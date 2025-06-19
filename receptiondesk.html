@@ -5,11 +5,28 @@
   <title>Redirecting...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>
+    // 取得當前頁面的所有參數
+    const currentParams = window.location.search;
+    
+    // 目標網址
+    const targetUrl = "https://script.google.com/macros/s/AKfycbwdka7Uf1r5QlleGSZU0LhQcteXf6wgywNArQ1x9ckxv6OMvy3K8Y8EuS_52PF5arVF/exec";
+    
+    // 組合完整網址（帶參數）
+    const fullUrl = targetUrl + currentParams;
+    
     // 自動轉址
-    window.location.href = "https://script.google.com/macros/s/AKfycbwdka7Uf1r5QlleGSZU0LhQcteXf6wgywNArQ1x9ckxv6OMvy3K8Y8EuS_52PF5arVF/exec";
+    window.location.href = fullUrl;
+    
+    // 同時更新連結文字中的網址
+    window.addEventListener('DOMContentLoaded', function() {
+      const link = document.getElementById('fallbackLink');
+      if (link) {
+        link.href = fullUrl;
+      }
+    });
   </script>
 </head>
 <body>
-  <p>正在轉址，若未自動跳轉，請 <a href="https://script.google.com/macros/s/AKfycbwdka7Uf1r5QlleGSZU0LhQcteXf6wgywNArQ1x9ckxv6OMvy3K8Y8EuS_52PF5arVF/exec">點此前往</a>。</p>
+  <p>正在轉址，若未自動跳轉，請 <a id="fallbackLink" href="https://script.google.com/macros/s/AKfycbwdka7Uf1r5QlleGSZU0LhQcteXf6wgywNArQ1x9ckxv6OMvy3K8Y8EuS_52PF5arVF/exec">點此前往</a>。</p>
 </body>
 </html>
