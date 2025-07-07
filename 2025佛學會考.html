@@ -738,7 +738,7 @@
     const menuContainer = document.getElementById('menu-container');
     const quizContainer = document.getElementById('quiz-container');
     const resultsContainer = document.getElementById('results-container');
-    
+
     const quizHeader = document.getElementById('quiz-header');
     const questionProgress = document.getElementById('question-progress');
     const questionText = document.getElementById('question-text');
@@ -746,33 +746,47 @@
     const feedback = document.getElementById('feedback');
     const nextBtn = document.getElementById('next-btn');
     const submitAnswerBtn = document.getElementById('submit-answer-btn');
-    
+
     const resultsSummary = document.getElementById('results-summary');
     const retryBtn = document.getElementById('retry-btn');
     const backToMenuBtn = document.getElementById('back-to-menu-btn');
 
+    let currentUnit = null;
+    let currentType = null;
+    let isRetryMode = false;
     let currentQuestions = [];
     let currentQuestionIndex = 0;
     let score = 0;
     let incorrectQuestions = [];
     let selectedAnswers = [];
+    
+    const STORAGE_KEY = 'buddhistQuizProgress';
 
     function cleanQuestionText(q) {
-        // Regex to remove prefixes like (O), (X), (A), (ABC) etc., and leading numbers.
-        return q.replace(/^\s*\([A-DXO]+\)\s*|\d+\.\s*/, '').trim();
+        return q.replace(/^\s*\(.+\)\s*|\d+\.\s*/, '').trim();
     }
     
-    function parseAnswerFromQuestion(q) {
-        const match = q.match(/^\s*\(([A-DXO]+)\)/);
-        if (!match) return null;
-        const answerStr = match[1];
-        if (answerStr === 'O') return true;
-        if (answerStr === 'X') return false;
-        if (answerStr.length > 1) return answerStr.split(''); // For multiple choice
-        return answerStr; // For single choice
+    // 1. 新增：儲存進度到 localStorage
+    function saveProgress() {
+        const progress = {
+            unit: currentUnit,
+            type: currentType,
+            isRetry: isRetryMode,
+            questions: isRetryMode ? currentQuestions : null, // 只在重做模式下儲存問題列表
+            index: currentQuestionIndex,
+            score: score,
+            incorrect: incorrectQuestions,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    }
+
+    // 2. 新增：清除儲存的進度
+    function clearProgress() {
+        localStorage.removeItem(STORAGE_KEY);
     }
 
     function createMenu() {
+        // ... 這部分函數保持不變 ...
         const title = menuContainer.querySelector('h1');
         const subtitle = menuContainer.querySelector('h2');
         menuContainer.innerHTML = '';
@@ -781,54 +795,60 @@
         
         Object.keys(quizData).forEach(unit => {
             const unitData = quizData[unit];
-            if (Object.values(unitData).every(arr => arr.length === 0)) return;
-
-            const unitDiv = document.createElement('div');
-            unitDiv.className = 'unit';
-            
-            const unitTitle = document.createElement('h2');
-            unitTitle.textContent = unit;
-            unitDiv.appendChild(unitTitle);
-
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.className = 'quiz-type-buttons';
-            
-            Object.keys(unitData).forEach(type => {
-                if (unitData[type].length > 0) {
-                    const button = document.createElement('button');
-                    button.textContent = type;
-                    button.onclick = () => startQuiz(unit, type);
-                    buttonsDiv.appendChild(button);
-                }
-            });
-            unitDiv.appendChild(buttonsDiv);
-            menuContainer.appendChild(unitDiv);
+            if (Object.values(unitData).some(arr => arr.length > 0)) {
+                const unitDiv = document.createElement('div');
+                unitDiv.className = 'unit';
+                const unitTitle = document.createElement('h2');
+                unitTitle.textContent = unit;
+                unitDiv.appendChild(unitTitle);
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'quiz-type-buttons';
+                Object.keys(unitData).forEach(type => {
+                    if (unitData[type].length > 0) {
+                        const button = document.createElement('button');
+                        button.textContent = type;
+                        button.onclick = () => startQuiz(unit, type);
+                        buttonsDiv.appendChild(button);
+                    }
+                });
+                unitDiv.appendChild(buttonsDiv);
+                menuContainer.appendChild(unitDiv);
+            }
         });
     }
-    
-    function startQuiz(unit, type, isRetry = false) {
-        currentQuestionIndex = 0;
-        score = 0;
 
-        if (isRetry) {
-            currentQuestions = unit; // For retry, 'unit' is the array of incorrect questions
+    function startQuiz(unit, type, retryData = null) {
+        currentUnit = unit;
+        currentType = type;
+        isRetryMode = !!retryData;
+
+        if (isRetryMode) {
+            currentQuestions = retryData;
             quizHeader.textContent = '錯題重做';
-            incorrectQuestions = []; // Clear for the new retry session
         } else {
             currentQuestions = quizData[unit][type];
             quizHeader.textContent = `${unit} - ${type}`;
-            incorrectQuestions = [];
         }
         
+        // 如果不是從儲存中恢復，則重置進度
+        if (!startQuiz.resuming) {
+            currentQuestionIndex = 0;
+            score = 0;
+            incorrectQuestions = [];
+        }
+        startQuiz.resuming = false; // 重置標記
+
         menuContainer.classList.add('hidden');
         resultsContainer.classList.add('hidden');
         quizContainer.classList.remove('hidden');
         backToMenuBtn.classList.remove('hidden');
-        
+
         loadQuestion();
     }
+    startQuiz.resuming = false; // 給函數添加一個靜態屬性來標記是否為恢復狀態
 
     function loadQuestion() {
+        // ... 函數開頭保持不變 ...
         feedback.classList.add('hidden');
         nextBtn.classList.add('hidden');
         submitAnswerBtn.classList.add('hidden');
@@ -840,19 +860,14 @@
             return;
         }
 
+        // 3. 修改：在加載問題後儲存進度
+        saveProgress(); 
+
         const qData = currentQuestions[currentQuestionIndex];
         const questionType = Array.isArray(qData.a) ? '複選題' : (typeof qData.a === 'boolean' ? '是非題' : '單選題');
 
         questionProgress.textContent = `第 ${currentQuestionIndex + 1} / ${currentQuestions.length} 題`;
-        
-        const prefixMatch = qData.q.match(/^\s*\(.+\)\s*/);
-        const prefixSpan = document.createElement('span');
-        prefixSpan.id = 'question-prefix';
-        prefixSpan.textContent = prefixMatch ? prefixMatch[0] : '';
-        
-        questionText.innerHTML = ''; // Clear previous content
-        // questionText.appendChild(prefixSpan); // We hide the answer prefix during quiz
-        questionText.append(cleanQuestionText(qData.q));
+        questionText.textContent = cleanQuestionText(qData.q);
 
         if (questionType === '是非題') {
             createOptionButton('O (是)', true);
@@ -862,7 +877,7 @@
                 const optionValue = optionText.charAt(0);
                 createOptionButton(optionText, optionValue, questionType === '複選題');
             });
-            if(questionType === '複選題') {
+            if (questionType === '複選題') {
                 submitAnswerBtn.classList.remove('hidden');
                 submitAnswerBtn.onclick = () => checkAnswer(null, '複選題');
             }
@@ -870,6 +885,7 @@
     }
 
     function createOptionButton(text, value, isMultipleChoice = false) {
+        // ... 這部分函數保持不變 ...
         const button = document.createElement('button');
         button.className = 'option-btn';
         button.innerHTML = text;
@@ -890,7 +906,9 @@
         optionsContainer.appendChild(button);
     }
 
+
     function checkAnswer(selectedValue, type = '單選/是非') {
+        // ... 這部分函數保持不變 ...
         const q = currentQuestions[currentQuestionIndex];
         let isCorrect;
         let correctAnswer = q.a;
@@ -909,19 +927,11 @@
             const btnValue = JSON.parse(btn.dataset.value);
             
             if (type === '複選題') {
-                if (correctAnswer.includes(btnValue)) {
-                    btn.classList.add('correct');
-                }
-                if (selectedAnswers.includes(btnValue) && !correctAnswer.includes(btnValue)) {
-                    btn.classList.add('incorrect');
-                }
+                if (correctAnswer.includes(btnValue)) btn.classList.add('correct');
+                if (selectedAnswers.includes(btnValue) && !correctAnswer.includes(btnValue)) btn.classList.add('incorrect');
             } else {
-                if (btnValue === correctAnswer) {
-                    btn.classList.add('correct');
-                }
-                if (btnValue === selectedValue && !isCorrect) {
-                    btn.classList.add('incorrect');
-                }
+                if (btnValue === correctAnswer) btn.classList.add('correct');
+                if (btnValue === selectedValue && !isCorrect) btn.classList.add('incorrect');
             }
         });
 
@@ -942,25 +952,23 @@
 
     function nextQuestion() {
         currentQuestionIndex++;
-        loadQuestion();
+        loadQuestion(); // loadQuestion 內部會自動儲存
     }
 
     function showResults() {
+        clearProgress(); // 4. 修改：完成測驗時清除進度
         quizContainer.classList.add('hidden');
         resultsContainer.classList.remove('hidden');
-        
-        const total = currentQuestions.length;
-        const correctCount = score;
-        const incorrectCount = total - score;
 
+        const total = currentQuestions.length;
         resultsSummary.innerHTML = `
             作答完成！<br>
             總題數：${total} 題<br>
-            答對：<span style="color: var(--correct-color);">${correctCount}</span> 題<br>
-            答錯：<span style="color: var(--incorrect-color);">${incorrectCount}</span> 題
+            答對：<span style="color: var(--correct-color);">${score}</span> 題<br>
+            答錯：<span style="color: var(--incorrect-color);">${total - score}</span> 題
         `;
 
-        if (incorrectCount > 0) {
+        if (incorrectQuestions.length > 0) {
             retryBtn.classList.remove('hidden');
         } else {
             retryBtn.classList.add('hidden');
@@ -969,23 +977,58 @@
 
     function retryIncorrect() {
         resultsContainer.classList.add('hidden');
-        startQuiz(incorrectQuestions, null, true);
+        startQuiz('錯題重做', '', incorrectQuestions);
     }
-    
+
     function goBackToMenu() {
+        clearProgress(); // 5. 修改：回到主選單時清除進度
         quizContainer.classList.add('hidden');
         resultsContainer.classList.add('hidden');
         backToMenuBtn.classList.add('hidden');
         menuContainer.classList.remove('hidden');
     }
     
+    // 6. 新增：網頁加載時檢查並恢復進度的核心邏輯
+    function checkForSavedProgress() {
+        const savedProgress = localStorage.getItem(STORAGE_KEY);
+        if (savedProgress) {
+            const progress = JSON.parse(savedProgress);
+            const quizName = progress.isRetry ? '錯題重做' : `${progress.unit} - ${progress.type}`;
+            
+            if (confirm(`發現您上次有未完成的測驗 (${quizName})，要繼續作答嗎？`)) {
+                // 恢復狀態
+                currentUnit = progress.unit;
+                currentType = progress.type;
+                isRetryMode = progress.isRetry;
+                currentQuestionIndex = progress.index;
+                score = progress.score;
+                incorrectQuestions = progress.incorrect;
+
+                startQuiz.resuming = true; // 標記為恢復狀態
+
+                if (isRetryMode) {
+                    startQuiz(currentUnit, currentType, progress.questions);
+                } else {
+                    startQuiz(currentUnit, currentType);
+                }
+            } else {
+                // 使用者選擇不繼續，清除存檔並顯示主選單
+                clearProgress();
+                createMenu();
+            }
+        } else {
+            // 沒有存檔，正常顯示主選單
+            createMenu();
+        }
+    }
+
     // Event Listeners
     nextBtn.addEventListener('click', nextQuestion);
     backToMenuBtn.addEventListener('click', goBackToMenu);
     retryBtn.addEventListener('click', retryIncorrect);
     
-    // Initial load
-    createMenu();
-    </script>
+    // 7. 修改：初始加載時調用新函數
+    checkForSavedProgress();
+</script>
 </body>
 </html>
