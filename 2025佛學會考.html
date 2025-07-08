@@ -931,11 +931,21 @@
     }
 
     function goBackToMenu() {
-        clearProgress(); // 5. 修改：回到主選單時清除進度
-        quizContainer.classList.add('hidden');
-        resultsContainer.classList.add('hidden');
-        backToMenuBtn.classList.add('hidden');
-        menuContainer.classList.remove('hidden');
+        // 我們也加入了確認提示框，避免使用者誤觸而清除進度
+        if (confirm("確定要回到主選單嗎？目前的作答進度將會被清除。")) {
+            clearProgress(); // 清除 localStorage 的進度
+            
+            // 隱藏測驗和結果區塊
+            quizContainer.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            backToMenuBtn.classList.add('hidden');
+            
+            // **關鍵修正：在這裡重新呼叫 createMenu() 來建立選單**
+            createMenu(); 
+            
+            // 顯示重建好的主選單
+            menuContainer.classList.remove('hidden');
+        }
     }
     
     // 6. 新增：網頁加載時檢查並恢復進度的核心邏輯
