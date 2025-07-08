@@ -6,208 +6,217 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>國際佛光會 2025 年全球佛學會考題庫《人間與實踐》</title>
     <style>
-    :root {
-        --primary-bg: #fdfaf3;
-        --secondary-bg: #ffffff;
-        --text-color: #3d2c1b;
-        --primary-color: #a87a4f;
-        --primary-hover-color: #8a6a4a; /* 新增：用於已選中按鈕的懸停顏色 */
-        --accent-color: #d4a373;
-        --correct-color: #4CAF50;
-        --incorrect-color: #F44336;
-        --font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
-    }
+        :root {
+            --primary-bg: #fdfaf3;
+            --secondary-bg: #ffffff;
+            --text-color: #3d2c1b;
+            --primary-color: #a87a4f;
+            --accent-color: #d4a373; /* 懸停顏色 */
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+        }
 
-    body {
-        font-family: var(--font-family);
-        background-color: var(--primary-bg);
-        color: var(--text-color);
-        margin: 0;
-        padding: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-    }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent; /* 移除 iOS 點擊時的灰色背景 */
+        }
 
-    .container {
-        width: 100%;
-        max-width: 800px;
-        background-color: var(--secondary-bg);
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        padding: 20px 40px;
-        box-sizing: border-box;
-    }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--secondary-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px 40px;
+            box-sizing: border-box;
+        }
 
-    h1, h2 {
-        color: var(--primary-color);
-        text-align: center;
-        border-bottom: 2px solid var(--accent-color);
-        padding-bottom: 10px;
-    }
-    
-    h1 { font-size: 1.8em; }
-    h2 { font-size: 1.5em; margin-top: 30px; }
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+        
+        h1 { font-size: 1.8em; }
+        h2 { font-size: 1.5em; margin-top: 30px; }
 
-    .hidden { display: none !important; }
+        .hidden { display: none !important; }
 
-    /* Menu Styles */
-    #menu-container .unit { margin-bottom: 25px; }
-    #menu-container .quiz-type-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-    #menu-container button {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1em;
-        transition: background-color 0.3s, transform 0.2s;
-        flex-grow: 1;
-    }
-    #menu-container button:hover {
-        background-color: var(--accent-color);
-        transform: translateY(-2px);
-    }
+        /* Menu Styles */
+        #menu-container .unit { margin-bottom: 25px; }
+        #menu-container .quiz-type-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        #menu-container button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s;
+            flex-grow: 1;
+        }
 
-    /* Quiz Styles */
-    #quiz-header { text-align: center; margin-bottom: 20px; font-size: 1.2em; font-weight: bold; }
-    #question-progress { text-align: right; font-size: 0.9em; color: #888; margin-bottom: 10px; }
-    #question-text {
-        font-size: 1.2em;
-        line-height: 1.8;
-        margin-bottom: 25px;
-        padding: 15px;
-        background-color: #f9f9f9;
-        border-left: 5px solid var(--accent-color);
-    }
-    #options-container { display: grid; gap: 15px; }
-    
-    .option-btn, #submit-answer-btn {
-        width: 100%;
-        padding: 15px;
-        font-size: 1em;
-        text-align: left;
-        background-color: #fff;
-        color: var(--text-color);
-        border: 2px solid var(--accent-color);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
-        display: flex; /* 新增：為了對齊圖示和文字 */
-        align-items: center; /* 新增：垂直居中對齊 */
-    }
+        /* Quiz Styles */
+        #quiz-header { text-align: center; margin-bottom: 20px; font-size: 1.2em; font-weight: bold; }
+        #question-progress { text-align: right; font-size: 0.9em; color: #888; margin-bottom: 10px; }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid var(--accent-color);
+        }
+        #options-container { display: grid; gap: 15px; }
+        
+        .option-btn, #submit-answer-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1em;
+            text-align: left;
+            background-color: #fff;
+            color: var(--text-color);
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+        }
 
-    /* **這裡是主要的修改** */
+        /* === 主要修正區域 === */
 
-    /* 1. 為圖示預留空間 */
-    .option-btn::before {
-        content: "\2714"; /* ✔ checkmark */
-        font-size: 1.2em;
-        margin-right: 10px;
-        color: transparent; /* 預設為透明，選中時才顯示 */
-        transition: color 0.2s;
-    }
+        /* 1. 使用 SVG 作為打勾圖示，解決跨平台顯示問題 */
+        .option-btn::before {
+            content: ''; /* 清空文字內容，改用背景圖 */
+            width: 1.2em;
+            height: 1.2em;
+            margin-right: 10px;
+            background-image: none; /* 預設沒有圖示 */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: background-image 0.2s;
+            flex-shrink: 0; /* 防止圖示被壓縮 */
+        }
 
-    /* 2. 選中時的樣式 */
-    .option-btn.selected {
-        background-color: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-    }
-    /* 讓選中按鈕的圖示顯示出來 */
-    .option-btn.selected::before {
-        color: white; /* 顯示打勾圖示 */
-    }
+        /* 2. 選中時的樣式 */
+        .option-btn.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* 讓選中按鈕顯示 SVG 打勾圖示 */
+        .option-btn.selected::before {
+            /* 這是一段嵌入的白色 SVG 打勾圖示 Data URI */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+        }
 
-    /* 3. 優化懸停效果 */
-    /* 未選中的按鈕懸停 */
-    .option-btn:not(.selected):hover:not(:disabled) {
-        background-color: var(--accent-color);
-        color: white;
-        border-color: var(--accent-color);
-    }
-    /* 已選中的按鈕懸停（暗示取消） */
-    .option-btn.selected:hover:not(:disabled) {
-        background-color: var(--primary-hover-color); /* 使用更深的顏色 */
-        opacity: 0.9;
-    }
-    
-    /* **修改結束** */
+        /* 3. 使用媒體查詢解決行動裝置「黏性 Hover」問題 */
+        /* 這個區塊內的樣式只會在有滑鼠的裝置上生效 */
+        @media (hover: hover) {
+            #menu-container button:hover {
+                background-color: var(--accent-color);
+                transform: translateY(-2px);
+            }
+            
+            .option-btn:hover:not(:disabled) {
+                background-color: var(--accent-color);
+                color: white;
+                border-color: var(--accent-color);
+            }
+            
+            /* 讓已選中的按鈕在滑鼠懸停時有不同的回饋，暗示可取消 */
+            .option-btn.selected:hover:not(:disabled) {
+                background-color: #8a6a4a; /* primary-color 的深色版 */
+            }
 
+            #next-btn:hover, #submit-answer-btn:hover { background-color: var(--accent-color); }
+            #retry-btn:hover { background-color: #388e3c; }
+            #back-to-menu-btn:hover {
+                background-color: #333;
+                transform: scale(1.05);
+            }
+        }
+        /* === 修正區域結束 === */
 
-    .option-btn.correct {
-        background-color: var(--correct-color);
-        border-color: var(--correct-color);
-        color: white;
-    }
-    .option-btn.correct::before {
-        color: white !important;
-    }
+        .option-btn.correct {
+            background-color: var(--correct-color);
+            border-color: var(--correct-color);
+            color: white;
+        }
+        .option-btn.correct::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+        }
 
-    .option-btn.incorrect {
-        background-color: var(--incorrect-color);
-        border-color: var(--incorrect-color);
-        color: white;
-    }
-    .option-btn:disabled {
-        cursor: not-allowed;
-        opacity: 0.8;
-    }
+        .option-btn.incorrect {
+            background-color: var(--incorrect-color);
+            border-color: var(--incorrect-color);
+            color: white;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
 
-    #feedback { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; text-align: center; }
-    .feedback-correct { background-color: #e8f5e9; color: var(--correct-color); }
-    .feedback-incorrect { background-color: #ffebee; color: var(--incorrect-color); }
+        #feedback { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; text-align: center; }
+        .feedback-correct { background-color: #e8f5e9; color: var(--correct-color); }
+        .feedback-incorrect { background-color: #ffebee; color: var(--incorrect-color); }
 
-    #navigation-btns { margin-top: 20px; text-align: center; }
-    #next-btn, #submit-answer-btn, #retry-btn {
-        color: white;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1.1em;
-        transition: background-color 0.3s;
-    }
-    #next-btn, #submit-answer-btn { background-color: var(--primary-color); }
-    #next-btn:hover, #submit-answer-btn:hover { background-color: var(--accent-color); }
-    #retry-btn { background-color: var(--correct-color); }
-    #retry-btn:hover { background-color: #388e3c; }
+        #navigation-btns { margin-top: 20px; text-align: center; }
+        #next-btn, #submit-answer-btn, #retry-btn {
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s;
+        }
+        #next-btn, #submit-answer-btn { background-color: var(--primary-color); }
+        #retry-btn { background-color: var(--correct-color); }
 
-    #back-to-menu-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: #555;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 50px;
-        cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        font-size: 1em;
-        z-index: 1000;
-        transition: background-color 0.3s, transform 0.2s;
-    }
-    #back-to-menu-btn:hover {
-        background-color: #333;
-        transform: scale(1.05);
-    }
-    
-    #results-container { text-align: center; }
-    #results-summary { font-size: 1.3em; line-height: 2; margin-bottom: 30px; }
+        #back-to-menu-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #555;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-size: 1em;
+            z-index: 1000;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        #results-container { text-align: center; }
+        #results-summary { font-size: 1.3em; line-height: 2; margin-bottom: 30px; }
 
-    @media (max-width: 600px) {
-        body { padding: 10px; }
-        .container { padding: 20px; }
-        h1 { font-size: 1.5em; }
-        h2 { font-size: 1.3em; }
-        #question-text { font-size: 1.1em; }
-        .option-btn, #submit-answer-btn { padding: 12px; font-size: 0.95em; }
-        #back-to-menu-btn { padding: 8px 12px; font-size: 0.9em; }
-    }
-</style>
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 20px; }
+            h1 { font-size: 1.5em; }
+            h2 { font-size: 1.3em; }
+            #question-text { font-size: 1.1em; }
+            .option-btn, #submit-answer-btn { padding: 12px; font-size: 0.95em; }
+            #back-to-menu-btn { padding: 8px 12px; font-size: 0.9em; }
+        }
+    </style>
 </head>
 <body>
 
