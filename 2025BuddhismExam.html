@@ -13,6 +13,10 @@
             --accent-color: #d4a373;
             --correct-color: #4CAF50;
             --incorrect-color: #F44336;
+            /* 新增題型顏色 */
+            --type-tf-bg: #3498db;  /* 是非題: 藍色 */
+            --type-sc-bg: #2ecc71;  /* 單選題: 綠色 */
+            --type-mc-bg: #f39c12;  /* 複選題: 橘色 */
             --font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
         }
         body {
@@ -81,6 +85,34 @@
         .option-btn.selected::before {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
         }
+
+        .question-type-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .question-type-tag.tf { background-color: var(--type-tf-bg); }
+        .question-type-tag.sc { background-color: var(--type-sc-bg); }
+        .question-type-tag.mc { background-color: var(--type-mc-bg); }
+
+        /* === 主要修正區域：為高亮樣式添加 !important === */
+        .option-btn.correct {
+            background-color: var(--correct-color) !important; /* 確保此樣式生效 */
+            border-color: var(--correct-color) !important;
+            color: white !important;
+        }
+        .option-btn.incorrect {
+            background-color: var(--incorrect-color) !important; /* 確保此樣式生效 */
+            border-color: var(--incorrect-color) !important;
+            color: white !important;
+        }
+        /* === 修正結束 === */
+
         #navigation-btns, #practice-nav, #exam-nav { margin-top: 25px; display: flex; justify-content: center; gap: 15px; }
         #exam-nav { justify-content: space-between; }
         #practice-nav, #exam-nav { width: 100%; }
@@ -267,10 +299,22 @@
             optionsContainer.innerHTML = '';
             
             const qData = currentQuestions[currentQuestionIndex];
+            questionProgress.textContent = `第 ${currentQuestionIndex + 1} / ${currentQuestions.length} 題`;
+
             const questionType = getQuestionType(qData);
             
-            questionProgress.textContent = `第 ${currentQuestionIndex + 1} / ${currentQuestions.length} 題`;
-            questionText.textContent = `[${questionType}] ${cleanQuestionText(qData.q)}`;
+            // 創建題型標籤
+            const typeTag = document.createElement('span');
+            typeTag.classList.add('question-type-tag');
+            typeTag.textContent = questionType;
+            if (questionType === '是非題') typeTag.classList.add('tf');
+            else if (questionType === '單選題') typeTag.classList.add('sc');
+            else if (questionType === '複選題') typeTag.classList.add('mc');
+
+            // 清空並組合題目顯示
+            questionText.innerHTML = '';
+            questionText.appendChild(typeTag);
+            questionText.append(cleanQuestionText(qData.q)); // append會將文字節點加到後面
             
             createOptions(qData, questionType);
             updateNavigation();
@@ -301,43 +345,24 @@
             }
         }
 
-        /*function createOptionButton(text, value, isMultiple, isSelected) {
-            const button = document.createElement('button');
-            button.className = 'option-btn';
-            if (isSelected) button.classList.add('selected');
-            button.innerHTML = text;
-            button.onclick = () => {
-                if (currentMode === 'exam') {
-                    if (isMultiple) {
-                        button.classList.toggle('selected');
-                        const currentSelection = userAnswers[currentQuestionIndex] || [];
-                        userAnswers[currentQuestionIndex] = button.classList.contains('selected') 
-                            ? [...currentSelection, value].sort() 
-                            : currentSelection.filter(v => v !== value);
-                    } else {
-                        Array.from(optionsContainer.children).forEach(btn => btn.classList.remove('selected'));
-                        button.classList.add('selected');
-                        userAnswers[currentQuestionIndex] = value;
-                    }
-                } else {
-                    if (!isMultiple) checkAnswerPractice(false, value);
-                    else button.classList.toggle('selected');
-                }
-            };
-            optionsContainer.appendChild(button);
-        }
-        */
+        
+        
+
         function createOptionButton(text, value, isMultiple, isSelected) {
             const button = document.createElement('button');
             button.className = 'option-btn';
             if (isSelected) button.classList.add('selected');
             button.innerHTML = text;
+
+            // ** 修正：不再使用 JSON.stringify，直接儲存值 **
+            button.dataset.value = value;
             
             button.onclick = () => {
                 if (currentMode === 'exam') {
                     if (isMultiple) {
                         button.classList.toggle('selected');
                         const currentSelection = userAnswers[currentQuestionIndex] || [];
+                        // 複選題的 value 是字串，直接處理
                         userAnswers[currentQuestionIndex] = button.classList.contains('selected') 
                             ? [...currentSelection, value].sort() 
                             : currentSelection.filter(v => v !== value);
@@ -346,7 +371,6 @@
                         button.classList.add('selected');
                         userAnswers[currentQuestionIndex] = value;
                     }
-                    // *** 主要修改 3: 答題後啟用下一題或交卷按鈕 ***
                     nextBtnExam.disabled = false;
                     submitExamBtn.disabled = false;
                 } else { // practice mode
@@ -357,14 +381,15 @@
             optionsContainer.appendChild(button);
         }
 
+
         function checkAnswerPractice(isMultiple, selectedValue) {
             let userAnswer = selectedValue;
+
             if (isMultiple) {
+                // 從選中的按鈕直接讀取 dataset.value
                 userAnswer = Array.from(optionsContainer.querySelectorAll('.option-btn.selected'))
-                    .map(btn => {
-                        const match = btn.textContent.match(/^\s*([A-Z])\.\s*|^\s*\(([A-Z])\)/);
-                        return match ? (match[1] || match[2]) : '';
-                    }).sort();
+                    .map(btn => btn.dataset.value)
+                    .sort();
             }
 
             const q = currentQuestions[currentQuestionIndex];
@@ -373,6 +398,31 @@
             
             feedback.classList.remove('hidden');
             Array.from(optionsContainer.querySelectorAll('button')).forEach(btn => btn.disabled = true);
+            
+            Array.from(optionsContainer.querySelectorAll('.option-btn')).forEach(btn => {
+                // 直接讀取 dataset.value 字串
+                let btnValue = btn.dataset.value;
+                // 如果是布林字串，將其轉換回布林值以便比較
+                if (btnValue === 'true') btnValue = true;
+                if (btnValue === 'false') btnValue = false;
+                
+                
+                const isCorrectAnswerOption = Array.isArray(correctAnswer) 
+                    ? correctAnswer.includes(btnValue) 
+                    : btnValue === correctAnswer;
+                
+                if (isCorrectAnswerOption) {
+                    btn.classList.add('correct');
+                }
+
+                const wasSelectedByUser = Array.isArray(userAnswer)
+                    ? userAnswer.includes(btnValue)
+                    : btnValue === userAnswer;
+
+                if (wasSelectedByUser && !isCorrectAnswerOption) {
+                    btn.classList.add('incorrect');
+                }
+            });
             
             if (isCorrect) {
                 score++;
@@ -386,21 +436,7 @@
             }
             nextBtnPractice.disabled = false;
         }
-        
-        /*function updateNavigation() {
-            practiceNav.classList.add('hidden');
-            examNav.classList.add('hidden');
 
-            if (currentMode === 'exam') {
-                examNav.classList.remove('hidden');
-                prevBtn.disabled = currentQuestionIndex === 0;
-                nextBtnExam.classList.toggle('hidden', currentQuestionIndex === currentQuestions.length - 1);
-                submitExamBtn.classList.toggle('hidden', currentQuestionIndex !== currentQuestions.length - 1);
-            } else {
-                practiceNav.classList.remove('hidden');
-                nextBtnPractice.disabled = true;
-            }
-        }*/
         function updateNavigation() {
             practiceNav.classList.add('hidden');
             examNav.classList.add('hidden');
@@ -473,6 +509,7 @@
                 if (!isCorrect) {
                     li.classList.add('result-item-incorrect');
                 }
+
 
                 li.innerHTML = `
                     <div class="result-question">${index + 1}. [${questionType}] ${cleanQuestionText(q.q)}</div>
