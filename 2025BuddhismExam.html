@@ -430,7 +430,13 @@
                 feedback.className = 'feedback-correct';
             } else {
                 incorrectQuestions.push(q);
-                const answerString = JSON.stringify(correctAnswer).replace(/[\[\]"]/g, '').replace(/,/g, ', ');
+                let answerString = JSON.stringify(correctAnswer).replace(/[\[\]"]/g, '').replace(/,/g, ', ');
+                if (answerString == 'true') {
+                    answerString = 'O (是)';
+                }
+                if (answerString == 'false') {
+                    answerString = 'X (非)';
+                }
                 feedback.innerHTML = `答錯了！<br>正確答案是：${answerString}`;
                 feedback.className = 'feedback-incorrect';
             }
