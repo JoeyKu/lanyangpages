@@ -239,6 +239,7 @@
         }
 
         function getQuestionType(q) {
+            if (q.isExplanation) return 'explanation';
             if (Array.isArray(q.a)) return '複選題';
             if (typeof q.a === 'boolean') return '是非題';
             return '單選題';
@@ -284,11 +285,25 @@
                 });
             });
             const shuffleAndPick = (arr, num) => arr.sort(() => 0.5 - Math.random()).slice(0, num);
-            currentQuestions = [
-                ...shuffleAndPick(allQuestions['是非題'], 10),
-                ...shuffleAndPick(allQuestions['單選題'], 10),
-                ...shuffleAndPick(allQuestions['複選題'], 10)
-            ];
+            
+            const tfQuestions = shuffleAndPick(allQuestions['是非題'], 10);
+            const scQuestions = shuffleAndPick(allQuestions['單選題'], 10);
+            const mcQuestions = shuffleAndPick(allQuestions['複選題'], 10);
+
+            currentQuestions = [];
+            if (tfQuestions.length > 0) {
+                currentQuestions.push({ isExplanation: true, text: `下面要開始進行"是非題"共 ${tfQuestions.length} 題` });
+                currentQuestions.push(...tfQuestions);
+            }
+            if (scQuestions.length > 0) {
+                currentQuestions.push({ isExplanation: true, text: `下面要開始進行"單選題"共 ${scQuestions.length} 題` });
+                currentQuestions.push(...scQuestions);
+            }
+            if (mcQuestions.length > 0) {
+                currentQuestions.push({ isExplanation: true, text: `下面要開始進行"複選題"共 ${mcQuestions.length} 題` });
+                currentQuestions.push(...mcQuestions);
+            }
+
             quizHeader.textContent = '模擬測驗';
             showView('quiz');
             loadQuestion();
@@ -299,8 +314,35 @@
             optionsContainer.innerHTML = '';
             
             const qData = currentQuestions[currentQuestionIndex];
-            questionProgress.textContent = `第 ${currentQuestionIndex + 1} / ${currentQuestions.length} 題`;
 
+            // Handle explanation page
+            if (qData.isExplanation) {
+                questionProgress.classList.add('hidden'); // Hide progress on explanation page
+                questionText.innerHTML = `<div style="font-size: 1.5em; text-align: center; padding: 40px 0; line-height: 1.8;">${qData.text}</div>`;
+                optionsContainer.innerHTML = ''; // No options for explanation
+
+                // Modify navigation for explanation page
+                practiceNav.classList.add('hidden');
+                examNav.classList.remove('hidden');
+                
+                prevBtn.disabled = (currentQuestionIndex === 0);
+                nextBtnExam.disabled = false; // Always allow moving to the first question
+                nextBtnExam.textContent = '開始作答'; // More intuitive text
+                submitExamBtn.classList.add('hidden'); // Hide submit button on explanation page
+                nextBtnExam.classList.remove('hidden');
+
+                return; // Stop further processing for explanation page
+            }
+
+            // Restore default state if previous was explanation
+            questionProgress.classList.remove('hidden');
+            nextBtnExam.textContent = '下一題';
+
+            // Calculate real question number
+            const realQuestions = currentQuestions.filter(q => !q.isExplanation);
+            const realQuestionIndex = currentQuestions.slice(0, currentQuestionIndex).filter(q => !q.isExplanation).length;
+            questionProgress.textContent = `第 ${realQuestionIndex + 1} / ${realQuestions.length} 題`;
+            
             const questionType = getQuestionType(qData);
             
             // 創建題型標籤
@@ -485,7 +527,12 @@
             const correctCounts = { '是非題': 0, '單選題': 0, '複選題': 0 };
             const points = { '是非題': 2, '單選題': 3, '複選題': 5 };
             resultsList.innerHTML = '';
+
+            const realQuestions = currentQuestions.filter(q => !q.isExplanation);
+
             currentQuestions.forEach((q, index) => {
+                if (q.isExplanation) return;
+
                 const userAnswer = userAnswers[index];
                 const correctAnswer = q.a;
                 const questionType = getQuestionType(q);
@@ -516,9 +563,10 @@
                     li.classList.add('result-item-incorrect');
                 }
 
+                const realQuestionIndex = currentQuestions.slice(0, index).filter(item => !item.isExplanation).length;
 
                 li.innerHTML = `
-                    <div class="result-question">${index + 1}. [${questionType}] ${cleanQuestionText(q.q)}</div>
+                    <div class="result-question">${realQuestionIndex + 1}. [${questionType}] ${cleanQuestionText(q.q)}</div>
                     ${optionsHTML}
                     <div class="result-answer" style="margin-top:10px;">您的答案：<span class="${isCorrect ? '' : 'user-answer-incorrect'}">${userAnswerStr}</span></div>
                     <div class="result-answer">正確答案：<span class="correct-answer">${correctAnswerStr}</span></div>
@@ -526,11 +574,15 @@
                 resultsList.appendChild(li);
             });
             
+            const tfCount = realQuestions.filter(q => getQuestionType(q) === '是非題').length;
+            const scCount = realQuestions.filter(q => getQuestionType(q) === '單選題').length;
+            const mcCount = realQuestions.filter(q => getQuestionType(q) === '複選題').length;
+
             resultsSummary.innerHTML = `
                 總分：${totalScore} / 100<br>
-                是非題：${correctCounts['是非題']}/10 | 
-                單選題：${correctCounts['單選題']}/10 | 
-                複選題：${correctCounts['複選題']}/10`;
+                是非題：${correctCounts['是非題']}/${tfCount} | 
+                單選題：${correctCounts['單選題']}/${scCount} | 
+                複選題：${correctCounts['複選題']}/${mcCount}`;
             showView('results');
             retryBtn.classList.add('hidden');
         }
