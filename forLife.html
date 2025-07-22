@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盡形壽護持興學試算器</title>
+    <style>
+        :root {
+            --primary-bg: #fdfaf3;
+            --secondary-bg: #ffffff;
+            --text-color: #3d2c1b;
+            --primary-color: #a87a4f;
+            --accent-color: #d4a373;
+            --font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--secondary-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px 40px;
+            box-sizing: border-box;
+            margin: 20px 0;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .input-group {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        label {
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+
+        input[type="date"] {
+            font-family: var(--font-family);
+            font-size: 1.1em;
+            padding: 8px;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+        }
+
+        #results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-left: 5px solid var(--accent-color);
+            border-radius: 8px;
+            font-size: 1.2em;
+            line-height: 1.8;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #results p {
+            margin: 10px 0;
+        }
+
+        #results span {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .leap-year-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #856404;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>盡形壽護持興學試算器</h1>
+        <div class="input-group">
+            <label for="birthdate">請輸入您的出生年月日：</label>
+            <input type="date" id="birthdate">
+        </div>
+        <div id="results" class="hidden">
+            <p>盡形壽結束日：<span id="endDate"></span></p>
+            <p>盡形壽一次繳清試算結果：<span id="totalAmount"></span> 元</p>
+            <div id="leapYearNotice" class="leap-year-notice hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        const birthdateInput = document.getElementById('birthdate');
+        const resultsDiv = document.getElementById('results');
+        const endDateSpan = document.getElementById('endDate');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const leapYearNotice = document.getElementById('leapYearNotice');
+
+        // 檢查是否為閏年的函數
+        function isLeapYear(year) {
+            return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+        }
+
+        // 安全創建日期，處理閏年問題
+        function createSafeDate(year, month, day) {
+            // 如果是2月29日，但目標年份不是閏年，則調整為2月28日
+            if (month === 1 && day === 29 && !isLeapYear(year)) {
+                return new Date(year, month, 28);
+            }
+            return new Date(year, month, day);
+        }
+
+        birthdateInput.addEventListener('change', function () {
+            if (!this.value) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            // 1. 解析用戶輸入的生日
+            const [birthYear, birthMonth, birthDay] = this.value.split('-').map(Number);
+            const birthdate = new Date(birthYear, birthMonth - 1, birthDay);
+
+            // 2. 計算盡形壽結束日期 (生日 + 108 年)，處理閏年問題
+            const endYear = birthYear + 108;
+            const endDate = createSafeDate(endYear, birthMonth - 1, birthDay);
+
+            // 3. 檢查是否有閏年調整並設定提醒
+            let leapYearMessage = '';
+            if (birthMonth === 2 && birthDay === 29 && !isLeapYear(endYear)) {
+                leapYearMessage = `注意：您的生日是閏年2月29日，但結束年份 ${endYear} 年不是閏年，因此結束日期調整為 ${endYear} 年2月28日。`;
+            }
+
+            // 4. 格式化結束日期以進行顯示
+            const displayFormatter = new Intl.DateTimeFormat(undefined, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            endDateSpan.textContent = displayFormatter.format(endDate);
+
+            // 5. 取得今天的日期
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // 6. 計算剩餘的完整月份數
+            let months = (endDate.getFullYear() - today.getFullYear()) * 12;
+            months -= today.getMonth();
+            months += endDate.getMonth();
+
+            if (endDate.getDate() < today.getDate()) {
+                months--;
+            }
+
+            // 如果結束日期在今天或之前，月份數應為 0
+            if (endDate <= today) {
+                months = 0;
+            }
+
+            // 7. 計算並顯示總金額
+            const totalAmount = months > 0 ? months * 100 : 0;
+            totalAmountSpan.textContent = new Intl.NumberFormat().format(totalAmount);
+
+            // 8. 顯示閏年提醒（如果需要）
+            if (leapYearMessage) {
+                leapYearNotice.textContent = leapYearMessage;
+                leapYearNotice.classList.remove('hidden');
+            } else {
+                leapYearNotice.classList.add('hidden');
+            }
+
+            resultsDiv.classList.remove('hidden');
+        });
+    </script>
+</body>
+
+</html>
