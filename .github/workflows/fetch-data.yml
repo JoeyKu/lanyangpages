@@ -13,6 +13,8 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
+  permissions:
+    contents: write
   fetch-and-save:
     # 指定執行的虛擬環境
     runs-on: ubuntu-latest
