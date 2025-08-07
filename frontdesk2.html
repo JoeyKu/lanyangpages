@@ -18,6 +18,7 @@
       </div>
       <!-- 主畫面容器 -->
       <div id="app" class="min-h-screen px-6 py-8 sm:px-4 sm:py-6 hidden"></div>
+      <script src="data.js"></script>
       <script>
          const MAX_LOGIN_DURATION = 7 * 24 * 60 * 60 * 1000;
          const MAX_ATTEMPTS = 3;
@@ -41,7 +42,7 @@
            const isLoggedIn = localStorage.getItem("isLoggedIn") === "yes";
            const loginTime = parseInt(localStorage.getItem("loginTime") || "0");
            const now = Date.now();
-
+         
            if (isLoggedIn && now - loginTime < MAX_LOGIN_DURATION) {
              loadMainApp();
            } else {
@@ -69,42 +70,42 @@
          
            return false;
          }
-
+         
          const PASSWORD_HASH = "e73a36f8264731f64049b86564604e671d4bb1cfc0f6ab26803a5ad18040fee2";
-
-        async function sha256(text) {
+         
+         async function sha256(text) {
           const encoder = new TextEncoder();
           const data = encoder.encode(text);
           const hashBuffer = await crypto.subtle.digest('SHA-256', data);
           const hashArray = Array.from(new Uint8Array(hashBuffer));
           return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        async function submitPassword() {
-  if (checkLockStatus()) return;
-
-  const pw = document.getElementById("passwordInput").value.trim();
-  const hash = await sha256(pw);
-
-  if (hash === PASSWORD_HASH) {
-    localStorage.setItem("isLoggedIn", "yes");
-    localStorage.setItem("loginTime", Date.now().toString());
-    localStorage.removeItem("failCount");
-    localStorage.removeItem("lockTime");
-    loadMainApp();
-  } else {
-    let count = parseInt(localStorage.getItem("failCount") || "0") + 1;
-    localStorage.setItem("failCount", count);
-
-    if (count >= MAX_ATTEMPTS) {
-      localStorage.setItem("lockTime", Date.now().toString());
-      document.getElementById("error").textContent = "錯誤過多，已鎖定 5 分鐘";
-    } else {
-      document.getElementById("error").textContent = `密碼錯誤，您還有 ${MAX_ATTEMPTS - count} 次機會`;
-    }
-  }
-}
-
+         }
+         
+         async function submitPassword() {
+         if (checkLockStatus()) return;
+         
+         const pw = document.getElementById("passwordInput").value.trim();
+         const hash = await sha256(pw);
+         
+         if (hash === PASSWORD_HASH) {
+         localStorage.setItem("isLoggedIn", "yes");
+         localStorage.setItem("loginTime", Date.now().toString());
+         localStorage.removeItem("failCount");
+         localStorage.removeItem("lockTime");
+         loadMainApp();
+         } else {
+         let count = parseInt(localStorage.getItem("failCount") || "0") + 1;
+         localStorage.setItem("failCount", count);
+         
+         if (count >= MAX_ATTEMPTS) {
+         localStorage.setItem("lockTime", Date.now().toString());
+         document.getElementById("error").textContent = "錯誤過多，已鎖定 5 分鐘";
+         } else {
+         document.getElementById("error").textContent = `密碼錯誤，您還有 ${MAX_ATTEMPTS - count} 次機會`;
+         }
+         }
+         }
+         
          function submitPasswordOld() {
            if (checkLockStatus()) return;
          
@@ -143,45 +144,44 @@
          
                  return;
              }
+             
+             const { events, annualEvents, faqs } = frontDeskData;
          
-             google.script.run.withSuccessHandler(data => {
-               const { events, annualEvents, faqs } = data;
-               const app = document.getElementById("app");
          
-               app.innerHTML = `
-                 <div class="max-w-4xl mx-auto">
-                   <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-3xl font-bold text-center text-indigo-700">三聯單及佛光卡填單說明</h1>
-                   <br>
          
-                   <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700 mb-6 text-center">近期活動</h2>
-                   <div id="eventBlocks" class="space-y-4 mb-6">
-                     ${renderEventBlocks(events, 'e')}
-                   </div>
-                   
-                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-4 mb-6 text-center">
-                     <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700">例行活動</h2>
-                     <button onclick="toggleSection('annualEventsBlocks', 'toggleAnnualBtn')" id="toggleAnnualBtn" class="text-indigo-700 underline text-lg md:text-5xl lg:text-xl">
-                       展開 ▼
-                     </button>
-                   </div>
+             app.innerHTML = `
+         <div class="max-w-4xl mx-auto">
+         <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-3xl font-bold text-center text-indigo-700">三聯單及佛光卡填單說明</h1>
+         <br>
          
-                   <div id="annualEventsBlocks" class="space-y-4 mb-6 hidden">
-                     ${renderEventBlocks(annualEvents, 'l')}
-                   </div>
+         <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700 mb-6 text-center">近期活動</h2>
+         <div id="eventBlocks" class="space-y-4 mb-6">
+         ${renderEventBlocks(events, 'e')}
+         </div>
          
-                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-4 mb-6 text-center">
-                     <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700">常見問答</h2>
-                     <button onclick="toggleSection('faqSection', 'toggleFaqBtn')" id="toggleFaqBtn" class="text-indigo-700 underline text-lg md:text-5xl lg:text-xl">
-                       展開 ▼
-                     </button>
-                   </div>
-                   
-                   <div id="faqSection" class="space-y-4 mb-6 hidden">
-                     ${renderFaqs(faqs)}
-                   </div>
-                 </div>
-               `;
-             }).getRecentData();
+         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-4 mb-6 text-center">
+         <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700">例行活動</h2>
+         <button onclick="toggleSection('annualEventsBlocks', 'toggleAnnualBtn')" id="toggleAnnualBtn" class="text-indigo-700 underline text-lg md:text-5xl lg:text-xl">
+          展開 ▼
+         </button>
+         </div>
+         
+         <div id="annualEventsBlocks" class="space-y-4 mb-6 hidden">
+         ${renderEventBlocks(annualEvents, 'l')}
+         </div>
+         
+         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-4 mb-6 text-center">
+         <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700">常見問答</h2>
+         <button onclick="toggleSection('faqSection', 'toggleFaqBtn')" id="toggleFaqBtn" class="text-indigo-700 underline text-lg md:text-5xl lg:text-xl">
+          展開 ▼
+         </button>
+         </div>
+         
+         <div id="faqSection" class="space-y-4 mb-6 hidden">
+         ${renderFaqs(faqs)}
+         </div>
+         </div>
+         `;
            }
          
            function checkUpdate() {
