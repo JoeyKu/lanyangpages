@@ -1,0 +1,64 @@
+# .github/workflows/fetch-data.yml
+
+name: '定期抓取資料並存為 JS'
+
+on:
+  # 允許你從 GitHub 網站的 "Actions" 頁面手動觸發此流程（方便測試）
+  workflow_dispatch:
+
+  # 設定排程觸發
+  schedule:
+    # 使用 CRON 語法，'0 0 * * *' 代表在每天的 UTC 時間 0 點執行
+    # 換算成台灣/香港時間 (UTC+8) 就是每天早上 8 點
+    - cron: '0 0 * * *'
+
+jobs:
+  fetch-and-save:
+    # 指定執行的虛擬環境
+    runs-on: ubuntu-latest
+
+    steps:
+      # 步驟 1: 將你的倉庫程式碼 checkout 到虛擬環境中
+      # 這是為了後續能將變動的檔案提交回倉庫
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步驟 2: 抓取資料並格式化成 JS 檔案
+      # 這是整個工作的核心步驟
+      - name: Fetch data and create JS file
+        # 使用 run 來執行 shell 指令
+        run: |
+          # 建立一個名為 data.js 的檔案，並寫入第一行 "var frontDestData = "
+          echo "var frontDestData = " > data.js
+          
+          # 使用 curl 抓取你的 URL，並將回傳的 JSON 內容附加(>>)到 data.js 檔案中
+          # 請將 'http://xxx.xxx.xxx/api/data' 換成你實際的網址
+          # -sL：-s 代表靜默模式(不顯示進度條)，-L 代表跟隨轉址
+          curl -sL 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiAgnURLEkQGoZGMzWMNHdJl-GpyHQskF6A4PrM5D098Wa6hWhQ6gNJ-Nunou9Sr1YLMmV7IaDOoWvgVv18PcnJuYMXxY2a0lucBdUGc4xckUtQ-Pa6YJgv2CR4oK_zA6FNp6vezAVHC9WQ2a6NKSNirlSaPo0b_3B70DH1XBlXY-MkccH-RiZpt7RXz9XkfDoIXPqLksF80IcTLReciWhbpVcXNQkoADIrLRNMZaEQqJeSYuzOGQ1457p4c6UNkdcprcTDabnNFVYn1eDGwK-NTO_jsw&lib=MAV-k4GihlBHTvmdM35hRpd55ueH--ymm' >> data.js
+          
+          # 在檔案結尾附加一個分號，完成 JavaScript 語法
+          echo ";" >> data.js
+          
+          echo "data.js 檔案已成功建立。"
+
+      # 步驟 3: 提交並推送變動到倉庫
+      # 這段程式碼會檢查 data.js 是否有變動，如果有，就自動 commit & push
+      - name: Commit and push if changed
+        run: |
+          # 設定 Git 的使用者名稱和 Email
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions-bot@github.com"
+          
+          # 將 data.js 加入 Git 暫存區
+          git add data.js
+          
+          # 檢查是否有檔案變動
+          # --quiet 會讓指令在沒有變動時回傳成功(exit code 0)，有變動時回傳失敗(exit code 1)
+          # 'git diff --staged --quiet' 的意思是「如果暫存區是空的，就什麼都不做」
+          if git diff --staged --quiet; then
+            echo "資料沒有變動，無需提交。"
+          else
+            # 如果有變動，則建立一個提交訊息並推送到 main 分支
+            git commit -m "📊 自動更新外部資料 - $(date -u)"
+            git push
+          fi
