@@ -106,30 +106,6 @@
          }
          }
          
-         function submitPasswordOld() {
-           if (checkLockStatus()) return;
-         
-           const pw = document.getElementById("passwordInput").value.trim();
-           google.script.run.withSuccessHandler(result => {
-             if (result) {
-               localStorage.setItem("isLoggedIn", "yes");
-               localStorage.setItem("loginTime", Date.now().toString());
-               localStorage.removeItem("failCount");
-               localStorage.removeItem("lockTime");
-               loadMainApp();
-             } else {
-               let count = parseInt(localStorage.getItem("failCount") || "0") + 1;
-               localStorage.setItem("failCount", count);
-         
-               if (count >= MAX_ATTEMPTS) {
-                 localStorage.setItem("lockTime", Date.now().toString());
-                 document.getElementById("error").textContent = "錯誤過多，已鎖定 5 分鐘";
-               } else {
-                 document.getElementById("error").textContent = `密碼錯誤，您還有 ${MAX_ATTEMPTS - count} 次機會`;
-               }
-             }
-           }).checkPassword(pw);
-         }
          
          function loadMainApp() {
            document.getElementById("loginPage").classList.add("hidden");
@@ -184,6 +160,7 @@
          `;
            }
          
+           /*
            function checkUpdate() {
              google.script.run.withSuccessHandler(function(time) {
                console.log("取得時間：", time);
@@ -198,6 +175,7 @@
          
            // 第一次載入時馬上更新一次
            updateApp();
+           */
          }
          
          
