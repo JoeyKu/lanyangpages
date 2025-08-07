@@ -27,7 +27,7 @@ jobs:
       - name: Fetch data and create JS file
         run: |
           echo "var frontDestData = " > data.js
-          curl -sL 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiAgnURLEkQGoZGMzWMNHdJl-GpyHQskF6A4PrM5D098Wa6hWhQ6gNJ-Nunou9Sr1YLMmV7IaDOoWvgVv18PcnJuYMXxY2a0lucBdUGc4xckUtQ-Pa6YJgv2CR4oK_zA6FNp6vezAVHC9WQ2a6NKSNirlSaPo0b_3B70DH1XBlXY-MkccH-RiZpt7RXz9XkfDoIXPqLksF80IcTLReciWhbpVcXNQkoADIrLRNMZaEQqJeSYuzOGQ1457p4c6UNkdcprcTDabnNFVYn1eDGwK-NTO_jsw&lib=MAV-k4GihlBHTvmdM35hRpd55ueH--ymm' >> data.js # 記得換成你的網址
+          curl -sL 'https://script.google.com/macros/s/AKfycbwdka7Uf1r5QlleGSZU0LhQcteXf6wgywNArQ1x9ckxv6OMvy3K8Y8EuS_52PF5arVF/exec?action=getRecentData' >> data.js
           echo ";" >> data.js
           echo "data.js 檔案已成功建立。"
 
