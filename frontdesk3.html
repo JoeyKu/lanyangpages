@@ -93,22 +93,27 @@
                  return;
              }
              
-             const apiKey = localStorage.getItem("apiKey");
+             /*const apiKey = localStorage.getItem("apiKey");
              if (!apiKey) {
                  console.error("API Key not found, logging out.");
                  logout();
                  return;
-             }
+             }*/
 
              const getInfoUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/getinfo";
 
              try {
+                const token = localStorage.getItem("token");
+		if (!token) {
+                    
+		    throw new Error(`API returned status ${response.status}`);
+		}
                 const response = await fetch(getInfoUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ apikey: apiKey }),
+			'Authorization': 'Bearer ' + token
+                    }
                 });
 
                 if (!response.ok) {
@@ -266,7 +271,7 @@
          function logout() {
            localStorage.removeItem("isLoggedIn");
            localStorage.removeItem("loginTime");
-           localStorage.removeItem("apiKey"); // 登出時也清除 API Key
+           localStorage.removeItem("token");
            location.reload();
          }
       </script>
