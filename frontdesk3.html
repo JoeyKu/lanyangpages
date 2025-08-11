@@ -19,198 +19,239 @@
       <!-- 主畫面容器 -->
       <div id="app" class="min-h-screen px-6 py-8 sm:px-4 sm:py-6 hidden"></div>
       <script>
-         // --- 後端 API 端點 ---
-         const LOGIN_API_URL = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws//login";   // <--- 請替換成您的 /login 端點
-         const GETINFO_API_URL = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws//getinfo"; // <--- 請替換成您的 /getinfo 端點
-
-         // --- 舊的計時與鎖定邏輯 (可以保留) ---
-         const MAX_LOGIN_DURATION = 7 * 24 * 60 * 60 * 1000;
-         const MAX_ATTEMPTS = 3;
-         const LOCK_DURATION = 5 * 60 * 1000;
          
-         // --- 頁面載入時的檢查邏輯 ---
+         let lastUpdate = null;
+         
          window.addEventListener("DOMContentLoaded", () => {
-           const token = localStorage.getItem("jwtToken");
-           const loginTime = parseInt(localStorage.getItem("loginTime") || "0");
-           const now = Date.now();
-
-           // 檢查：1. 是否有 token  2. 登入時間是否在 7 天內
-           if (token && (now - loginTime < MAX_LOGIN_DURATION)) {
-             loadMainApp();
-           } else {
-             logout(); // 如果 token 不存在或時間過期，確保是登出狀態
-             document.getElementById("loginPage").classList.remove("hidden");
-           }
-         
-           checkLockStatus();
+             const token = localStorage.getItem("jwtToken");
+	     if (token) { //FIXME: here!
+	         loadMainApp();
+	     } else {
+		logout(); // 如果 token 不存在或時間過期，確保是登出狀態
+             	document.getElementById("loginPage").classList.remove("hidden");
+	    }
          });
          
-         function checkLockStatus() {
-           const lockTime = parseInt(localStorage.getItem("lockTime") || "0");
-           const now = Date.now();
-           const errorDiv = document.getElementById("error");
-         
-           if (lockTime && now - lockTime < LOCK_DURATION) {
-             const remaining = Math.ceil((LOCK_DURATION - (now - lockTime)) / 1000);
-             errorDiv.textContent = `密碼已錯誤超過 ${MAX_ATTEMPTS} 次，請 ${remaining} 秒後再試`;
-             return true;
-           }
-         
-           if (lockTime && now - lockTime >= LOCK_DURATION) {
-             localStorage.removeItem("lockTime");
-             localStorage.removeItem("failCount");
-           }
-           return false;
-         }
-         
-         // -------------------- 登入函數 (升級為 JWT) --------------------
+         // -------------------- 修改開始 (1/2) --------------------
          async function submitPassword() {
-           if (checkLockStatus()) return;
-         
            const pw = document.getElementById("passwordInput").value.trim();
            const errorDiv = document.getElementById("error");
-           errorDiv.textContent = ''; // 清除舊錯誤
+           const loginUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/login";
 
            try {
-               const response = await fetch(LOGIN_API_URL, {
+               const response = await fetch(loginUrl, {
                    method: 'POST',
-                   headers: { 'Content-Type': 'application/json' },
+                   headers: {
+                       'Content-Type': 'application/json',
+                   },
                    body: JSON.stringify({ pass: pw }),
                });
 
                const result = await response.json();
 
-               if (response.ok && result.token) {
+	      if (response.ok && result.token) {
                    // 登入成功
-                   console.log("登入成功，收到 JWT。");
-                   localStorage.setItem("loginTime", Date.now().toString()); // <-- 記錄登入時間
-                   localStorage.setItem("jwtToken", result.token);         // <-- 儲存 JWT
-                   localStorage.removeItem("failCount");
-                   localStorage.removeItem("lockTime");
+                   localStorage.setItem("jwtToken", result.token);
                    loadMainApp();
                } else {
                    // 登入失敗 (密碼錯誤或後端其他問題)
                    let count = parseInt(localStorage.getItem("failCount") || "0") + 1;
                    localStorage.setItem("failCount", count);
                    
-                   if (count >= MAX_ATTEMPTS) {
-                       localStorage.setItem("lockTime", Date.now().toString());
-                       errorDiv.textContent = "錯誤過多，已鎖定 5 分鐘";
-                   } else {
-                       errorDiv.textContent = `密碼錯誤，您還有 ${MAX_ATTEMPTS - count} 次機會`;
-                   }
                }
            } catch (error) {
-               console.error('登入請求失敗:', error);
-               errorDiv.textContent = "登入請求失敗，請檢查網路連線。";
+               console.error('Login request failed:', error);
+               errorDiv.textContent = "登入請求失敗，請檢查網路連線或稍後再試。";
            }
          }
-         
-         // -------------------- 主應用載入函數 (升級為 JWT) --------------------
+         // -------------------- 修改結束 (1/2) --------------------
+
          function loadMainApp() {
            document.getElementById("loginPage").classList.add("hidden");
            document.getElementById("app").classList.remove("hidden");
          
+           // -------------------- 修改開始 (2/2) --------------------
            async function updateApp() {
-             const token = localStorage.getItem("jwtToken");
-             
-             // 如果在 localStorage 中找不到 token，則登出
-             if (!token) {
+            const token = localStorage.getItem("jwtToken");
+	    if (!token) {
                  console.log("找不到 Token，執行登出。");
-                 logout();
-                 return;
-             }
+                  logout();
+                  return;
+              }
+
+             const getInfoUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/getinfo";
 
              try {
-                // 發送請求，並在標頭中附上 JWT
-                const response = await fetch(GETINFO_API_URL, {
-                    method: 'GET', // 或 POST，取決於您的 Lambda 設定
+                const response = await fetch(getInfoUrl, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}` // <-- 核心修改：使用 Bearer Token
-                    },
+                        'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`
+                    }
                 });
 
-                // 檢查後端的回應狀態碼
-                if (response.status === 401) { // 401 Unauthorized
-                    // 這通常表示 token 過期或無效
+	     if (response.status === 401) {
                     console.log("Token 無效或已過期，執行登出。");
                     logout();
                     return;
                 }
 
-                if (!response.ok) { // 處理 500 等其他伺服器錯誤
-                    throw new Error(`伺服器錯誤，狀態碼: ${response.status}`);
+                if (!response.ok) {
+                    // 如果 API Key 失效或後端出錯
+                    throw new Error(`API returned status ${response.status}`);
                 }
 
                 const data = await response.json();
-                
-                // --- 後續的 UI 渲染邏輯完全不變 ---
                 const { events, annualEvents, faqs } = data;
                 const app = document.getElementById("app");
+          
                 app.innerHTML = `
                   <div class="max-w-4xl mx-auto">
                     <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-3xl font-bold text-center text-indigo-700">三聯單及佛光卡填單說明</h1>
-                    <button onclick="logout()" class="absolute top-4 right-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700">登出</button>
                     <br>
+          
                     <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700 mb-6 text-center">近期活動</h2>
-                    <div id="eventBlocks" class="space-y-4 mb-6">${renderEventBlocks(events, 'e')}</div>
-                    <div class="flex ...">${/* ... */}<button onclick="toggleSection('annualEventsBlocks', 'toggleAnnualBtn')" ...>展開 ▼</button></div>
-                    <div id="annualEventsBlocks" class="space-y-4 mb-6 hidden">${renderEventBlocks(annualEvents, 'l')}</div>
-                    <div class="flex ...">${/* ... */}<button onclick="toggleSection('faqSection', 'toggleFaqBtn')" ...>展開 ▼</button></div>
-                    <div id="faqSection" class="space-y-4 mb-6 hidden">${renderFaqs(faqs)}</div>
-                  </div>`;
+                    <div id="eventBlocks" class="space-y-4 mb-6">
+                      ${renderEventBlocks(events, 'e')}
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-4 mb-6 text-center">
+                      <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700">例行活動</h2>
+                      <button onclick="toggleSection('annualEventsBlocks', 'toggleAnnualBtn')" id="toggleAnnualBtn" class="text-indigo-700 underline text-lg md:text-5xl lg:text-xl">
+                        展開 ▼
+                      </button>
+                    </div>
+          
+                    <div id="annualEventsBlocks" class="space-y-4 mb-6 hidden">
+                      ${renderEventBlocks(annualEvents, 'l')}
+                    </div>
+          
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-4 mb-6 text-center">
+                      <h2 class="text-2xl sm:text-3xl md:text-5xl lg:text-2xl font-bold text-indigo-700">常見問答</h2>
+                      <button onclick="toggleSection('faqSection', 'toggleFaqBtn')" id="toggleFaqBtn" class="text-indigo-700 underline text-lg md:text-5xl lg:text-xl">
+                        展開 ▼
+                      </button>
+                    </div>
+                    
+                    <div id="faqSection" class="space-y-4 mb-6 hidden">
+                      ${renderFaqs(faqs)}
+                    </div>
+                  </div>
+                `;
              } catch (error) {
-                console.error('獲取應用資料失敗:', error);
-                logout(); // 如果獲取資料時發生任何錯誤，都安全地將使用者登出
+                console.error('Failed to fetch app data:', error);
+                // 可以在這裡顯示一個錯誤訊息給使用者，或直接登出
+                logout();
              }
            }
-           
+           // -------------------- 修改結束 (2/2) --------------------
+         
+           /*
+           function checkUpdate() {
+             google.script.run.withSuccessHandler(function(time) {
+               console.log("取得時間：", time);
+         
+               if (window.lastUpdate && window.lastUpdate !== time) {
+                 updateApp(); // 資料有更新，重整
+               }
+               window.lastUpdate = time;
+             }).getLastUpdateTime();
+           }
+           setInterval(checkUpdate, 60 * 1000); // 每 60 秒檢查一次
+           */
+         
+           // 第一次載入時馬上更新一次
            updateApp();
          }
          
-         // -------------------- 登出函數 (升級為 JWT) --------------------
-         function logout() {
-           console.log("執行登出操作...");
-           localStorage.removeItem("loginTime");
-           localStorage.removeItem("jwtToken"); // <-- 主要移除 jwtToken
-           localStorage.removeItem("isLoggedIn"); // 為了相容舊邏輯，也移除這個
-           localStorage.removeItem("apiKey"); // 順便移除舊的 apiKey，保持乾淨
-           
-           // 直接重新載入頁面，這是最簡單、最可靠的重置狀態的方法
-           location.reload(); 
-         }
          
-         // --- 以下是您的 UI 渲染函數和輔助函數，完全不需要修改 ---
-         // (請將您原本的 renderFaqs, renderEventBlocks, toggleDetails, toggleSection 貼在這裡)
          function renderFaqs(faqs) {
            return faqs.map(faq => `
              <details class="bg-white rounded shadow p-4 text-lg md:text-5xl lg:text-xl leading-relaxed">
-               <summary class="text-lg md:text-5xl lg:text-xl cursor-pointer text-indigo-700 font-semibold">${faq.question}</summary>
-               <div class="mt-4 text-gray-700 leading-snug">${faq.answer.replace(/\n/g, '<br>').replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')}</div>
-             </details>`).join('');
+               <summary class="text-lg md:text-5xl lg:text-xl cursor-pointer text-indigo-700 font-semibold">
+                   ${faq.question}</summary>
+               <div class="mt-4 text-gray-700 leading-snug">
+                 ${faq.answer
+                   .replace(/\n/g, '<br>')
+                   .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
+                 }
+                </div>
+             </details>
+           `).join('');
          }
+         
          function renderEventBlocks(dataArray, blockPrefix) {
            return dataArray.map((e, index) => {
-             const warningText = e.warning ? `${e.warning.replace(/\n/g, '<br>').replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>').replace(/<a\b([^>]*)>/g, '<a style="color: blue; text-decoration: underline;" $1>')}<br>` : '';
-             const formattedDescription = e.description.replace(/\n/g, '<br>').replace(/\?([^?]+)\?/g, '<span style="background-color: red; color: white; padding: 2px 4px; border-radius: 4px;">?$1?</span>').replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>').replace(/\[佛光卡\]/g, '<span style="color: green; font-weight: bold;">[佛光卡]</span>').replace(/\[三聯單\]/g, '<span style="color: green; font-weight: bold;">[三聯單]</span>').replace(/\[百萬人興學三聯單\]/g, '<span style="color: green; font-weight: bold;">[百萬人興學三聯單]</span>');
-             let moreButton = '', detailContent = '';
+             const warningText = e.warning
+               ? `${
+                   e.warning
+                     .replace(/\n/g, '<br>')
+                     .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
+                     .replace(/<a\b([^>]*)>/g, '<a style="color: blue; text-decoration: underline;" $1>')
+                 }<br>`
+               : '';
+         
+             const formattedDescription = e.description
+               .replace(/\n/g, '<br>')
+               .replace(/\?([^?]+)\?/g, '<span style="background-color: red; color: white; padding: 2px 4px; border-radius: 4px;">?$1?</span>')
+               .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
+               .replace(/\[佛光卡\]/g, '<span style="color: green; font-weight: bold;">[佛光卡]</span>')
+               .replace(/\[三聯單\]/g, '<span style="color: green; font-weight: bold;">[三聯單]</span>')
+               .replace(/\[百萬人興學三聯單\]/g, '<span style="color: green; font-weight: bold;">[百萬人興學三聯單]</span>');
+         
+             let moreButton = '';
+             let detailContent = '';
              if (e.detail) {
                moreButton = `<button onclick="toggleDetails('${blockPrefix}-${index}')" class="text-indigo-600 text-lg md:text-5xl lg:text-xl mt-2">更多</button>`;
                detailContent = `<div id="detail-${blockPrefix}-${index}" class="mt-2 text-gray-500 text-lg md:text-5xl lg:text-xl hidden !leading-relaxed">${e.detail.replace(/\n/g, '<br>')}</div>`;
              }
-             return `<details class="bg-white rounded shadow p-4 text-lg md:text-5xl lg:text-xl leading-relaxed"><summary class="text-lg md:text-5xl lg:text-xl cursor-pointer text-indigo-700 font-semibold">${e.title}</summary><div class="text-red-700 mt-4 leading-snug">${warningText}</div><div class="mt-4 text-gray-700 leading-snug">${formattedDescription}</div><br>${moreButton}${detailContent}</details>`;
+         
+             return `
+         <details class="bg-white rounded shadow p-4 text-lg md:text-5xl lg:text-xl leading-relaxed">
+         <summary class="text-lg md:text-5xl lg:text-xl cursor-pointer text-indigo-700 font-semibold">${e.title}</summary>
+         
+         <div class="text-red-700  mt-4  leading-snug">${warningText}</div>
+         
+         <div class="mt-4 text-gray-700 leading-snug">${formattedDescription}</div>
+         <br>
+         ${moreButton}
+         ${detailContent}
+         </details>
+         `;
            }).join('');
          }
+         
          function toggleDetails(id) {
            const detailDiv = document.getElementById(`detail-${id}`);
-           if (detailDiv) { detailDiv.classList.toggle('hidden'); }
+           if (detailDiv) {
+             detailDiv.classList.toggle('hidden');
+           }
          }
+         
+         function toggleAnnualEvents() {
+         const block = document.getElementById("annualEventsBlocks");
+         const button = document.getElementById("toggleAnnualBtn");
+         
+         const isHidden = block.classList.contains("hidden");
+         block.classList.toggle("hidden");
+
+         button.textContent = isHidden ? "收起 ▲" : "展開 ▼";
+         }
+         
          function toggleSection(sectionId, buttonId) {
-           const section = document.getElementById(sectionId);
-           const button = document.getElementById(buttonId);
-           const isHidden = section.classList.contains("hidden");
-           section.classList.toggle("hidden");
-           button.textContent = isHidden ? "收起 ▲" : "展開 ▼";
+         const section = document.getElementById(sectionId);
+         const button = document.getElementById(buttonId);
+         
+         const isHidden = section.classList.contains("hidden");
+         section.classList.toggle("hidden");
+         
+         button.textContent = isHidden ? "收起 ▲" : "展開 ▼";
+         }
+         
+         function logout() {
+           localStorage.removeItem("isLoggedIn");
+           localStorage.removeItem("loginTime");
+           location.reload();
          }
       </script>
    </body>
