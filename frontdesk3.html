@@ -108,7 +108,6 @@
 		if (!token) {
 		    throw new Error(`API returned status ${response.status}`);
 		}
-		alert("bearer " + token)
                 const response = await fetch(getInfoUrl, {
                     method: 'POST',
                     headers: {
@@ -117,7 +116,6 @@
                     }
                 });
 
-                 alert(response)
                 if (!response.ok) {
                     // 如果 API Key 失效或後端出錯
                     throw new Error(`API returned status ${response.status}`);
