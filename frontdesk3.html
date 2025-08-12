@@ -67,7 +67,8 @@
                const result = await response.json();
 
                if (response.ok && result.token) {
-                   // 登入成功
+		       // 登入成功
+		   console.log("login OK")
                    localStorage.setItem("isLoggedIn", "yes");
                    localStorage.setItem("loginTime", Date.now().toString());
                    localStorage.setItem("token", result.token); // 儲存 token
@@ -87,7 +88,7 @@
            // -------------------- 修改開始 (2/2) --------------------
            async function updateApp() {
              if (!checkSessionValid()) {
-                 document.getElementById("loginPage").classList.remove("hidden");
+		 document.getElementById("loginPage").classList.remove("hidden");
                  document.getElementById("app").classList.add("hidden");
                  document.getElementById("passwordInput").value = '';
                  return;
@@ -105,17 +106,19 @@
              try {
                 const token = localStorage.getItem("token");
 		if (!token) {
-                    
 		    throw new Error(`API returned status ${response.status}`);
 		}
+		alert("bearer " + token)
                 const response = await fetch(getInfoUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+			'Access-Control-Allow-Origin': '*',
 			'Authorization': 'Bearer ' + token
                     }
                 });
 
+                 alert(response)
                 if (!response.ok) {
                     // 如果 API Key 失效或後端出錯
                     throw new Error(`API returned status ${response.status}`);
