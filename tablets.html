@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>法會報名系統</title>
+    <style>
+        :root {
+            --primary-color: #8c1515; --secondary-color: #fdfcf7; --text-color: #333;
+            --border-color: #ddd; --input-bg-color: #fff; --danger-color: #d9534f;
+            --secondary-btn-bg: #6c757d; --disabled-bg: #f1f1f1;
+        }
+        /* ★ 修改：增加基礎字體大小 */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 20px; background-color: var(--secondary-color); color: var(--text-color); line-height: 1.6; font-size: 17px; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .page { display: none; } .page.active { display: block; }
+        h1, h2, h3, h4 { color: var(--primary-color); text-align: center; }
+        fieldset { border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; margin-bottom: 20px; }
+        legend { font-weight: bold; color: var(--primary-color); padding: 0 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        input[type="text"], input[type="tel"], input[type="password"], select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; font-size: 1em; /* 繼承 body 字體大小 */ }
+        input:disabled { background-color: var(--disabled-bg); cursor: not-allowed; }
+        .other-input { display: none; margin-top: -10px; }
+        button { width: 100%; padding: 12px; background-color: var(--primary-color); color: white; border: none; border-radius: 4px; font-size: 1.05em; /* 相對放大 */ cursor: pointer; transition: background-color 0.3s; margin-top: 10px; }
+        button:hover { background-color: #a52a2a; }
+        .toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--primary-color); cursor: pointer; text-decoration: underline; }
+        .tablet-entry { border: 1px solid #e0e0e0; border-radius: 5px; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9; position: relative; margin-top: 15px; }
+        .btn-add { background-color: #5cb85c; } .btn-add:hover { background-color: #4cae4c; }
+        .btn-remove { position: absolute; top: -12px; right: -12px; background-color: var(--danger-color); color: white; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border-radius: 50%; width: 30px; height: 30px; padding: 0; font-size: 22px; /* 放大 */ font-weight: bold; line-height: 26px; /* 微調 */ text-align: center; transition: transform 0.2s ease, background-color 0.2s ease; }
+        .btn-remove:hover { background-color: #a52a2a; transform: scale(1.1); }
+        .marital-status-container, .gender-container { display: none; margin-bottom: 15px; }
+        .marital-status-options, .gender-options { display: flex; gap: 20px; align-items: center; }
+        .marital-status-options input, .gender-options input { width: auto; margin-bottom: 0; }
+        .marital-status-options label, .gender-options label { margin-bottom: 0; font-weight: normal; }
+        .consent-container { display: flex; align-items: flex-start; margin-bottom: 20px; margin-top: 10px; }
+        .consent-container input { width: auto; margin-top: 5px; margin-right: 10px; }
+        .consent-container label { font-weight: normal; font-size: 0.9em; color: #555; }
+        .preview-section { margin-bottom: 10px; }
+        .preview-section h3, .preview-group h4 { text-align: left; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
+        .preview-section p { margin: 5px 0; word-wrap: break-word; } .preview-section p strong { color: #555; min-width: 80px; display: inline-block; }
+        .preview-group { margin-bottom: 25px; }
+        .preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        .preview-table th, .preview-table td { border: 1px solid var(--border-color); padding: 8px; text-align: left; word-wrap: break-word; }
+        .preview-table th { background-color: #f2f2f2; }
+        .pagination-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .pagination-controls button { width: auto; padding: 5px 15px; font-size: 0.9em; /* 相對縮小 */ }
+        .pagination-controls button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .no-data-message { color: #888; text-align: center; padding: 15px; }
+        .preview-actions { display: flex; gap: 10px; }
+        .btn-secondary { background-color: var(--secondary-btn-bg); } .btn-secondary:hover { background-color: #5a6268; }
+        footer { text-align: center; margin-top: 20px; font-size: 0.9em; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HTML 結構不變 -->
+        <div id="login-page" class="page active"><h1>系統登入</h1><form id="login-form" onsubmit="handleLogin(event)"><label for="login-phone">手機號碼</label><input type="tel" id="login-phone" placeholder="請輸入您的手機號碼" required><label for="login-password">密碼</label><input type="password" id="login-password" placeholder="請輸入您的密碼" required><button type="submit">登入</button></form><span class="toggle-link" onclick="showPage('signup-page')">還沒有帳號？點此註冊</span></div>
+        <div id="signup-page" class="page"><h1>建立新帳號</h1><form id="signup-form" onsubmit="handleSignup(event)"><label for="signup-phone">手機號碼</label><input type="tel" id="signup-phone" placeholder="將作為您的登入帳號" required><label for="signup-password">自訂密碼</label><input type="password" id="signup-password" placeholder="請設定您的密碼" required><label for="signup-password-confirm">確認密碼</label><input type="password" id="signup-password-confirm" placeholder="請再次輸入您的密碼" required><div class="consent-container"><input type="checkbox" id="consent-checkbox" required><label for="consent-checkbox">本人已閱讀並同意，將此次填寫的個人資料儲存於本系統，以供未來法會報名時快速帶入使用。</label></div><button type="submit">同意並註冊</button></form><span class="toggle-link" onclick="showPage('login-page')">已經有帳號了？返回登入</span></div>
+        <div id="main-form-page" class="page"><h2>法會牌位資料填寫</h2><form id="data-form" onsubmit="goToPreview(event)"><fieldset><legend>一、基本資料</legend><label for="user-name">姓名</label><input type="text" id="user-name" required><label for="user-phone">手機號碼</label><input type="tel" id="user-phone"><label for="user-address">地址</label><input type="text" id="user-address" required></fieldset><fieldset><legend>二、法會資料</legend><label for="service-name">參加法會名稱</label><select id="service-name" onchange="toggleOtherInput(this, 'service-name-other')" required><option value="" disabled selected>請選擇...</option><option value="地藏法會">地藏法會</option><option value="水懺法會">水懺法會</option><option value="梁皇法會">梁皇法會</option><option value="彌陀法會">彌陀法會</option><option value="隨堂超薦">隨堂超薦</option><option value="北區萬緣水陸法會">北區萬緣水陸法會</option><option value="中區萬緣水陸法會">中區萬緣水陸法會</option><option value="南區萬緣水陸法會">南區萬緣水陸法會</option><option value="other">其它(自行填寫)</option></select><input type="text" id="service-name-other" class="other-input" placeholder="請自行填寫法會名稱"></fieldset><fieldset><legend>三、超薦牌位資料</legend><div id="tablet-entries-container"></div><button type="button" class="btn-add" onclick="addTabletEntry()">新增一筆牌位資料</button></fieldset><button type="submit">前往預覽</button></form><span class="toggle-link" onclick="logout()">登出</span></div>
+        <div id="preview-page" class="page"><h2>資料預覽確認</h2><div class="preview-section"><h3>基本 & 法會資料</h3><p><strong>姓名：</strong><span id="preview-user-name"></span></p><p><strong>手機：</strong><span id="preview-user-phone"></span></p><p><strong>地址：</strong><span id="preview-user-address"></span></p><p><strong>法會：</strong><span id="preview-service-name"></span></p></div><div class="preview-group" id="preview-group-large"><h4>大牌</h4><div class="table-container"></div><div class="pagination-controls"></div></div><div class="preview-group" id="preview-group-medium"><h4>中牌</h4><div class="table-container"></div><div class="pagination-controls"></div></div><div class="preview-group" id="preview-group-small"><h4>小牌</h4><div class="table-container"></div><div class="pagination-controls"></div></div><div class="preview-actions"><button type="button" class="btn-secondary" onclick="showPage('main-form-page')">返回修改</button><button type="button" id="confirm-submit-btn" onclick="handleFinalSubmit()">確認送出</button></div></div>
+    </div>
+    <footer><p>&copy; 2025 法會報名系統</p></footer>
+
+    <script>
+        // --- 核心頁面控制函式 ---
+        function showPage(pageId) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); const page = document.getElementById(pageId); if (page) page.classList.add('active'); }
+        function handleLogin(event) { event.preventDefault(); alert('登入成功！'); document.getElementById('user-phone').value = document.getElementById('login-phone').value; tabletContainer.innerHTML = ''; addTabletEntry(); showPage('main-form-page'); }
+        function handleSignup(event) { event.preventDefault(); if (!event.target.checkValidity()) { event.target.reportValidity(); return; } if (document.getElementById('signup-password').value !== document.getElementById('signup-password-confirm').value) { alert('兩次輸入的密碼不一致！'); return; } alert('註冊成功！請返回登入頁面登入。'); showPage('login-page'); }
+        function logout() { alert('您已成功登出。'); formDataToSubmit = null; document.getElementById('login-form').reset(); showPage('login-page'); }
+        
+        // --- ★ 資料定義區 (更新文字與 key) ---
+        const baseTitles = [ "祖父", "祖母", "父", "母", "夫", "妻", "兒", "女", "兄", "弟", "姊", "妹", "地基主", "()氏歷代祖先", "未出世子女", "十方法界一切眾生", "累劫冤親債主", "朋友", "other" ];
+        const largeOnlyTitles = [ "()氏歷代祖先 + 父 + 母", "()氏歷代祖先 + 父", "()氏歷代祖先 + 母", "()氏歷代祖先 + 祖父 + 祖母", "()氏歷代祖先 + 祖父", "()氏歷代祖先 + 祖母" ];
+        const titleOptionsMap = { '大': [...largeOnlyTitles, ...baseTitles], '中': baseTitles, '小': baseTitles };
+        const dynamicFieldConfig = {
+            "祖父": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "祖母": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "父": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "母": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "夫": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "妻": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "兒": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "女": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "兄": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "弟": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "姊": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "妹": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "地基主": [{label: "地址", key: "address", placeholder: "請填寫地址"}],
+            "()氏歷代祖先": [{label: "姓氏", key: "ancestor_surname", placeholder: "請填寫姓氏"}], // key 已更新
+            "朋友": [{label: "姓名", key: "name", placeholder: "請填寫姓名"}], "other": [{label: "內容", key: "content", placeholder: "請自行填寫內容"}],
+            "()氏歷代祖先 + 父 + 母": [{label: "()氏歷代祖先", key: "ancestor_surname", placeholder: "請填寫姓氏"}, {label: "父", key: "father_name", placeholder: "請填寫姓名"}, {label: "母", key: "mother_name", placeholder: "請填寫姓名"}],
+            "()氏歷代祖先 + 父": [{label: "()氏歷代祖先", key: "ancestor_surname", placeholder: "請填寫姓氏"}, {label: "父", key: "father_name", placeholder: "請填寫姓名"}],
+            "()氏歷代祖先 + 母": [{label: "()氏歷代祖先", key: "ancestor_surname", placeholder: "請填寫姓氏"}, {label: "母", key: "mother_name", placeholder: "請填寫姓名"}],
+            "()氏歷代祖先 + 祖父 + 祖母": [{label: "()氏歷代祖先", key: "ancestor_surname", placeholder: "請填寫姓氏"}, {label: "祖父", key: "grandfather_name", placeholder: "請填寫姓名"}, {label: "祖母", key: "grandmother_name", placeholder: "請填寫姓名"}],
+            "()氏歷代祖先 + 祖父": [{label: "()氏歷代祖先", key: "ancestor_surname", placeholder: "請填寫姓氏"}, {label: "祖父", key: "grandfather_name", placeholder: "請填寫姓名"}],
+            "()氏歷代祖先 + 祖母": [{label: "()氏歷代祖先", key: "ancestor_surname", placeholder: "請填寫姓氏"}, {label: "祖母", key: "grandmother_name", placeholder: "請填寫姓名"}],
+            "未出世子女": [], "十方法界一切眾生": [], "累劫冤親債主": []
+        };
+        const maritalStatusTriggers = ["兄", "弟", "姊", "妹", "兒", "女", "朋友", "other"];
+        const genderTriggers = ["朋友", "other"];
+        const ITEMS_PER_PAGE = 2;
+        let formDataToSubmit = null, previewState = {}, tabletCounter = 0;
+        
+        function handleFamilyMemberInput(event) {
+            const currentInput = event.target;
+            const parentEntry = currentInput.closest('.tablet-entry'); if (!parentEntry) return;
+            const allInputs = parentEntry.querySelectorAll('.family-member-input');
+            const atLeastOneHasValue = Array.from(allInputs).some(input => input.value.trim() !== '');
+            if (atLeastOneHasValue) { allInputs.forEach(input => input.required = false); } 
+            else { allInputs.forEach((input, index) => { input.required = (index === 0); }); }
+        }
+        
+        function renderFamilyMembersInputs(triggerElement) {
+            const parent = triggerElement.closest('.tablet-entry'); if (!parent) return;
+            const size = parent.querySelector('.tablet-size').value;
+            const title = parent.querySelector('.relation-title').value;
+            const container = parent.querySelector('.family-members-container');
+            container.innerHTML = '';
+            let count = 4;
+            if (size === '小') { count = (title === '未出世子女') ? 2 : 1; } 
+            else if (size === '中') { count = (title === '累劫冤親債主') ? 1 : 2; } 
+            else if (size === '大') {
+                if (title === '累劫冤親債主') { count = 1; } 
+                else if (['未出世子女', '地基主', '十方法界一切眾生'].includes(title)) { count = 2; } 
+                else if (title !== 'other') { count = 4; }
+            }
+            for (let i = 0; i < count; i++) {
+                const isRequired = (i === 0);
+                container.innerHTML += `<input type="text" class="family-member-input" placeholder="個人姓名" ${isRequired ? 'required' : ''}>`;
+            }
+            container.querySelectorAll('.family-member-input').forEach(input => {
+                input.addEventListener('input', handleFamilyMemberInput);
+            });
+        }
+
+        function updateTitleOptions(tabletSizeSelect) {
+            const parent = tabletSizeSelect.closest('.tablet-entry');
+            const titleSelect = parent.querySelector('.relation-title');
+            const dynamicFieldsContainer = parent.querySelector('.dynamic-fields-container');
+            titleSelect.innerHTML = '<option value="" disabled selected>請選擇稱謂...</option>';
+            dynamicFieldsContainer.innerHTML = '';
+            const selectedSize = tabletSizeSelect.value;
+            if (!selectedSize) { titleSelect.disabled = true; return; }
+            titleSelect.disabled = false;
+            (titleOptionsMap[selectedSize] || []).forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt; optionEl.textContent = opt;
+                titleSelect.appendChild(optionEl);
+            });
+            renderFamilyMembersInputs(tabletSizeSelect);
+        }
+        function renderDynamicFields(titleSelect) {
+            const parent = titleSelect.closest('.tablet-entry');
+            const container = parent.querySelector('.dynamic-fields-container');
+            container.innerHTML = '';
+            const selectedTitle = titleSelect.value;
+            (dynamicFieldConfig[selectedTitle] || []).forEach(field => {
+                container.innerHTML += `<label>${field.label}</label><input type="text" class="dynamic-field" data-key="${field.key}" placeholder="${field.placeholder}" required>`;
+            });
+            toggleMaritalStatus(titleSelect);
+            toggleGender(titleSelect);
+            renderFamilyMembersInputs(titleSelect);
+        }
+        function toggleMaritalStatus(select) {
+            const container = select.closest('.tablet-entry').querySelector('.marital-status-container');
+            const radios = container.querySelectorAll('input[type="radio"]');
+            const shouldShow = maritalStatusTriggers.includes(select.value);
+            container.style.display = shouldShow ? 'block' : 'none';
+            radios.forEach(r => r.required = shouldShow);
+        }
+        function toggleGender(select) {
+            const container = select.closest('.tablet-entry').querySelector('.gender-container');
+            const radios = container.querySelectorAll('input[type="radio"]');
+            const shouldShow = genderTriggers.includes(select.value);
+            container.style.display = shouldShow ? 'block' : 'none';
+            radios.forEach(r => r.required = shouldShow);
+        }
+        
+        const tabletContainer = document.getElementById('tablet-entries-container');
+        function addTabletEntry() {
+            tabletCounter++;
+            const entryId = `tablet-entry-${tabletCounter}`, maritalStatusName = `marital-status-${tabletCounter}`, genderName = `gender-${tabletCounter}`;
+            const newEntry = document.createElement('div');
+            newEntry.className = 'tablet-entry'; newEntry.id = entryId;
+            newEntry.innerHTML = `
+                <button type="button" class="btn-remove" onclick="removeTabletEntry('${entryId}')">&times;</button>
+                <label>牌位</label>
+                <select class="tablet-size" onchange="updateTitleOptions(this)" required><option value="" disabled selected>請選擇大小...</option><option value="大">大</option><option value="中">中</option><option value="小">小</option></select>
+                <label>稱謂</label>
+                <select class="relation-title" onchange="renderDynamicFields(this)" required disabled><option value="" disabled selected>請先選擇牌位大小</option></select>
+                <div class="dynamic-fields-container"></div>
+                <div class="marital-status-container"><label>婚姻狀況</label><div class="marital-status-options"><input type="radio" id="${maritalStatusName}-married" name="${maritalStatusName}" value="已婚"><label for="${maritalStatusName}-married">已婚</label><input type="radio" id="${maritalStatusName}-unmarried" name="${maritalStatusName}" value="未婚" checked><label for="${maritalStatusName}-unmarried">未婚</label></div></div>
+                <div class="gender-container"><label>性別</label><div class="gender-options"><input type="radio" id="${genderName}-male" name="${genderName}" value="男" checked><label for="${genderName}-male">男</label><input type="radio" id="${genderName}-female" name="${genderName}" value="女"><label for="${genderName}-female">女</label></div></div>
+                <label>陽上眷屬</label>
+                <div class="family-members-container"><input type="text" class="family-member-input" placeholder="個人姓名" required></div>
+            `;
+            tabletContainer.appendChild(newEntry);
+            newEntry.querySelector('.family-member-input').addEventListener('input', handleFamilyMemberInput);
+        }
+
+        function removeTabletEntry(entryId) { const el = document.getElementById(entryId); if (el) el.remove(); }
+        
+        function goToPreview(event) {
+            event.preventDefault();
+            if (!document.getElementById('data-form').checkValidity()) { document.getElementById('data-form').reportValidity(); return; }
+            if (tabletContainer.children.length === 0) { alert('請至少新增一筆超薦牌位資料！'); return; }
+            let serviceName = document.getElementById('service-name').value;
+            if (serviceName === 'other') serviceName = document.getElementById('service-name-other').value;
+            const mainData = { user_name: document.getElementById('user-name').value, user_phone: document.getElementById('user-phone').value, user_address: document.getElementById('user-address').value, service_name: serviceName, tablets: [] };
+            for (const entry of document.querySelectorAll('.tablet-entry')) {
+                const maritalRadio = entry.querySelector('input[name^="marital-status-"]:checked');
+                const genderRadio = entry.querySelector('input[name^="gender-"]:checked');
+                const details = {};
+                entry.querySelectorAll('.dynamic-field').forEach(input => { details[input.dataset.key] = input.value; });
+                const familyMembers = Array.from(entry.querySelectorAll('.family-member-input')).map(input => input.value.trim()).filter(value => value).join(' ');
+                mainData.tablets.push({
+                    tablet_size: entry.querySelector('.tablet-size').value, relation_title: entry.querySelector('.relation-title').value,
+                    family_members: familyMembers, details: details,
+                    marital_status: maritalRadio && maritalRadio.required ? maritalRadio.value : null,
+                    gender: genderRadio && genderRadio.required ? genderRadio.value : null
+                });
+            }
+            formDataToSubmit = mainData; populatePreview(formDataToSubmit); showPage('preview-page');
+        }
+
+        function populatePreview(data) {
+            document.getElementById('preview-user-name').textContent = data.user_name;
+            document.getElementById('preview-user-phone').textContent = data.user_phone;
+            document.getElementById('preview-user-address').textContent = data.user_address;
+            document.getElementById('preview-service-name').textContent = data.service_name;
+            resetPreviewState();
+            data.tablets.forEach(tablet => {
+                if (previewState[tablet.tablet_size]) { previewState[tablet.tablet_size].tablets.push(tablet); }
+            });
+            Object.keys(previewState).forEach(size => {
+                const state = previewState[size];
+                state.totalPages = Math.ceil(state.tablets.length / ITEMS_PER_PAGE) || 1;
+                renderTable(size);
+            });
+        }
+        
+        function renderTable(size) {
+            const sizeMap = { '大': 'large', '中': 'medium', '小': 'small' };
+            const state = previewState[size];
+            const tableContainer = document.querySelector(`#preview-group-${sizeMap[size]} .table-container`);
+            const paginationContainer = document.querySelector(`#preview-group-${sizeMap[size]} .pagination-controls`);
+            tableContainer.innerHTML = ''; paginationContainer.innerHTML = '';
+            if (state.tablets.length === 0) { tableContainer.innerHTML = `<p class="no-data-message">無此尺寸的牌位資料</p>`; return; }
+            const pageItems = state.tablets.slice((state.currentPage - 1) * ITEMS_PER_PAGE, state.currentPage * ITEMS_PER_PAGE);
+            let tableHTML = `<table class="preview-table"><thead><tr><th>稱謂</th><th>亡者 / 項目 / 地址</th><th>陽上眷屬</th></tr></thead><tbody>`;
+            pageItems.forEach(tablet => {
+                const config = dynamicFieldConfig[tablet.relation_title] || [];
+                let deceasedInfoDisplay = config.map(field => {
+                    const value = tablet.details[field.key] || '';
+                    return value ? `${field.label}: ${value}` : '';
+                }).filter(Boolean).join('<br>');
+                let suffix = '';
+                if (tablet.gender) suffix += `(${tablet.gender})`;
+                if (tablet.marital_status) suffix += `(${tablet.marital_status})`;
+                if (suffix && config.length === 1 && (config[0].key === 'name' || config[0].key === 'content')) {
+                    const singleValue = tablet.details.name || tablet.details.content;
+                    deceasedInfoDisplay = `${singleValue} ${suffix}`;
+                } else if (suffix) {
+                     deceasedInfoDisplay += `<br>${suffix.trim()}`;
+                }
+                tableHTML += `<tr><td>${tablet.relation_title}</td><td>${deceasedInfoDisplay || '(空白)'}</td><td>${tablet.family_members}</td></tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+            tableContainer.innerHTML = tableHTML;
+            if (state.totalPages > 1) { paginationContainer.innerHTML = `<button onclick="changePage('${size}', -1)" ${state.currentPage === 1 ? 'disabled' : ''}>上一頁</button><span>第 ${state.currentPage} / ${state.totalPages} 頁</span><button onclick="changePage('${size}', 1)" ${state.currentPage === state.totalPages ? 'disabled' : ''}>下一頁</button>`; }
+        }
+        
+        function resetPreviewState() { previewState = { '大': { tablets: [], currentPage: 1, totalPages: 1 }, '中': { tablets: [], currentPage: 1, totalPages: 1 }, '小': { tablets: [], currentPage: 1, totalPages: 1 } }; }
+        function changePage(size, direction) { const state = previewState[size]; const newPage = state.currentPage + direction; if (newPage >= 1 && newPage <= state.totalPages) { state.currentPage = newPage; renderTable(size); } }
+        
+        function handleFinalSubmit() {
+            if (!formDataToSubmit) { alert('沒有資料可以提交！'); return; }
+            console.log('--- FINAL SUBMISSION TO BACKEND ---'); console.log(JSON.stringify(formDataToSubmit, null, 2));
+            alert('您的資料已成功提交！');
+            document.getElementById('data-form').reset(); tabletContainer.innerHTML = ''; addTabletEntry(); showPage('main-form-page');
+            formDataToSubmit = null;
+        }
+        
+        function toggleOtherInput(select, inputId) {
+             const otherInput = document.getElementById(inputId); if (!otherInput) return;
+            otherInput.style.display = (select.value === 'other') ? 'block' : 'none'; otherInput.required = (select.value === 'other');
+            if (select.value !== 'other') otherInput.value = '';
+        }
+
+        // --- 初始化 ---
+        addTabletEntry();
+        document.addEventListener('DOMContentLoaded', () => { showPage('login-page'); });
+    </script>
+</body>
+</html>
