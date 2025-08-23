@@ -723,7 +723,6 @@
         }
 
         function hidePlaqueForm() {
-            //JOEY
             document.getElementById('benefactor-plaque-entries-container').innerHTML = '';
             plaqueFormSection.classList.add('hidden');
             plaqueSection.classList.remove('hidden');
@@ -865,7 +864,6 @@
         }
 
         function populateFormWithData(data) {
-            //JOEY
             showPlaqueForm();
             // 修正: 分解 showPlaqueForm 的動作，避免 reset() 清除所有東西
             plaqueSection.classList.add('hidden');
@@ -909,11 +907,6 @@
             } else {
                 addPlaqueEntry('plaque-entries-container');
             }
-
-            //JOEY
-            //plaqueSection.classList.add('hidden');
-            //plaqueFormSection.classList.remove('hidden');
-            //JOEY
         }
 
         function populateBenefactorFormWithData(data) {
