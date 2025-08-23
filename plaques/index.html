@@ -175,11 +175,11 @@
             text-align: center;
             padding: 0;
         }
-        #add-plaque-btn {
+        #add-plaque-btn, #add-benefactor-plaque-btn {
             background-color: #28a745;
             margin-top: 1rem;
         }
-        #add-plaque-btn:hover {
+        #add-plaque-btn:hover, #add-benefactor-plaque-btn:hover {
             background-color: #218838;
         }
         .form-actions {
@@ -187,11 +187,21 @@
             gap: 1rem;
             margin-top: 2rem;
         }
-        #cancel-plaque-form, #back-to-edit-btn {
+        #cancel-plaque-form, #back-to-edit-btn, #cancel-benefactor-form {
             background-color: #6c757d;
         }
-        #cancel-plaque-form:hover, #back-to-edit-btn:hover {
+        #cancel-plaque-form:hover, #back-to-edit-btn:hover, #cancel-benefactor-form:hover {
             background-color: #5a6268;
+        }
+        .benefactor-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        #benefactor-entries-container.benefactor-grid > input {
+            width: 90%;
+            padding: 0.5rem;
+            font-size: 1rem;
         }
 
         /* 預覽畫面樣式 */
@@ -326,18 +336,17 @@
 
         <!-- Plaque Main Section -->
         <div id="plaque-section" class="hidden">
-            <h2>牌位資訊</h2>
-            <button onclick="showPlaqueForm()">新增牌位資訊(大中小牌)</button>
-            <button>新增牌位資訊(懺主)</button>
-            
-            <!-- 新增: 搜尋框 -->
+            <h2>法會功德登記資訊</h2>
             <div class="form-group" style="margin-top: 2rem;">
-                <label for="search-input">搜尋牌位名稱</label>
+                <label for="search-input">搜尋功德登記表名稱</label>
                 <input type="text" id="search-input" onkeyup="filterPlaqueList()" placeholder="請輸入關鍵字...">
             </div>
 
-            <h3>超薦牌位清單:</h3>
+            <h3>功德登記表清單:</h3>
             <ul id="plaque-list"></ul>
+
+            <button onclick="showPlaqueForm()">新增功德資訊(大中小牌)</button>
+            <button onclick="showBenefactorForm()">新增功德資訊(懺主)</button>
 
             <button id="logout-button" onclick="logout()">登出</button>
         </div>
@@ -371,7 +380,7 @@
                 <fieldset>
                     <legend><strong>牌位資訊</strong></legend>
                     <div id="plaque-entries-container"></div>
-                    <button type="button" id="add-plaque-btn" onclick="addPlaqueEntry()">新增一筆牌位</button>
+                    <button type="button" id="add-plaque-btn" onclick="addPlaqueEntry('plaque-entries-container')">新增一筆牌位</button>
                 </fieldset>
 
                 <div class="form-actions">
@@ -381,9 +390,64 @@
             </form>
         </div>
 
+        <!-- Benefactor Form Section -->
+        <div id="benefactor-form-section" class="hidden">
+            <h3 id="benefactor-form-title">新增牌位資訊(懺主)</h3>
+            <form id="benefactor-plaque-form">
+                <input type="hidden" id="benefactor-plaque-id">
+                <div class="form-group">
+                    <label for="benefactor-plaque-name">名稱</label>
+                    <input type="text" id="benefactor-plaque-name" placeholder="例如: 地藏法會懺主" required>
+                </div>
+                
+                <fieldset>
+                    <legend><strong>基本資料</strong></legend>
+                    <div class="form-group">
+                        <label for="benefactor-user-name">姓名</label>
+                        <input type="text" id="benefactor-user-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="benefactor-user-phone">電話</label>
+                        <input type="tel" id="benefactor-user-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="benefactor-user-address">地址</label>
+                        <input type="text" id="benefactor-user-address" required>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend><strong>懺主類型</strong></legend>
+                    <div class="radio-group">
+                        <label><input type="radio" name="benefactor-type" value="two_large" onchange="handleBenefactorTypeChange(this.value)" checked> 20個消災+2支大牌</label>
+                        <label><input type="radio" name="benefactor-type" value="three_large" onchange="handleBenefactorTypeChange(this.value)"> 3支大牌</label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="benefactor-entries-section" class="hidden">
+                    <legend><strong>消災資訊</strong></legend>
+                    <div id="benefactor-entries-container" class="benefactor-grid"></div>
+                </fieldset>
+                
+                <fieldset>
+                    <legend><strong>牌位資訊</strong></legend>
+                    <small id="benefactor-plaque-hint" class="form-hint"></small>
+                    <div id="benefactor-plaque-entries-container"></div>
+                    <button type="button" id="add-benefactor-plaque-btn" onclick="addPlaqueEntry('benefactor-plaque-entries-container')">新增一筆牌位</button>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="button" onclick="generateBenefactorPreview()">預覽資料</button>
+                    <button type="button" id="cancel-benefactor-form" onclick="hideBenefactorForm()">取消</button>
+                </div>
+            </form>
+        </div>
+
+
         <!-- Preview Section -->
         <div id="preview-section" class="hidden">
             <h3>資料預覽</h3>
+            <input type="hidden" id="preview-mode">
             
             <h4>基本資料</h4>
             <div class="preview-item">
@@ -401,6 +465,11 @@
             <div class="preview-item">
                 <div class="preview-item-label">地址:</div>
                 <div id="preview-user-address"></div>
+            </div>
+            
+            <div id="preview-benefactor-list-section" class="hidden">
+                <h4>消災資訊:</h4>
+                <p id="preview-benefactor-list" style="word-break: break-all;"></p>
             </div>
             
             <div id="preview-big-section" class="preview-table-section">
@@ -435,50 +504,47 @@
     <script>
         const API_BASE_URL = 'http://127.0.0.1:3000';
 
+        // --- Global State ---
+        let plaqueEntryCounter = 0;
+        let notificationTimeout;
+
         // --- DOM Elements ---
         const loginForm = document.getElementById('login-form');
         const createAccountForm = document.getElementById('create-account-form');
         const plaqueSection = document.getElementById('plaque-section');
         const plaqueFormSection = document.getElementById('plaque-form-section');
+        const benefactorFormSection = document.getElementById('benefactor-form-section');
         const previewSection = document.getElementById('preview-section');
         const plaqueList = document.getElementById('plaque-list');
         const plaqueEntriesContainer = document.getElementById('plaque-entries-container');
-        let plaqueEntryCounter = 0;
-        
         const notificationBanner = document.getElementById('notification-banner');
         const notificationMessage = document.getElementById('notification-message');
         const notificationClose = document.getElementById('notification-close');
-        let notificationTimeout;
 
         // --- Notification Banner ---
         function showNotification(message, type = 'success') {
-            clearTimeout(notificationTimeout); 
-
+            clearTimeout(notificationTimeout);
             notificationMessage.textContent = message;
-            notificationBanner.className = ''; 
+            notificationBanner.className = '';
             notificationBanner.classList.add(type, 'show');
-
             notificationTimeout = setTimeout(() => {
                 notificationBanner.classList.remove('show');
             }, 4000);
         }
-
         notificationClose.addEventListener('click', () => {
             clearTimeout(notificationTimeout);
             notificationBanner.classList.remove('show');
         });
 
-
         // --- Authentication & View Management ---
-
         function showLoginView() {
             localStorage.removeItem('jwt_token');
             localStorage.removeItem('user_id');
             document.getElementById('login-user-id').value = '';
             document.getElementById('login-password').value = '';
-            
             plaqueSection.classList.add('hidden');
             plaqueFormSection.classList.add('hidden');
+            benefactorFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
             loginForm.classList.remove('hidden');
             createAccountForm.classList.add('hidden');
@@ -561,11 +627,12 @@
                     if (data.plaques && data.plaques.length > 0) {
                         data.plaques.forEach(plaque => {
                             const li = document.createElement('li');
-                            li.onclick = () => editPlaque(plaque.timestamp);
+                            li.onclick = () => handleListItemClick(plaque.timestamp, plaque.plaque_type);
 
                             const nameSpan = document.createElement('span');
                             nameSpan.className = 'plaque-name';
-                            nameSpan.textContent = plaque.plaque_name;
+                            const plaqueType = plaque.plaque_type || '一般';
+                            nameSpan.textContent = `[${plaqueType}] ${plaque.plaque_name}`;
 
                             const actionsDiv = document.createElement('div');
                             actionsDiv.className = 'list-item-actions';
@@ -605,7 +672,6 @@
             }
         }
         
-        // 新增: 搜尋功能函式
         function filterPlaqueList() {
             const input = document.getElementById('search-input');
             const filter = input.value.toLowerCase();
@@ -614,10 +680,10 @@
 
             for (let i = 0; i < liItems.length; i++) {
                 const nameSpan = liItems[i].querySelector('.plaque-name');
-                if (nameSpan) { // 確保不是 "尚無資料" 的 li
+                if (nameSpan) {
                     const txtValue = nameSpan.textContent || nameSpan.innerText;
                     if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                        liItems[i].style.display = "";
+                        liItems[i].style.display = "flex";
                     } else {
                         liItems[i].style.display = "none";
                     }
@@ -629,9 +695,10 @@
             loginForm.classList.add('hidden');
             createAccountForm.classList.add('hidden');
             plaqueFormSection.classList.add('hidden');
+            benefactorFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
             plaqueSection.classList.remove('hidden');
-            document.getElementById('search-input').value = ''; // 清空搜尋框
+            document.getElementById('search-input').value = '';
             fetchPlaques(userId);
         }
         
@@ -640,30 +707,60 @@
             showNotification('您已登出。', 'success');
         }
         
-        // --- Form Handling ---
-
+        // --- Form Views Logic ---
         function showPlaqueForm() {
             plaqueSection.classList.add('hidden');
+            benefactorFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
             plaqueFormSection.classList.remove('hidden');
-            
             document.getElementById("main-plaque-form").reset();
             document.getElementById('plaque-id').value = '';
-            document.getElementById('form-title').textContent = "新增法會超薦資料";
-
+            document.getElementById('benefactor-plaque-id').value = '';
+            document.getElementById('form-title').textContent = "新增牌位資訊(大中小牌)";
             plaqueEntriesContainer.innerHTML = '';
             plaqueEntryCounter = 0;
-            addPlaqueEntry();
+            addPlaqueEntry('plaque-entries-container');
         }
 
         function hidePlaqueForm() {
+            //JOEY
+            document.getElementById('benefactor-plaque-entries-container').innerHTML = '';
+            plaqueFormSection.classList.add('hidden');
+            plaqueSection.classList.remove('hidden');
+        }
+
+        function showBenefactorForm() {
+            plaqueSection.classList.add('hidden');
             plaqueFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
-            plaqueSection.classList.remove('hidden');
+            benefactorFormSection.classList.remove('hidden');
+            document.getElementById('benefactor-plaque-name').value = '';
+            document.getElementById('benefactor-user-name').value = '';
+            document.getElementById('benefactor-user-phone').value = '';
+            document.getElementById('benefactor-user-address').value = '';
             document.getElementById('plaque-id').value = '';
+            document.getElementById('benefactor-plaque-id').value = '';
+            document.getElementById('benefactor-form-title').textContent = "新增牌位資訊(懺主)";
+            document.getElementById('benefactor-plaque-entries-container').innerHTML = '';
+            plaqueEntryCounter = 0;
+            //handleBenefactorTypeChange('two_large');
+            // 修正: 只有在 "新增" 模式下才呼叫 handleBenefactorTypeChange 來產生預設版面
+            handleBenefactorTypeChange(document.querySelector('input[name="benefactor-type"]:checked').value);
+        }
+
+        function hideBenefactorForm() {
+            benefactorFormSection.classList.add('hidden');
+            plaqueSection.classList.remove('hidden');
         }
 
         // --- Edit, Delete, Copy Logic ---
+        function handleListItemClick(id, type) {
+            if (type === '懺主') {
+                editBenefactor(id);
+            } else { // '一般' or undefined (default)
+                editPlaque(id);
+            }
+        }
 
         async function editPlaque(id) {
             try {
@@ -683,10 +780,26 @@
             }
         }
         
-        async function deletePlaque(id, name) {
-            if (!confirm(`您確定要刪除 "${name}" 嗎？此操作無法復原。`)) {
-                return;
+        async function editBenefactor(id) {
+            try {
+                const token = localStorage.getItem('jwt_token');
+                const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (handleUnauthorized(response)) return;
+                if (!response.ok) throw new Error('獲取懺主資料失敗');
+                
+                const data = await response.json();
+                populateBenefactorFormWithData(data);
+
+            } catch(error) {
+                showNotification(error.message, 'error');
+                console.error("編輯懺主時發生錯誤:", error);
             }
+        }
+        
+        async function deletePlaque(id, name) {
+            if (!confirm(`您確定要刪除 "${name}" 嗎？此操作無法復原。`)) return;
 
             try {
                 const token = localStorage.getItem('jwt_token');
@@ -711,9 +824,7 @@
         }
         
         async function copyPlaque(id, name) {
-            if (!confirm(`您確定要複製 "${name}" 嗎？`)) {
-                return;
-            }
+            if (!confirm(`您確定要複製 "${name}" 嗎？`)) return;
             try {
                 const token = localStorage.getItem('jwt_token');
                 let response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
@@ -754,10 +865,17 @@
         }
 
         function populateFormWithData(data) {
+            //JOEY
             showPlaqueForm();
-            document.getElementById('form-title').textContent = "修改法會超薦資料";
+            // 修正: 分解 showPlaqueForm 的動作，避免 reset() 清除所有東西
+            plaqueSection.classList.add('hidden');
+            benefactorFormSection.classList.add('hidden');
+            previewSection.classList.add('hidden');
+            plaqueFormSection.classList.remove('hidden');
+            document.getElementById('form-title').textContent = "修改牌位資訊(大中小牌)";
             document.getElementById('plaque-id').value = data.timestamp;
-            
+            document.getElementById('benefactor-plaque-id').value = '';
+
             document.getElementById('plaque-name').value = data.plaque_name || '';
             document.getElementById('user_name').value = data.user_name || '';
             document.getElementById('user_phone').value = data.user_phone || '';
@@ -768,47 +886,116 @@
 
             if (data.plaque_data && data.plaque_data.length > 0) {
                 data.plaque_data.forEach(item => {
-                    addPlaqueEntry();
+                    addPlaqueEntry('plaque-entries-container');
                     const entryId = plaqueEntryCounter;
+                    const entryDiv = document.getElementById(`plaque-entry-${entryId}`);
                     
-                    document.querySelector(`input[name="type-${entryId}"][value="${item.type}"]`).checked = true;
+                    entryDiv.querySelector(`input[name="type-${entryId}"][value="${item.type}"]`).checked = true;
                     
-                    const titleSelect = document.getElementById(`title-${entryId}`);
+                    const titleSelect = entryDiv.querySelector(`#title-${entryId}`);
                     const isStandardTitle = Array.from(titleSelect.options).some(opt => opt.value === item.item_title);
 
-                    if (isStandardTitle) {
-                        titleSelect.value = item.item_title;
-                    } else {
-                        titleSelect.value = 'other';
-                    }
-                    
-                    handleTitleChange(titleSelect, entryId);
+                    titleSelect.value = isStandardTitle ? item.item_title : 'other';
+                    handleTitleChange(titleSelect);
 
                     if (!isStandardTitle) {
-                        const otherInput = document.getElementById(`title-other-${entryId}`);
+                        const otherInput = entryDiv.querySelector('.title-other-input');
                         if (otherInput) otherInput.value = item.item_title;
                     }
                     
-                    document.getElementById(`deceased-${entryId}`).value = item.item_name;
-                    document.getElementById(`sponsor-${entryId}`).value = item.item_benefactor;
+                    entryDiv.querySelector(`#deceased-${entryId}`).value = item.item_name;
+                    entryDiv.querySelector(`#sponsor-${entryId}`).value = item.item_benefactor;
                 });
             } else {
-                addPlaqueEntry();
+                addPlaqueEntry('plaque-entries-container');
             }
 
+            //JOEY
+            //plaqueSection.classList.add('hidden');
+            //plaqueFormSection.classList.remove('hidden');
+            //JOEY
+        }
+
+        function populateBenefactorFormWithData(data) {
+            document.getElementById('plaque-id').value = '';
             plaqueSection.classList.add('hidden');
-            plaqueFormSection.classList.remove('hidden');
+            plaqueFormSection.classList.add('hidden');
+            previewSection.classList.add('hidden');
+            benefactorFormSection.classList.remove('hidden');
+
+            plaqueSection.classList.add('hidden');
+            plaqueFormSection.classList.add('hidden');
+            previewSection.classList.add('hidden');
+            benefactorFormSection.classList.remove('hidden');
+            document.getElementById("benefactor-plaque-form").reset();
+
+
+            document.getElementById('benefactor-form-title').textContent = "修改牌位資訊(懺主)";
+            document.getElementById('benefactor-plaque-id').value = data.timestamp;
+            
+            document.getElementById('benefactor-plaque-name').value = data.plaque_name || '';
+            document.getElementById('benefactor-user-name').value = data.user_name || '';
+            document.getElementById('benefactor-user-phone').value = data.user_phone || '';
+            document.getElementById('benefactor-user-address').value = data.user_address || '';
+            // JOEY
+            const benefactorType = data.plaque_subtype || 'three_large';
+            // JOEY
+            
+            document.querySelector(`input[name="benefactor-type"][value="${benefactorType}"]`).checked = true;
+            handleBenefactorTypeChange(benefactorType);
+
+            if (data.misfortune_dispelling_data && data.misfortune_dispelling_data.length > 0) {
+                const benefactorInputs = document.getElementById('benefactor-entries-container').getElementsByTagName('input');
+                for (let i = 0; i < data.misfortune_dispelling_data.length; i++) {
+                    if (benefactorInputs[i]) {
+                        benefactorInputs[i].value = data.misfortune_dispelling_data[i];
+                    }
+                }
+            }
+
+            // 先清空，再由後續邏輯填入正確資料
+            document.getElementById('plaque-entries-container').innerHTML = '';
+            // JOEY
+            const plaqueContainer = document.getElementById('benefactor-plaque-entries-container');
+            plaqueContainer.innerHTML = '';
+            plaqueEntryCounter = 0;
+
+            if (data.plaque_data && data.plaque_data.length > 0) {
+                data.plaque_data.forEach(item => {
+                    addPlaqueEntry('benefactor-plaque-entries-container');
+                    const entryId = plaqueEntryCounter;
+                    const entryDiv = document.getElementById(`plaque-entry-${entryId}`);
+
+                    entryDiv.querySelector(`input[name="type-${entryId}"][value="${item.type}"]`).checked = true;
+                    
+                    const titleSelect = entryDiv.querySelector(`#title-${entryId}`);
+                    const isStandardTitle = Array.from(titleSelect.options).some(opt => opt.value === item.item_title);
+
+                    titleSelect.value = isStandardTitle ? item.item_title : 'other';
+                    handleTitleChange(titleSelect);
+
+                    if (!isStandardTitle) {
+                        const otherInput = entryDiv.querySelector('.title-other-input');
+                        if (otherInput) otherInput.value = item.item_title;
+                    }
+                    
+                    entryDiv.querySelector(`#deceased-${entryId}`).value = item.item_name;
+                    entryDiv.querySelector(`#sponsor-${entryId}`).value = item.item_benefactor;
+                });
+            }
         }
 
 
         // --- Dynamic Form Entry ---
-
-        function handleTitleChange(selectElement, entryId) {
+        function handleTitleChange(selectElement) {
             const selectedValue = selectElement.value;
-            const deceasedInput = document.getElementById(`deceased-${entryId}`);
-            const hintElement = document.getElementById(`hint-${entryId}`);
+            const entryDiv = selectElement.closest('.plaque-entry');
+            if (!entryDiv) return;
+
+            const deceasedInput = entryDiv.querySelector('[id^="deceased-"]');
+            const hintElement = entryDiv.querySelector('[id^="hint-"]');
             
-            const existingOtherInput = document.getElementById(`title-other-${entryId}`);
+            const existingOtherInput = entryDiv.querySelector('.title-other-input');
             if (existingOtherInput) existingOtherInput.remove();
 
             deceasedInput.disabled = false;
@@ -817,38 +1004,23 @@
             deceasedInput.placeholder = '';
 
             switch (selectedValue) {
-                case 'ancestors':
-                    hintElement.textContent = '請於下方欄位填寫「姓氏」';
-                    break;
-                case 'foundation':
-                    hintElement.textContent = '請於下方欄位填寫「地址」';
-                    break;
-                case 'unborn_children':
-                case 'karmic_creditors':
-                case 'ten_directions':
+                case 'ancestors': hintElement.textContent = '請於下方欄位填寫「姓氏」'; break;
+                case 'foundation': hintElement.textContent = '請於下方欄位填寫「地址」'; break;
+                case 'unborn_children': case 'karmic_creditors': case 'ten_directions':
                     hintElement.textContent = '（此項無需填寫）';
                     deceasedInput.value = 'None';
                     deceasedInput.disabled = true;
                     break;
-                case 'father':
-                case 'mother':
-                case 'grandfather':
-                case 'grandmother':
+                case 'father': case 'mother': case 'grandfather': case 'grandmother':
                     hintElement.textContent = '請於下方欄位填寫「姓名」';
                     break;
-                case 'brother':
-                case 'younger_brother':
-                case 'sister':
-                case 'younger_sister':
-                case 'son':
-                case 'daughter':
+                case 'brother': case 'younger_brother': case 'sister': case 'younger_sister': case 'son': case 'daughter':
                     hintElement.textContent = '請於下方欄位填寫「姓名」並註明是否已婚';
                     break;
                 case 'other':
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.placeholder = '請註明稱謂';
-                    input.id = `title-other-${entryId}`;
                     input.className = 'title-other-input';
                     input.style.marginTop = '0.5rem';
                     selectElement.parentNode.appendChild(input);
@@ -857,15 +1029,16 @@
             }
         }
 
-        function addPlaqueEntry() {
+        function addPlaqueEntry(containerId) {
             plaqueEntryCounter++;
             const entryId = plaqueEntryCounter;
+            const container = document.getElementById(containerId);
             const entryDiv = document.createElement('div');
             entryDiv.className = 'plaque-entry';
             entryDiv.id = `plaque-entry-${entryId}`;
             entryDiv.innerHTML = `
-                <div class="plaque-entry-header">牌位 #${entryId}</div>
-                ${plaqueEntriesContainer.children.length > 0 ? `<button type="button" class="remove-plaque-btn" onclick="removePlaqueEntry(${entryId})">X</button>` : ''}
+                <div class="plaque-entry-header">牌位 #${container.children.length + 1}</div>
+                ${container.children.length > 0 ? `<button type="button" class="remove-plaque-btn" onclick="removePlaqueEntry(${entryId})">X</button>` : ''}
                 <div class="form-group">
                     <label>型別</label>
                     <div class="radio-group">
@@ -876,22 +1049,17 @@
                 </div>
                 <div class="form-group">
                     <label for="title-${entryId}">稱謂</label>
-                    <select id="title-${entryId}" onchange="handleTitleChange(this, ${entryId})">
+                    <select id="title-${entryId}" onchange="handleTitleChange(this)">
                         <option value="ancestors">歷代祖先</option>
                         <option value="karmic_creditors">累劫冤親債主</option>
                         <option value="foundation">地基主</option>
                         <option value="ten_directions">十方法界一切眾生</option>
                         <option value="unborn_children">未出世子女</option>
-                        <option value="father">父</option>
-                        <option value="mother">母</option>
-                        <option value="brother">兄</option>
-                        <option value="younger_brother">弟</option>
-                        <option value="sister">姊</option>
-                        <option value="younger_sister">妹</option>
-                        <option value="grandfather">祖父</option>
-                        <option value="grandmother">祖母</option>
-                        <option value="son">子</option>
-                        <option value="daughter">女</option>
+                        <option value="father">父</option> <option value="mother">母</option>
+                        <option value="brother">兄</option> <option value="younger_brother">弟</option>
+                        <option value="sister">姊</option> <option value="younger_sister">妹</option>
+                        <option value="grandfather">祖父</option> <option value="grandmother">祖母</option>
+                        <option value="son">子</option> <option value="daughter">女</option>
                         <option value="other">其它(需註明)</option>
                     </select>
                 </div>
@@ -905,131 +1073,263 @@
                     <input type="text" id="sponsor-${entryId}" required>
                 </div>
             `;
-            plaqueEntriesContainer.appendChild(entryDiv);
+            container.appendChild(entryDiv);
             const newSelect = document.getElementById(`title-${entryId}`);
-            handleTitleChange(newSelect, entryId);
+            handleTitleChange(newSelect);
+
+
+            // --- 新增: 在懺主模式下，隱藏中牌選項 ---
+            if (containerId === 'benefactor-plaque-entries-container') {
+                const radioButtons = entryDiv.querySelectorAll(`input[name="type-${entryId}"]`);
+                radioButtons.forEach(radio => {
+                    if (radio.value === '中') {
+                        radio.parentElement.style.display = 'none'; // 隱藏 "中牌" 的 <label>
+                    }
+                });
+            }
         }
         
         function removePlaqueEntry(entryId) {
-            document.getElementById(`plaque-entry-${entryId}`)?.remove();
+            const entry = document.getElementById(`plaque-entry-${entryId}`);
+            if (entry) entry.remove();
+        }
+
+        function handleBenefactorTypeChange(type) {
+            const benefactorEntriesSection = document.getElementById('benefactor-entries-section');
+            const benefactorGrid = document.getElementById('benefactor-entries-container');
+            const hintElement = document.getElementById('benefactor-plaque-hint');
+
+            benefactorGrid.innerHTML = '';
+            
+            if (type === 'two_large') {
+                benefactorEntriesSection.classList.remove('hidden');
+                hintElement.textContent = '注意: 最多2支大牌 6支小牌';
+                for (let i = 1; i <= 20; i++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = `消災 #${i}`;
+                    benefactorGrid.appendChild(input);
+                }
+            } else { // three_large
+                benefactorEntriesSection.classList.add('hidden');
+                hintElement.textContent = '注意: 最多3支大牌 6支小牌';
+            }
         }
 
         // --- Data Collection, Preview, and Submission ---
-
-        function collectAndFormatData() {
+        function collectPlaquesFromContainer(containerId) {
             const plaqueData = [];
-            const entries = plaqueEntriesContainer.getElementsByClassName('plaque-entry');
-            for (let i = 0; i < entries.length; i++) {
-                const entry = entries[i];
-                const entryId = entry.id.split('-')[2];
-                
-                let apiTitle = entry.querySelector(`#title-${entryId}`).value;
+            const entries = document.getElementById(containerId).getElementsByClassName('plaque-entry');
+            for (let entry of entries) {
+                const titleSelect = entry.querySelector('[id^="title-"]');
+                let apiTitle = titleSelect.value;
                 if (apiTitle === 'other') {
-                    const otherInput = entry.querySelector(`#title-other-${entryId}`);
+                    const otherInput = entry.querySelector('.title-other-input');
                     apiTitle = otherInput ? otherInput.value.trim() : 'other';
                 }
-
                 plaqueData.push({
-                    type: entry.querySelector(`input[name="type-${entryId}"]:checked`).value,
+                    type: entry.querySelector('[name^="type-"]:checked').value,
                     item_title: apiTitle,
-                    item_name: entry.querySelector(`#deceased-${entryId}`).value,
-                    item_benefactor: entry.querySelector(`#sponsor-${entryId}`).value,
+                    item_name: entry.querySelector('[id^="deceased-"]').value,
+                    item_benefactor: entry.querySelector('[id^="sponsor-"]').value,
                 });
             }
+            return plaqueData;
+        }
+
+        function collectAndFormatData() {
             return {
                 user_id: localStorage.getItem('user_id'),
                 plaque_name: document.getElementById('plaque-name').value,
+                plaque_type: "一般",
                 user_name: document.getElementById('user_name').value,
                 user_phone: document.getElementById('user_phone').value,
                 user_address: document.getElementById('user_address').value,
-                plaque_data: plaqueData
+                plaque_data: collectPlaquesFromContainer('plaque-entries-container')
+            };
+        }
+        
+        function collectBenefactorData() {
+            const misfortuneData = [];
+            const benefactorInputs = document.getElementById('benefactor-entries-container').getElementsByTagName('input');
+            for(let input of benefactorInputs) {
+                if(input.value.trim() !== '') {
+                    misfortuneData.push(input.value.trim());
+                }
+            }
+
+            return {
+                user_id: localStorage.getItem('user_id'),
+                plaque_name: document.getElementById('benefactor-plaque-name').value,
+                plaque_type: "懺主",
+                plaque_subtype: document.querySelector('input[name="benefactor-type"]:checked').value,
+                user_name: document.getElementById('benefactor-user-name').value,
+                user_phone: document.getElementById('benefactor-user-phone').value,
+                user_address: document.getElementById('benefactor-user-address').value,
+                misfortune_dispelling_data: misfortuneData,
+                plaque_data: collectPlaquesFromContainer('benefactor-plaque-entries-container')
             };
         }
 
         function generatePreview() {
             if (!document.getElementById('main-plaque-form').checkValidity()) {
-                document.getElementById('main-plaque-form').reportValidity();
-                return;
+                document.getElementById('main-plaque-form').reportValidity(); return;
             }
+            document.getElementById('preview-mode').value = 'plaque';
             
             document.getElementById('preview-plaque-name').textContent = document.getElementById('plaque-name').value;
             document.getElementById('preview-user-name').textContent = document.getElementById('user_name').value;
             document.getElementById('preview-user-phone').textContent = document.getElementById('user_phone').value;
             document.getElementById('preview-user-address').textContent = document.getElementById('user_address').value;
 
-            const previewBigTableBody = document.getElementById('preview-big-tbody');
-            const previewMediumTableBody = document.getElementById('preview-medium-tbody');
-            const previewSmallTableBody = document.getElementById('preview-small-tbody');
-            
-            const previewBigSection = document.getElementById('preview-big-section');
-            const previewMediumSection = document.getElementById('preview-medium-section');
-            const previewSmallSection = document.getElementById('preview-small-section');
+            const plaques = collectPlaquesFromContainer('plaque-entries-container');
+            const bigTbody = document.getElementById('preview-big-tbody');
+            const mediumTbody = document.getElementById('preview-medium-tbody');
+            const smallTbody = document.getElementById('preview-small-tbody');
+            bigTbody.innerHTML = ''; mediumTbody.innerHTML = ''; smallTbody.innerHTML = '';
 
-            previewBigTableBody.innerHTML = '';
-            previewMediumTableBody.innerHTML = '';
-            previewSmallTableBody.innerHTML = '';
-
-            const entries = plaqueEntriesContainer.getElementsByClassName('plaque-entry');
-            let bigCount = 0, mediumCount = 0, smallCount = 0;
-
-            for (let i = 0; i < entries.length; i++) {
-                const entry = entries[i];
-                const entryId = entry.id.split('-')[2];
-                
-                const type = entry.querySelector(`input[name="type-${entryId}"]:checked`).value;
-                const titleSelect = entry.querySelector(`#title-${entryId}`);
-                let previewTitleText = titleSelect.options[titleSelect.selectedIndex].text;
-                if (titleSelect.value === 'other') {
-                    const otherInput = entry.querySelector(`#title-other-${entryId}`);
-                    previewTitleText = otherInput ? otherInput.value.trim() : '其它(需註明)';
-                }
-                const deceased = entry.querySelector(`#deceased-${entryId}`).value;
-                const sponsor = entry.querySelector(`#sponsor-${entryId}`).value;
-
+            plaques.forEach(plaque => {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${previewTitleText}</td><td>${deceased}</td><td>${sponsor}</td>`;
-
-                if (type === '大') {
-                    previewBigTableBody.appendChild(row);
-                    bigCount++;
-                } else if (type === '中') {
-                    previewMediumTableBody.appendChild(row);
-                    mediumCount++;
-                } else {
-                    previewSmallTableBody.appendChild(row);
-                    smallCount++;
+                const titleSelect = document.querySelector(`#plaque-entries-container select option[value="${plaque.item_title}"]`);
+                let titleText = plaque.item_title;
+                if(plaque.item_title !== 'other' && titleSelect) {
+                    titleText = titleSelect.textContent;
                 }
-            }
+                
+                row.innerHTML = `<td>${titleText}</td><td>${plaque.item_name}</td><td>${plaque.item_benefactor}</td>`;
+                if (plaque.type === '大') bigTbody.appendChild(row);
+                else if (plaque.type === '中') mediumTbody.appendChild(row);
+                else smallTbody.appendChild(row);
+            });
 
-            previewBigSection.style.display = bigCount > 0 ? 'block' : 'none';
-            previewMediumSection.style.display = mediumCount > 0 ? 'block' : 'none';
-            previewSmallSection.style.display = smallCount > 0 ? 'block' : 'none';
+            document.getElementById('preview-big-section').style.display = bigTbody.children.length > 0 ? 'block' : 'none';
+            document.getElementById('preview-medium-section').style.display = mediumTbody.children.length > 0 ? 'block' : 'none';
+            document.getElementById('preview-small-section').style.display = smallTbody.children.length > 0 ? 'block' : 'none';
+            document.getElementById('preview-benefactor-list-section').classList.add('hidden');
 
             plaqueFormSection.classList.add('hidden');
             previewSection.classList.remove('hidden');
         }
+        
+        function generateBenefactorPreview() {
+            if (!document.getElementById('benefactor-plaque-form').checkValidity()) {
+                document.getElementById('benefactor-plaque-form').reportValidity(); return;
+            }
+            
+
+            // --- 新增: 檢查懺主大小牌數量 ---
+            const benefactorType = document.querySelector('input[name="benefactor-type"]:checked').value;
+            const plaquesInBenefactorForm = collectPlaquesFromContainer('benefactor-plaque-entries-container');
+            
+            let largeCount = 0;
+            let mediumCount = 0;
+            let smallCount = 0;
+
+            plaquesInBenefactorForm.forEach(p => {
+                if (p.type === '大') largeCount++;
+                else if (p.type === '中') mediumCount++;
+                else if (p.type === '小') smallCount++;
+            });
+
+            if (mediumCount > 0) {
+                alert("懺主類型不可包含中牌，請移除。");
+                return;
+            }
+
+            if (benefactorType === 'two_large') {
+                if (largeCount > 2 || smallCount > 6) {
+                    alert("此懺主類型最多只能包含 2 支大牌和 6 支小牌，請檢查您的輸入。");
+                    return;
+                }
+            } else { // three_large
+                if (largeCount > 3 || smallCount > 6) {
+                    alert("此懺主類型最多只能包含 3 支大牌和 6 支小牌，請檢查您的輸入。");
+                    return;
+                }
+            }
+            // --- 驗證結束 ---
+
+
+            document.getElementById('preview-mode').value = 'benefactor';
+
+            document.getElementById('preview-plaque-name').textContent = document.getElementById('benefactor-plaque-name').value;
+            document.getElementById('preview-user-name').textContent = document.getElementById('benefactor-user-name').value;
+            document.getElementById('preview-user-phone').textContent = document.getElementById('benefactor-user-phone').value;
+            document.getElementById('preview-user-address').textContent = document.getElementById('benefactor-user-address').value;
+
+            const benefactorListSection = document.getElementById('preview-benefactor-list-section');
+            const benefactorList = document.getElementById('preview-benefactor-list');
+            const benefactorInputs = document.getElementById('benefactor-entries-container').getElementsByTagName('input');
+            const names = Array.from(benefactorInputs).map(input => input.value.trim()).filter(name => name);
+            
+            if(names.length > 0) {
+                benefactorList.textContent = names.join(', ');
+                benefactorListSection.classList.remove('hidden');
+            } else {
+                benefactorListSection.classList.add('hidden');
+            }
+            
+            const plaques = collectPlaquesFromContainer('benefactor-plaque-entries-container');
+            const bigTbody = document.getElementById('preview-big-tbody');
+            const mediumTbody = document.getElementById('preview-medium-tbody');
+            const smallTbody = document.getElementById('preview-small-tbody');
+            bigTbody.innerHTML = ''; mediumTbody.innerHTML = ''; smallTbody.innerHTML = '';
+            
+            plaques.forEach(plaque => {
+                const row = document.createElement('tr');
+                const titleSelect = document.querySelector(`#benefactor-plaque-entries-container select option[value="${plaque.item_title}"]`);
+                let titleText = plaque.item_title;
+                if(plaque.item_title !== 'other' && titleSelect) {
+                    titleText = titleSelect.textContent;
+                }
+                
+                row.innerHTML = `<td>${titleText}</td><td>${plaque.item_name}</td><td>${plaque.item_benefactor}</td>`;
+                if (plaque.type === '大') bigTbody.appendChild(row);
+                else if (plaque.type === '中') mediumTbody.appendChild(row);
+                else smallTbody.appendChild(row);
+            });
+
+            document.getElementById('preview-big-section').style.display = bigTbody.children.length > 0 ? 'block' : 'none';
+            document.getElementById('preview-medium-section').style.display = mediumTbody.children.length > 0 ? 'block' : 'none';
+            document.getElementById('preview-small-section').style.display = smallTbody.children.length > 0 ? 'block' : 'none';
+
+            benefactorFormSection.classList.add('hidden');
+            previewSection.classList.remove('hidden');
+        }
 
         function backToEdit() {
+            const mode = document.getElementById('preview-mode').value;
             previewSection.classList.add('hidden');
-            plaqueFormSection.classList.remove('hidden');
+            if (mode === 'benefactor') {
+                benefactorFormSection.classList.remove('hidden');
+            } else {
+                plaqueFormSection.classList.remove('hidden');
+            }
         }
 
         async function submitData() {
-            const data = collectAndFormatData();
-            const plaqueId = document.getElementById('plaque-id').value;
-            const isEditing = !!plaqueId;
+            const mode = document.getElementById('preview-mode').value;
+            let data, endpoint, method;
 
-            const method = isEditing ? 'PUT' : 'POST';
-            const endpoint = isEditing ? `${API_BASE_URL}/plaques/${plaqueId}` : `${API_BASE_URL}/plaques`;
+            if (mode === 'benefactor') {
+                data = collectBenefactorData();
+                const plaqueId = document.getElementById('benefactor-plaque-id').value;
+                const isEditing = !!plaqueId;
+                method = isEditing ? 'PUT' : 'POST';
+                endpoint = isEditing ? `${API_BASE_URL}/plaques/${plaqueId}` : `${API_BASE_URL}/plaques`;
+            } else {
+                data = collectAndFormatData();
+                const plaqueId = document.getElementById('plaque-id').value;
+                const isEditing = !!plaqueId;
+                method = isEditing ? 'PUT' : 'POST';
+                endpoint = isEditing ? `${API_BASE_URL}/plaques/${plaqueId}` : `${API_BASE_URL}/plaques`;
+            }
             
             try {
                 const token = localStorage.getItem('jwt_token');
                 const response = await fetch(endpoint, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(data)
                 });
                 if (handleUnauthorized(response)) return;
@@ -1052,6 +1352,8 @@
             const userId = localStorage.getItem('user_id');
             if (token && userId) {
                 showPlaqueSectionView(userId);
+            } else {
+                showLoginView();
             }
         };
     </script>
