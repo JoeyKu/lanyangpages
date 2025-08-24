@@ -16,13 +16,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 
-# 從環境變數讀取設定 (與 plaque 函數共用相同的設定)
-TABLETS_TABLE_NAME = "plaques" # os.environ.get("TABLETS_TABLE_NAME", "plaques")
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
-
 # +++ 輔助函式 (維持不變) +++
-# (draw_multiline_string, split_string_if_long, create_overlay_for_page, add_pages_to_writer)
-# 為了簡潔，這裡省略了您已經擁有的輔助函式定義，您需要將它們完整地複製貼上到這裡。
 def draw_multiline_string(canvas, x, y, text, line_height=14):
     lines = text.split('\n')
     for line in lines:
@@ -101,15 +95,20 @@ def lambda_handler(event, context):
     - GET /forms/{id}: 根據 JWT 的 user_id 和路徑中的 id 取得資料。
     """
 
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
     # ---- DynamoDB 連線邏輯 ----
     if os.environ.get("AWS_SAM_LOCAL"):
         dynamodb_endpoint = "http://192.168.200.144:8000" # <-- 請換成你自己的 IP
         dynamodb_resource = boto3.resource("dynamodb", endpoint_url=dynamodb_endpoint)
+        PLAQUES_TABLE_NAME = "plaques" # 直接使用您在 YAML 中定義的實體名稱
+        METADATA_TABLE_NAME = "metadata"
     else:
+        PLAQUES_TABLE_NAME = os.environ.get("PLAQUE_TABLE_NAME")
+        METADATA_TABLE_NAME = os.environ.get("METADATA_TABLE_NAME")
         dynamodb_resource = boto3.resource("dynamodb")
 
-    plaque_table = dynamodb_resource.Table(TABLETS_TABLE_NAME)
-    form_table = dynamodb_resource.Table('metadata') # FIXME:
+    plaque_table = dynamodb_resource.Table(PLAQUES_TABLE_NAME)
+    form_table = dynamodb_resource.Table(METADATA_TABLE_NAME)
 
     # ---- CORS 標頭設定 ----
     cors_headers = {
