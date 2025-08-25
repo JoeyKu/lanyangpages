@@ -883,7 +883,8 @@
             }
             
             // 修正 #1: 請確保這個 URL 指向您設定的、專門用來回傳二進位檔案的 API Gateway 端點
-            const downloadUrl = `${API_BASE_URL}/forms/${id}`
+            //const downloadUrl = `${API_BASE_URL}/forms/${id}`
+            const downloadUrl = `https://fsu3zbvwm5.execute-api.us-east-1.amazonaws.com/Prod/forms/${id}`
             console.log(`準備從 ${downloadUrl} 下載 PDF`);
 
             try {
