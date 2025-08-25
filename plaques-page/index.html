@@ -1015,6 +1015,13 @@
         }
 
         function hidePlaqueForm() {
+            // Perform a full cleanup when canceling
+            document.getElementById('plaque-name').value = '';
+            document.getElementById('user_name').value = '';
+            document.getElementById('user_phone').value = '';
+            document.getElementById('user_address').value = '';
+            plaqueEntriesContainer.innerHTML = '';
+            plaqueEntryCounter = 0;
             plaqueFormSection.classList.add('hidden');
             plaqueSection.classList.remove('hidden');
         }
@@ -1041,6 +1048,14 @@
         }
 
         function hideBenefactorForm() {
+            // Perform a full cleanup when canceling
+            document.getElementById('benefactor-plaque-name').value = '';
+            document.getElementById('benefactor-user-name').value = '';
+            document.getElementById('benefactor-user-phone').value = '';
+            document.getElementById('benefactor-user-address').value = '';
+            document.getElementById('benefactor-entries-container').innerHTML = '';
+            document.getElementById('benefactor-plaque-entries-container').innerHTML = '';
+            plaqueEntryCounter = 0;
             benefactorFormSection.classList.add('hidden');
             plaqueSection.classList.remove('hidden');
         }
