@@ -42,6 +42,7 @@ def lambda_handler(event, context):
 
     try:
         # API Gateway 會將 POST 的 body 包成一個字串，需要先解析
+        print(event)
         body = json.loads(event.get("body", "{}"))
     except json.JSONDecodeError:
         return {"statusCode": 400, "headers": cors_headers, "body": json.dumps({"message": "Invalid JSON in request body"})}

@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 # 從環境變數讀取設定
 TABLETS_TABLE_NAME = "plaques" # os.environ.get("TABLETS_TABLE_NAME", "plaques")
 # 確保您在部署時或在 template.yaml 的 Environment Variables 中設定了 JWT_SECRET_KEY
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-default-secret-key-for-local-testing")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 
 def lambda_handler(event, context):
