@@ -1140,7 +1140,7 @@
 
             showLoader();
             try {
-                const response = await fetch(`${API_BASE_URL}/users/${userId}/password`, {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })

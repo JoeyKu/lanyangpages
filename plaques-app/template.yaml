@@ -29,8 +29,6 @@ Globals:
       AllowOrigin: "'*'" # 允許的來源網域，'*' 表示任何來源
     BinaryMediaTypes:
       - 'application/pdf'
-    Auth:
-      Authorizer: NONE
 
 Resources:
   PlaqueFunction:
