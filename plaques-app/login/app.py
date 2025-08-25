@@ -7,7 +7,7 @@ import jwt  # <-- 1. 匯入 jwt 函式庫
 import datetime # <-- 2. 匯入 datetime 來設定 token 過期時間
 
 # 從環境變數讀取資料表名稱
-ACCOUNTS_TABLE_NAME = "users"#os.environ.get("ACCOUNTS_TABLE_NAME", "users")
+ACCOUNTS_TABLE_NAME = os.environ.get("ACCOUNTS_TABLE_NAME", "users")
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 # ---- 與之前相同的 DynamoDB 連線邏輯 ----

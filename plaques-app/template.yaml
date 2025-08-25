@@ -5,6 +5,12 @@ Description: >
 
   Sample SAM Template for plaques-app
 
+Parameters:
+  JwtSecretKeyParameter:
+    Type: String
+    Description: The actual JWT secret key. This will be passed as an environment variable to all functions.
+    NoEcho: true
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -23,6 +29,8 @@ Globals:
       AllowOrigin: "'*'" # 允許的來源網域，'*' 表示任何來源
     BinaryMediaTypes:
       - 'application/pdf'
+    Auth:
+      Authorizer: NONE
 
 Resources:
   PlaqueFunction:
@@ -41,7 +49,7 @@ Resources:
         Variables:
           PLAQUE_TABLE_NAME: !Ref PlaqueTable
           # 驗證 JWT 需要同一個 secret key
-          JWT_SECRET_KEY: "ThisIsAStrongAndSecretKeyForLocalDev123!@#"
+          JWT_SECRET_KEY: !Ref JwtSecretKeyParameter
       Events:
         AddPlaqueApi:
           Type: Api
@@ -121,7 +129,7 @@ Resources:
       Environment:
         Variables:
           # 驗證 token 需要同一個 secret key
-          JWT_SECRET_KEY: "ThisIsAStrongAndSecretKeyForLocalDev123!@#"
+          JWT_SECRET_KEY: !Ref JwtSecretKeyParameter
       Events:
         GetProfileApi:
           Type: Api
@@ -143,7 +151,7 @@ Resources:
         Variables:
           # 同樣將資料表名稱作為環境變數傳入
           ACCOUNTS_TABLE_NAME: !Ref AccountsTable
-          JWT_SECRET_KEY: "ThisIsAStrongAndSecretKeyForLocalDev123!@#"
+          JWT_SECRET_KEY: !Ref JwtSecretKeyParameter
       Events:
         LoginApi:
           Type: Api
@@ -167,12 +175,23 @@ Resources:
         Variables:
           # 將資料表名稱作為環境變數傳入函式，這是最佳實踐
           ACCOUNTS_TABLE_NAME: !Ref AccountsTable
+          JWT_SECRET_KEY: !Ref JwtSecretKeyParameter
       Events:
         CreateUserApi:
           Type: Api
           Properties:
             Path: /users
             Method: post # 建立資源通常使用 POST 方法
+        GetUserApi:
+          Type: Api
+          Properties:
+            Path: /users/{id}
+            Method: get
+        UpdateUserApi:
+          Type: Api
+          Properties:
+            Path: /users/{id}
+            Method: put
 
   FormFunction:
     Type: AWS::Serverless::Function
@@ -187,7 +206,7 @@ Resources:
             TableName: !Ref MetadataTable
       Environment:
         Variables:
-          JWT_SECRET_KEY: "ThisIsAStrongAndSecretKeyForLocalDev123!@#"
+          JWT_SECRET_KEY: !Ref JwtSecretKeyParameter
           PLAQUE_TABLE_NAME: !Ref PlaqueTable
           METADATA_TABLE_NAME: !Ref MetadataTable
       Events:

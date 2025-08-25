@@ -27,22 +27,22 @@ ITEMS_PER_PAGE = 5
 STRING_MAX_LENGTH = 20
 IS_LOCAL = os.environ.get("AWS_SAM_LOCAL")
 
+
 # ===================================================================
 # --- AWS 資源初始化 (AWS Resource Initialization) ---
 # ===================================================================
 # 將初始化放在 handler 外部，以便 Lambda 重複使用連線
+PLAQUES_TABLE_NAME = os.environ.get("PLAQUE_TABLE_NAME")
+METADATA_TABLE_NAME = os.environ.get("METADATA_TABLE_NAME")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+
 if IS_LOCAL:
     print("偵測到本地 SAM 環境，正在使用本地設定。")
     DYNAMODB_RESOURCE = boto3.resource("dynamodb", endpoint_url="http://192.168.200.144:8000")
-    PLAQUES_TABLE_NAME = "plaques"
-    METADATA_TABLE_NAME = "metadata"
 else:
     print("正在使用雲端部署設定。")
     DYNAMODB_RESOURCE = boto3.resource("dynamodb")
-    PLAQUES_TABLE_NAME = os.environ.get("PLAQUE_TABLE_NAME")
-    METADATA_TABLE_NAME = os.environ.get("METADATA_TABLE_NAME")
 
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 PLAQUES_TABLE = DYNAMODB_RESOURCE.Table(PLAQUES_TABLE_NAME)
 METADATA_TABLE = DYNAMODB_RESOURCE.Table(METADATA_TABLE_NAME)

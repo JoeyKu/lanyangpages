@@ -7,10 +7,8 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 # 從環境變數讀取設定
-TABLETS_TABLE_NAME = "plaques" # os.environ.get("TABLETS_TABLE_NAME", "plaques")
-# 確保您在部署時或在 template.yaml 的 Environment Variables 中設定了 JWT_SECRET_KEY
+PLAQUE_TABLE_NAME = os.environ.get("PLAQUE_TABLE_NAME", "plaques")
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
-
 
 def lambda_handler(event, context):
     """
@@ -32,7 +30,7 @@ def lambda_handler(event, context):
         # 在 AWS 環境中，Boto3 會自動找到對應區域的 DynamoDB
         dynamodb_resource = boto3.resource("dynamodb")
 
-    table = dynamodb_resource.Table(TABLETS_TABLE_NAME)
+    table = dynamodb_resource.Table(PLAQUE_TABLE_NAME)
 
     # ---- CORS 標頭設定 ----
     # 確保允許所有需要的 HTTP 方法
