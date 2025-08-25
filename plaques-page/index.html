@@ -22,6 +22,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 700px;
+            position: relative; /* Needed for positioning the menu */
         }
         h2, h3 {
             text-align: center;
@@ -140,13 +141,6 @@
         .delete-plaque-btn:hover {
             background-color: #c82333;
         }
-
-        #logout-button {
-            background-color: #6c757d;
-        }
-        #logout-button:hover {
-            background-color: #5a6268;
-        }
         .plaque-entry {
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -192,6 +186,15 @@
         }
         #cancel-plaque-form:hover, #back-to-edit-btn:hover, #cancel-benefactor-form:hover, .back-to-list-btn:hover {
             background-color: #5a6268;
+        }
+        .fieldset-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .btn-load-info {
+            width: auto; padding: 4px 10px; font-size: 0.8em; background-color: #17a2b8; margin: 0;
         }
         .benefactor-grid {
             display: grid;
@@ -313,6 +316,56 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* 右上角選單樣式 */
+        .header-menu {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+        }
+        .menu-toggle-btn {
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 8px 10px;
+            width: auto;
+            margin: 0;
+        }
+        .menu-toggle-btn span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background-color: #333;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 5px;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .dropdown-menu a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+        .dropdown-menu a:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+
     </style>
 </head>
 <body>    
@@ -371,6 +424,18 @@
 
         <!-- Plaque Main Section -->
         <div id="plaque-section" class="hidden">
+            <div class="header-menu">
+                <button id="menu-toggle-btn" class="menu-toggle-btn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div id="dropdown-menu" class="dropdown-menu">
+                    <a href="#" onclick="event.preventDefault(); showUserProfile();">修改個人資料</a>
+                    <a href="#" onclick="event.preventDefault(); logout();">登出</a>
+                </div>
+            </div>
+
             <h2>法會功德登記資訊</h2>
             <div class="form-group" style="margin-top: 2rem;">
                 <label for="search-input">搜尋功德登記表名稱</label>
@@ -382,10 +447,56 @@
 
             <button onclick="showPlaqueForm()">新增功德資訊(大中小牌)</button>
             <button onclick="showBenefactorForm()">新增功德資訊(懺主)</button>
-
-            <button id="logout-button" onclick="logout()">登出</button>
         </div>
         
+        <!-- User Profile Section -->
+        <div id="user-profile-section" class="hidden">
+            <h2>個人資料管理</h2>
+            <form onsubmit="updateUserProfile(event)">
+                <fieldset>
+                    <legend><strong>基本資料</strong></legend>
+                    <div class="form-group">
+                        <label for="profile-user-id">使用者帳號</label>
+                        <input type="text" id="profile-user-id" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-user-name">姓名</label>
+                        <input type="text" id="profile-user-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-user-phone">電話</label>
+                        <input type="tel" id="profile-user-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-user-address">地址</label>
+                        <input type="text" id="profile-user-address" required>
+                    </div>
+                    <button type="submit">儲存基本資料</button>
+                </fieldset>
+            </form>
+
+            <form onsubmit="changePassword(event)" style="margin-top: 2rem;">
+                <fieldset>
+                    <legend><strong>更改密碼</strong></legend>
+                     <div class="form-group">
+                        <label for="current-password">目前密碼</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">新密碼</label>
+                        <input type="password" id="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-new-password">確認新密碼</label>
+                        <input type="password" id="confirm-new-password" required>
+                    </div>
+                    <button type="submit" style="background-color: #ffc107;">確認更改密碼</button>
+                </fieldset>
+            </form>
+
+            <button type="button" class="back-to-list-btn" onclick="hideUserProfile()" style="margin-top: 2rem;">返回列表</button>
+        </div>
+
         <!-- Add/Edit Plaque Form Section -->
         <div id="plaque-form-section" class="hidden">
             <h3 id="form-title">法會超薦資料</h3>
@@ -397,7 +508,10 @@
                 </div>
                 
                 <fieldset>
-                    <legend><strong>基本資料</strong></legend>
+                    <div class="fieldset-header">
+                        <legend><strong>基本資料</strong></legend>
+                        <button type="button" class="btn-load-info" onclick="loadBasicInfo('plaque')">載入基本資料</button>
+                    </div>
                     <div class="form-group">
                         <label for="user_name">姓名</label>
                         <input type="text" id="user_name" required>
@@ -436,7 +550,10 @@
                 </div>
                 
                 <fieldset>
-                    <legend><strong>基本資料</strong></legend>
+                     <div class="fieldset-header">
+                        <legend><strong>基本資料</strong></legend>
+                        <button type="button" class="btn-load-info" onclick="loadBasicInfo('benefactor')">載入基本資料</button>
+                    </div>
                     <div class="form-group">
                         <label for="benefactor-user-name">姓名</label>
                         <input type="text" id="benefactor-user-name" required>
@@ -598,6 +715,7 @@
 
     <script>
         const API_BASE_URL = 'https://f5opovf0if.execute-api.ap-east-2.amazonaws.com/Prod';
+        //const API_BASE_URL = 'http://127.0.0.1:3000'
 
         // --- Global State ---
         let plaqueEntryCounter = 0;
@@ -607,6 +725,7 @@
         const loginForm = document.getElementById('login-form');
         const createAccountForm = document.getElementById('create-account-form');
         const plaqueSection = document.getElementById('plaque-section');
+        const userProfileSection = document.getElementById('user-profile-section');
         const plaqueFormSection = document.getElementById('plaque-form-section');
         const benefactorFormSection = document.getElementById('benefactor-form-section');
         const previewSection = document.getElementById('preview-section');
@@ -650,6 +769,7 @@
             document.getElementById('login-password').value = '';
             plaqueSection.classList.add('hidden');
             plaqueFormSection.classList.add('hidden');
+            userProfileSection.classList.add('hidden');
             benefactorFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
             readOnlyPreviewSection.classList.add('hidden');
@@ -676,8 +796,8 @@
             event.preventDefault();
             const userId = document.getElementById('login-user-id').value;
             const password = document.getElementById('login-password').value;
+            showLoader();
             try {
-                showLoader();
                 const response = await fetch(`${API_BASE_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -721,8 +841,8 @@
             }
             passwordError.style.display = 'none';
 
+            showLoader();
             try {
-                showLoader();
                 const response = await fetch(`${API_BASE_URL}/users`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -744,8 +864,8 @@
         }
         
         async function fetchPlaques(userId) {
+            showLoader();
             try {
-                showLoader();
                 const token = localStorage.getItem('jwt_token');
                 const response = await fetch(`${API_BASE_URL}/plaques?user_id=${userId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -828,6 +948,7 @@
         function showPlaqueSectionView(userId) {
             loginForm.classList.add('hidden');
             createAccountForm.classList.add('hidden');
+            userProfileSection.classList.add('hidden');
             plaqueFormSection.classList.add('hidden');
             benefactorFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
@@ -838,6 +959,8 @@
         }
         
         function logout() {
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            if (dropdownMenu) dropdownMenu.classList.remove('show');
             showLoginView();
             showNotification('您已登出。', 'success');
         }
@@ -845,6 +968,7 @@
         // --- Form Views Logic ---
         function showPlaqueForm() {
             plaqueSection.classList.add('hidden');
+            userProfileSection.classList.add('hidden');
             benefactorFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
             readOnlyPreviewSection.classList.add('hidden');
@@ -870,6 +994,7 @@
 
         function showBenefactorForm() {
             plaqueSection.classList.add('hidden');
+            userProfileSection.classList.add('hidden');
             plaqueFormSection.classList.add('hidden');
             previewSection.classList.add('hidden');
             readOnlyPreviewSection.classList.add('hidden');
@@ -893,10 +1018,123 @@
             plaqueSection.classList.remove('hidden');
         }
 
+        // --- User Profile View ---
+        function showUserProfile() {
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            if (dropdownMenu) dropdownMenu.classList.remove('show');
+            plaqueSection.classList.add('hidden');
+            userProfileSection.classList.remove('hidden');
+            fetchAndDisplayProfile();
+        }
+
+        function hideUserProfile() {
+            userProfileSection.classList.add('hidden');
+            plaqueSection.classList.remove('hidden');
+        }
+
+        async function fetchAndDisplayProfile() {
+            const userId = localStorage.getItem('user_id');
+            const token = localStorage.getItem('jwt_token');
+            if (!userId || !token) return;
+
+            showLoader();
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (handleUnauthorized(response)) return;
+                if (!response.ok) throw new Error('獲取個人資料失敗');
+
+                const data = await response.json();
+                document.getElementById('profile-user-id').value = data.user_id || userId;
+                document.getElementById('profile-user-name').value = data.user_name || '';
+                document.getElementById('profile-user-phone').value = data.user_phone || '';
+                document.getElementById('profile-user-address').value = data.user_address || '';
+                
+                // Clear password fields every time
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-new-password').value = '';
+
+            } catch(error) {
+                showNotification(error.message, 'error');
+                console.error("獲取個人資料時發生錯誤:", error);
+            } finally {
+                hideLoader();
+            }
+        }
+
+        async function updateUserProfile(event) {
+            event.preventDefault();
+            const userId = localStorage.getItem('user_id');
+            const token = localStorage.getItem('jwt_token');
+            
+            const profileData = {
+                user_name: document.getElementById('profile-user-name').value,
+                user_phone: document.getElementById('profile-user-phone').value,
+                user_address: document.getElementById('profile-user-address').value,
+            };
+
+            showLoader();
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(profileData)
+                });
+                if (handleUnauthorized(response)) return;
+                if (!response.ok) throw new Error('更新失敗');
+
+                showNotification('基本資料更新成功！', 'success');
+            } catch(error) {
+                showNotification('更新失敗，請稍後再試。', 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+            if (!currentPassword || !newPassword) {
+                showNotification('目前密碼與新密碼皆不可為空', 'error');
+                return;
+            }
+            if (newPassword !== confirmNewPassword) {
+                showNotification('新密碼與確認密碼不一致', 'error');
+                return;
+            }
+
+            const userId = localStorage.getItem('user_id');
+            const token = localStorage.getItem('jwt_token');
+
+            showLoader();
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+                });
+                 if (handleUnauthorized(response)) return;
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || '更改密碼失敗');
+
+                alert('密碼已成功更改，為了安全起見，將為您自動登出。');
+                logout();
+            } catch(error) {
+                showNotification(error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
         // --- Read-only Preview and Edit Logic ---
         async function handleListItemClick(id, type) {
+            showLoader();
             try {
-                showLoader();
                 const token = localStorage.getItem('jwt_token');
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -950,6 +1188,39 @@
             }
         }
 
+        async function loadBasicInfo(formPrefix) {
+            const userId = localStorage.getItem('user_id');
+            const token = localStorage.getItem('jwt_token');
+            if (!userId || !token) return;
+            
+            showLoader();
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (handleUnauthorized(response)) return;
+                if (!response.ok) throw new Error('獲取個人資料失敗');
+
+                const data = await response.json();
+                
+                if (formPrefix === 'plaque') {
+                    document.getElementById('user_name').value = data.user_name || '';
+                    document.getElementById('user_phone').value = data.user_phone || '';
+                    document.getElementById('user_address').value = data.user_address || '';
+                } else if (formPrefix === 'benefactor') {
+                    document.getElementById('benefactor-user-name').value = data.user_name || '';
+                    document.getElementById('benefactor-user-phone').value = data.user_phone || '';
+                    document.getElementById('benefactor-user-address').value = data.user_address || '';
+                }
+                showNotification('基本資料已載入', 'success');
+
+            } catch(error) {
+                showNotification(error.message, 'error');
+                console.error("載入基本資料時發生錯誤:", error);
+            } finally {
+                hideLoader();
+            }
+        }
 
         async function downloadPDF() {
             const id = document.getElementById('readonly-plaque-id').value;
@@ -958,13 +1229,11 @@
                 return;
             }
             
-            // 修正 #1: 請確保這個 URL 指向您設定的、專門用來回傳二進位檔案的 API Gateway 端點
             const downloadUrl = `${API_BASE_URL}/forms/${id}`
             console.log(`準備從 ${downloadUrl} 下載 PDF`);
 
+            showLoader();
             try {
-                showLoader();
-                alert("HAHA")
                 const token = localStorage.getItem('jwt_token');
                 const response = await fetch(downloadUrl, {
                     method: 'GET',
@@ -977,18 +1246,15 @@
                 if (handleUnauthorized(response)) return;
 
                 if (!response.ok) {
-                    // 如果後端在出錯時回傳 JSON 錯誤訊息，這段程式碼可以將其解析出來
                     const errorData = await response.json().catch(() => ({ message: '伺服器發生未知錯誤' }));
                     throw new Error(`下載失敗: ${errorData.message}`);
                 }
 
-                // 修正 #2: 將回應作為二進位 Blob 處理，而不是 JSON
                 const blob = await response.blob();
 
-                // 從回應的 Header 中取得後端設定的檔名
                 const contentDisposition = response.headers.get('content-disposition');
                 let filename = document.getElementById('readonly-user-name').innerHTML + '-' + 
-                               document.getElementById('readonly-plaque-name').innerHTML + '.pdf'; // 如果後端沒給檔名，就用這個預設值
+                               document.getElementById('readonly-plaque-name').innerHTML + '.pdf';
                 if (contentDisposition) {
                     const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
                     if (filenameMatch && filenameMatch.length === 2) {
@@ -996,17 +1262,15 @@
                     }
                 }
 
-                // 修正 #3: 在前端動態建立一個隱藏的下載連結，並模擬點擊它
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = filename; // 設定下載的檔案名稱
+                a.download = filename;
                 
                 document.body.appendChild(a);
                 a.click();
                 
-                // 清理工作：釋放記憶體中的 URL 並移除臨時連結
                 window.URL.revokeObjectURL(url);
                 a.remove();
 
@@ -1020,12 +1284,11 @@
             }
         }
         
-
         // --- Edit, Delete, Copy Logic ---
         async function editPlaque(id) {
+            showLoader();
             try {
                 const token = localStorage.getItem('jwt_token');
-                showLoader();
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1044,9 +1307,9 @@
         }
         
         async function editBenefactor(id) {
+            showLoader();
             try {
                 const token = localStorage.getItem('jwt_token');
-                showLoader();
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1067,9 +1330,9 @@
         async function deletePlaque(id, name) {
             if (!confirm(`您確定要刪除 "${name}" 嗎？此操作無法復原。`)) return;
 
+            showLoader();
             try {
                 const token = localStorage.getItem('jwt_token');
-                showLoader();
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -1094,9 +1357,9 @@
         
         async function copyPlaque(id, name) {
             if (!confirm(`您確定要複製 "${name}" 嗎？`)) return;
+            showLoader();
             try {
                 const token = localStorage.getItem('jwt_token');
-                showLoader();
                 let response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1547,9 +1810,9 @@
                 endpoint = isEditing ? `${API_BASE_URL}/plaques/${plaqueId}` : `${API_BASE_URL}/plaques`;
             }
             
+            showLoader();
             try {
                 const token = localStorage.getItem('jwt_token');
-                showLoader();
                 const response = await fetch(endpoint, {
                     method: method,
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -1581,6 +1844,26 @@
                 showLoginView();
             }
         };
+
+        // --- Dropdown Menu Logic ---
+        const menuToggleBtn = document.getElementById('menu-toggle-btn');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+
+        if (menuToggleBtn) {
+            menuToggleBtn.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent the window.onclick from closing it immediately
+                dropdownMenu.classList.toggle('show');
+            });
+        }
+
+        // Close the dropdown if the user clicks outside of it
+        window.addEventListener('click', (event) => {
+            if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+                if (!event.target.closest('.header-menu')) {
+                     dropdownMenu.classList.remove('show');
+                }
+            }
+        });
     </script>
 </body>
 </html>
