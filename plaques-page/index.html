@@ -286,9 +286,39 @@
             background-color: #f2f2f2;
             font-weight: bold;
         }
+
+        /* 載入中指示器樣式 */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            display: none; /* 預設隱藏 */
+            justify-content: center;
+            align-items: center;
+        }
+        .loader {
+            border: 5px solid #f3f3f3; /* Light grey */
+            border-top: 5px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
     </style>
 </head>
-<body>
+<body>    
+    <div id="loading-overlay">
+        <div class="loader"></div>
+    </div>
     
     <div id="notification-banner">
         <span id="notification-message"></span>
@@ -320,12 +350,17 @@
             <h2>建立帳號</h2>
             <form onsubmit="createAccount(event)">
                 <div class="form-group">
-                    <label for="create-user-id">新使用者帳號</label>
-                    <input type="text" id="create-user-id" required>
+                    <label for="create-user-id">新使用者帳號 (僅限英文、數字與.)</label>
+                    <input type="text" id="create-user-id" required pattern="[a-zA-Z0-9.]+" title="帳號只能包含英文、數字與.">
                 </div>
                 <div class="form-group">
                     <label for="create-password">密碼</label>
                     <input type="password" id="create-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">確認密碼</label>
+                    <input type="password" id="confirm-password" required>
+                    <small id="password-match-error" class="form-hint" style="display: none; color: #dc3545;">兩次輸入的密碼不一致</small>
                 </div>
                 <button type="submit">建立</button>
             </form>
@@ -562,7 +597,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'https://h8syjyis1h.execute-api.us-east-1.amazonaws.com/Prod';
+        const API_BASE_URL = 'https://f5opovf0if.execute-api.ap-east-2.amazonaws.com/Prod';
 
         // --- Global State ---
         let plaqueEntryCounter = 0;
@@ -596,6 +631,16 @@
             clearTimeout(notificationTimeout);
             notificationBanner.classList.remove('show');
         });
+
+        // --- Loader ---
+        function showLoader() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'flex';
+        }
+        function hideLoader() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
 
         // --- Authentication & View Management ---
         function showLoginView() {
@@ -632,6 +677,7 @@
             const userId = document.getElementById('login-user-id').value;
             const password = document.getElementById('login-password').value;
             try {
+                showLoader();
                 const response = await fetch(`${API_BASE_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -648,6 +694,8 @@
             } catch (error) {
                 console.error('登入時發生錯誤:', error);
                 showNotification('登入時發生錯誤，請查看主控台。', 'error');
+            } finally {
+                hideLoader();
             }
         }
 
@@ -655,7 +703,26 @@
             event.preventDefault();
             const userId = document.getElementById('create-user-id').value;
             const password = document.getElementById('create-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const passwordError = document.getElementById('password-match-error');
+
+            // 檢查：帳號格式 (只能是英文、數字、點)
+            const userIdRegex = /^[a-zA-Z0-9.]+$/;
+            if (!userIdRegex.test(userId)) {
+                showNotification('帳號格式錯誤，只能使用英文、數字與.', 'error');
+                return;
+            }
+
+            // 檢查：兩次密碼是否相符
+            if (password !== confirmPassword) {
+                passwordError.style.display = 'block';
+                showNotification('兩次輸入的密碼不一致', 'error');
+                return;
+            }
+            passwordError.style.display = 'none';
+
             try {
+                showLoader();
                 const response = await fetch(`${API_BASE_URL}/users`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -671,11 +738,14 @@
             } catch (error) {
                 console.error('建立帳號時發生錯誤:', error);
                 showNotification('建立帳號時發生錯誤，請查看主控台。', 'error');
+            } finally {
+                hideLoader();
             }
         }
         
         async function fetchPlaques(userId) {
             try {
+                showLoader();
                 const token = localStorage.getItem('jwt_token');
                 const response = await fetch(`${API_BASE_URL}/plaques?user_id=${userId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -731,6 +801,8 @@
                 }
             } catch (error) {
                 console.error('獲取牌位資料時發生錯誤:', error);
+            } finally {
+                hideLoader();
             }
         }
         
@@ -824,6 +896,7 @@
         // --- Read-only Preview and Edit Logic ---
         async function handleListItemClick(id, type) {
             try {
+                showLoader();
                 const token = localStorage.getItem('jwt_token');
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -837,6 +910,8 @@
             } catch(error) {
                 showNotification(error.message, 'error');
                 console.error("預覽時發生錯誤:", error);
+            } finally {
+                hideLoader();
             }
         }
 
@@ -875,7 +950,8 @@
             }
         }
 
-                async function downloadPDF() {
+
+        async function downloadPDF() {
             const id = document.getElementById('readonly-plaque-id').value;
             if (!id) {
                 showNotification('找不到資料 ID', 'error');
@@ -887,6 +963,8 @@
             console.log(`準備從 ${downloadUrl} 下載 PDF`);
 
             try {
+                showLoader();
+                alert("HAHA")
                 const token = localStorage.getItem('jwt_token');
                 const response = await fetch(downloadUrl, {
                     method: 'GET',
@@ -909,7 +987,8 @@
 
                 // 從回應的 Header 中取得後端設定的檔名
                 const contentDisposition = response.headers.get('content-disposition');
-                let filename = 'download.pdf'; // 如果後端沒給檔名，就用這個預設值
+                let filename = document.getElementById('readonly-user-name').innerHTML + '-' + 
+                               document.getElementById('readonly-plaque-name').innerHTML + '.pdf'; // 如果後端沒給檔名，就用這個預設值
                 if (contentDisposition) {
                     const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
                     if (filenameMatch && filenameMatch.length === 2) {
@@ -936,35 +1015,17 @@
             } catch (error) {
                 console.error('下載 PDF 時發生錯誤:', error);
                 showNotification(error.message, 'error');
+            } finally {
+                hideLoader();
             }
         }
         
-        /*async function downloadPDF() {
-            const id = document.getElementById('readonly-plaque-id').value;
-            console.log(`準備下載 ID: ${id} 的 PDF`);
-            
-            try {
-                const token = localStorage.getItem('jwt_token');
-                const response = await fetch(`${API_BASE_URL}/forms/${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (handleUnauthorized(response)) return;
-                if (!response.ok) throw new Error('獲取下載資料失敗');
-
-                const blob = await response.blob();
-                const data = await response.json();
-                console.log("PDF 應包含以下資料:", data);
-                showNotification("PDF 下載功能已觸發，請檢查 console log。", "success");
-            } catch (error) {
-                showNotification(error.message, 'error');
-            }
-        }
-        */
 
         // --- Edit, Delete, Copy Logic ---
         async function editPlaque(id) {
             try {
                 const token = localStorage.getItem('jwt_token');
+                showLoader();
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -977,12 +1038,15 @@
             } catch(error) {
                 showNotification(error.message, 'error');
                 console.error("編輯時發生錯誤:", error);
+            } finally {
+                hideLoader();
             }
         }
         
         async function editBenefactor(id) {
             try {
                 const token = localStorage.getItem('jwt_token');
+                showLoader();
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -995,6 +1059,8 @@
             } catch(error) {
                 showNotification(error.message, 'error');
                 console.error("編輯懺主時發生錯誤:", error);
+            } finally {
+                hideLoader();
             }
         }
         
@@ -1003,6 +1069,7 @@
 
             try {
                 const token = localStorage.getItem('jwt_token');
+                showLoader();
                 const response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -1020,6 +1087,8 @@
             } catch (error) {
                 console.error('刪除時發生錯誤:', error);
                 showNotification('刪除時發生錯誤。', 'error');
+            } finally {
+                hideLoader();
             }
         }
         
@@ -1027,6 +1096,7 @@
             if (!confirm(`您確定要複製 "${name}" 嗎？`)) return;
             try {
                 const token = localStorage.getItem('jwt_token');
+                showLoader();
                 let response = await fetch(`${API_BASE_URL}/plaques/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1061,6 +1131,8 @@
             } catch (error) {
                 showNotification(error.message, 'error');
                 console.error("複製時發生錯誤:", error);
+            } finally {
+                hideLoader();
             }
         }
 
@@ -1477,6 +1549,7 @@
             
             try {
                 const token = localStorage.getItem('jwt_token');
+                showLoader();
                 const response = await fetch(endpoint, {
                     method: method,
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -1493,6 +1566,8 @@
             } catch (error) {
                 console.error('儲存牌位時發生錯誤:', error);
                 showNotification('儲存牌位時發生錯誤。', 'error');
+            } finally {
+                hideLoader();
             }
         }
 
