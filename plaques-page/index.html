@@ -76,6 +76,10 @@
         button:hover {
             background-color: #0056b3;
         }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
         .toggle-link {
             text-align: center;
             margin-top: 1rem;
@@ -205,6 +209,16 @@
             width: 90%;
             padding: 0.5rem;
             font-size: 1rem;
+        }
+        .terms-group {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 1rem;
+            font-size: 0.9em;
+        }
+        .terms-group input {
+            margin-right: 10px;
+            margin-top: 3px;
         }
 
         /* 預覽畫面樣式 */
@@ -415,7 +429,11 @@
                     <input type="password" id="confirm-password" required>
                     <small id="password-match-error" class="form-hint" style="display: none; color: #dc3545;">兩次輸入的密碼不一致</small>
                 </div>
-                <button type="submit">建立</button>
+                <div class="terms-group">
+                    <input type="checkbox" id="terms-agree" onchange="toggleCreateAccountButton()">
+                    <label for="terms-agree">註冊即表示您同意我們儲存您的資料，以提供服務。您的資料將被妥善保管，並僅供您本人使用。</label>
+                </div>
+                <button type="submit" id="create-account-btn" disabled>建立</button>
             </form>
             <div class="toggle-link">
                 <a onclick="toggleForms()">已經有帳號了？登入</a>
@@ -788,6 +806,9 @@
         }
 
         function toggleForms() {
+            // Reset terms checkbox when switching to create account form
+            document.getElementById('terms-agree').checked = false;
+            toggleCreateAccountButton(); // Ensure button state is correct
             loginForm.classList.toggle('hidden');
             createAccountForm.classList.toggle('hidden');
         }
@@ -863,6 +884,12 @@
             }
         }
         
+        function toggleCreateAccountButton() {
+            const checkbox = document.getElementById('terms-agree');
+            const button = document.getElementById('create-account-btn');
+            button.disabled = !checkbox.checked;
+        }
+
         async function fetchPlaques(userId) {
             showLoader();
             try {
