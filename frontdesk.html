@@ -62,7 +62,8 @@
       async function submitPassword() {
         const pw = document.getElementById("passwordInput").value.trim();
         const errorDiv = document.getElementById("error");
-        const loginUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/login";
+        //const loginUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/login";
+        const loginUrl = "https://yucq6ksf6ba3de2zsayin5s5wi0yekag.lambda-url.us-east-1.on.aws/login";
 
         try {
           const response = await fetch(loginUrl, {
@@ -96,7 +97,8 @@
       }
 
       async function updateApp() {
-        const getInfoUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/getinfo";
+        //const getInfoUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/getinfo";
+        const getInfoUrl = "https://yucq6ksf6ba3de2zsayin5s5wi0yekag.lambda-url.us-east-1.on.aws/getinfo";
 
         try {
           const token = localStorage.getItem("token");
