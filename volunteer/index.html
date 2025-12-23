@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蘭陽別院義工時數管理系統</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="login-screen" class="screen full-screen">
+        <div class="login-card glass">
+            <div class="login-header">
+                <h1>義工時數管理系統</h1>
+                <p>請登入系統以管理義工資料</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">帳號</label>
+                    <input type="text" id="username" placeholder="請輸入帳號 (admin)" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" placeholder="請輸入密碼 (1234)" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">登入</button>
+                <p id="login-error" class="error-msg"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="screen container" style="display: none;">
+        <header class="dash-header">
+            <div class="logo">義工時數管理系統</div>
+            <div class="user-info">
+                <span id="display-user">管理員</span>
+                <button id="logout-btn" class="btn btn-sm btn-outline">登出</button>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="table-card glass">
+                <div class="card-header">
+                    <h2>義工列表</h2>
+                    <div class="header-actions">
+                        <button id="add-record-btn" class="btn btn-success btn-sm">新增紀錄</button>
+                        <button id="refresh-btn" class="btn btn-primary btn-sm">重新整理</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="volunteer-table">
+                        <thead>
+                            <tr>
+                                <th>義工姓名</th>
+                                <th>分會</th>
+                                <th>時數</th>
+                            </tr>
+                        </thead>
+                        <tbody id="volunteer-list">
+                            <!-- Data will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="loading-state" class="loading-overlay" style="display: none;">
+                    <div class="loader"></div>
+                    <p>正在載入數據...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Record Modal -->
+    <div id="add-modal" class="modal-overlay hidden">
+        <div class="modal-card glass">
+            <div class="modal-header">
+                <h3>新增服務紀錄</h3>
+                <button id="close-modal" class="btn-close">&times;</button>
+            </div>
+            <form id="add-record-form">
+                <div class="form-group mb-4">
+                    <label for="reg-name">填單人</label>
+                    <input type="text" id="reg-name" placeholder="請輸入姓名" required>
+                </div>
+
+                <div class="records-editor">
+                    <div class="section-header">
+                        <h4>義工名單</h4>
+                        <button type="button" id="add-row-btn" class="btn btn-sm btn-outline">+ 新增義工</button>
+                    </div>
+                    <div id="volunteer-rows-container">
+                        <div class="volunteer-row-item">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>義工姓名</label>
+                                    <input type="text" class="vol-name" placeholder="請輸入姓名" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>分會</label>
+                                    <select class="vol-branch" required>
+                                        <option value="">請選擇分會</option>
+                                        <option value="宜二">宜二</option>
+                                        <option value="宜三">宜三</option>
+                                        <option value="宜四">宜四</option>
+                                        <option value="宜五">宜五</option>
+                                        <option value="蘭一">蘭一</option>
+                                        <option value="蘭二">蘭二</option>
+                                        <option value="頭城">頭城</option>
+                                        <option value="礁溪">礁溪</option>
+                                        <option value="員山">員山</option>
+                                        <option value="金剛六">金剛六</option>
+                                        <option value="宜一">宜一</option>
+                                        <option value="宜六">宜六</option>
+                                        <option value="羅一">羅一</option>
+                                        <option value="羅二">羅二</option>
+                                        <option value="五結">五結</option>
+                                        <option value="冬山">冬山</option>
+                                        <option value="蘇澳">蘇澳</option>
+                                        <option value="壯一">壯一</option>
+                                        <option value="壯二">壯二</option>
+                                        <option value="教師">教師</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>單位</label>
+                                    <select class="vol-unit" required>
+                                        <option value="">請選擇單位</option>
+                                        <option value="香燈">香燈</option>
+                                        <option value="典座">典座</option>
+                                        <option value="行堂">行堂</option>
+                                        <option value="義賣組(饅頭)">義賣組(饅頭)</option>
+                                        <option value="排贊普">排贊普</option>
+                                        <option value="房務">房務</option>
+                                        <option value="書車義工">書車義工</option>
+                                        <option value="服務台 101">服務台 101</option>
+                                        <option value="服務台 100">服務台 100</option>
+                                        <option value="服務台 10">服務台 10</option>
+                                        <option value="知賓">知賓</option>
+                                        <option value="流通處">流通處</option>
+                                        <option value="滴水坊">滴水坊</option>
+                                        <option value="助念團">助念團</option>
+                                        <option value="童軍團">童軍團</option>
+                                        <option value="金剛巡寮">金剛巡寮</option>
+                                        <option value="茶席">茶席</option>
+                                        <option value="美術館">美術館</option>
+                                        <option value="社教">社教</option>
+                                        <option value="監獄佈教">監獄佈教</option>
+                                        <option value="六樓打掃">六樓打掃</option>
+                                        <option value="佛光會">佛光會</option>
+                                        <option value="直播">直播</option>
+                                        <option value="11、10樓打掃">11、10樓打掃</option>
+                                        <option value="1 樓念佛會">1 樓念佛會</option>
+                                        <option value="園藝組">園藝組</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>時數</label>
+                                    <input type="number" class="vol-hours" min="0.5" step="0.5" placeholder="時數"
+                                        required>
+                                </div>
+                                <div class="row-actions">
+                                    <button type="button" class="btn-remove-row"
+                                        style="visibility: hidden;">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block">確認新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
