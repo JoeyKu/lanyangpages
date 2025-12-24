@@ -8,58 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshBtn = document.getElementById('refresh-btn');
     const loadingState = document.getElementById('loading-state');
 
-    // Mock Database
-    const mockVolunteers = [
-        {
-            id: 1,
-            name: '王小明',
-            branch: '宜一',
-            records: [
-                { id: 101, registrar: '知林法師', hours: 20, unit: '服務台 101' },
-                { id: 102, registrar: '知林法師', hours: 25, unit: '流通處' }
-            ]
-        },
-        {
-            id: 2,
-            name: '李美華',
-            branch: '宜一',
-            records: [
-                { id: 201, registrar: '明恆法師', hours: 120, unit: '書車義工' }
-            ]
-        },
-        {
-            id: 3,
-            name: '張建國',
-            branch: '蘭二',
-            records: [
-                { id: 301, registrar: '知林法師', hours: 88, unit: '園藝組' }
-            ]
-        },
-        {
-            id: 4,
-            name: '林宜君',
-            branch: '宜三',
-            records: [
-                { id: 401, registrar: '知林法師', hours: 32, unit: '茶席' }
-            ]
-        },
-        {
-            id: 5,
-            name: '陳致中',
-            branch: '宜四',
-            records: [
-                { id: 501, registrar: '知林法師', hours: 210, unit: '金剛巡寮' }
-            ]
-        },
-        {
-            id: 6,
-            name: '黃詩涵',
-            branch: '宜五',
-            records: [
-                { id: 601, registrar: '知修法師', hours: 56, unit: '典座' }
-            ]
-        }
-    ];
+    let currentVolunteers = [];
 
     // Login logic
     loginForm.addEventListener('submit', (e) => {
@@ -135,61 +84,133 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Add Record logic
-    addRecordForm.addEventListener('submit', (e) => {
+    addRecordForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const submitBtn = addRecordForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+
+        // UI Loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = '傳送中...';
 
         const regName = document.getElementById('reg-name').value;
         const rowItems = volunteerRowsContainer.querySelectorAll('.volunteer-row-item');
+        const currentYear = new Date().getFullYear();
+
+        const payload = {
+            creator: regName,
+            records: []
+        };
 
         rowItems.forEach(row => {
             const volName = row.querySelector('.vol-name').value;
             const volBranch = row.querySelector('.vol-branch').value;
             const volUnit = row.querySelector('.vol-unit').value;
             const volHours = parseFloat(row.querySelector('.vol-hours').value);
+            const volRemarks = row.querySelector('.vol-remarks').value;
 
-            // Find existing volunteer
-            let volunteer = mockVolunteers.find(v => v.name === volName && v.branch === volBranch);
-
-            const newRecord = {
-                id: Date.now() + Math.random(), // Add random to ensure uniqueness in same batch
-                registrar: regName,
+            payload.records.push({
+                volunteer: volName,
+                chapter: volBranch,
+                unit: volUnit,
                 hours: volHours,
-                unit: volUnit
-            };
-
-            if (volunteer) {
-                volunteer.records.push(newRecord);
-            } else {
-                const newVolunteer = {
-                    id: mockVolunteers.length + 1,
-                    name: volName,
-                    branch: volBranch,
-                    records: [newRecord]
-                };
-                mockVolunteers.push(newVolunteer);
-            }
+                year: currentYear,
+                remarks: volRemarks
+            });
         });
 
-        // feedback and cleanup
-        addModal.classList.add('hidden');
-        renderTable(mockVolunteers);
+        try {
+            const response = await fetch('https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/hours', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                // Handle non-2xx responses
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `伺服器回應錯誤: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Success:', result);
+            alert('紀錄新增成功！');
+
+            // feedback and cleanup
+            addModal.classList.add('hidden');
+            fetchVolunteers(); // Refresh the list
+        } catch (error) {
+            console.error('Error details:', error);
+
+            // Check if it's a TypeError (often caused by CORS or Network failure)
+            if (error instanceof TypeError) {
+                alert('新增失敗：連線錯誤或 CORS 阻擋。\n請確認 AWS API Gateway 已啟用 CORS 並允許您的網域。\n(Referrer Policy: strict-origin-when-cross-origin)');
+            } else {
+                alert('新增失敗：' + error.message);
+            }
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+        }
     });
 
-    // Data fetching logic (Simulated API)
+    // Data fetching logic (API Integration)
     async function fetchVolunteers() {
         loadingState.style.display = 'flex';
         volunteerList.innerHTML = '';
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        try {
+            const response = await fetch('https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/hours?limit=500');
+            if (!response.ok) throw new Error('無法取得資料');
 
-        renderTable(mockVolunteers);
-        loadingState.style.display = 'none';
+            const data = await response.json();
+            const items = data.items || [];
+
+            // Group items by volunteer + chapter
+            const groupedData = {};
+            items.forEach(item => {
+                const key = `${item.volunteer}-${item.chapter}`;
+                if (!groupedData[key]) {
+                    groupedData[key] = {
+                        id: item.id, // Use the latest ID as reference
+                        name: item.volunteer,
+                        branch: item.chapter,
+                        records: []
+                    };
+                }
+                groupedData[key].records.push({
+                    id: item.id,
+                    registrar: item.creator || '系統',
+                    hours: item.hours || 0,
+                    unit: item.unit || '',
+                    remarks: item.remarks || '',
+                    date: item.created_at
+                });
+            });
+
+            // Convert to array and sort by name
+            currentVolunteers = Object.values(groupedData).sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+
+            renderTable(currentVolunteers);
+        } catch (error) {
+            console.error('Fetch error:', error);
+            volunteerList.innerHTML = `<tr><td colspan="4" class="text-center text-danger">載入失敗：${error.message}</td></tr>`;
+        } finally {
+            loadingState.style.display = 'none';
+        }
     }
 
     function renderTable(data) {
         volunteerList.innerHTML = data.map(v => {
             const totalHours = v.records.reduce((sum, r) => sum + r.hours, 0);
+            // Get the most recent remark
+            const latestRemark = v.records
+                .filter(r => r.remarks)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.remarks || '';
+
             return `
                 <tr class="expandable-row" data-id="${v.id}">
                     <td><strong>${v.name}</strong></td>
@@ -207,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <span><span class="record-label">單位:</span><span class="record-value">${r.unit}</span></span>
                                             <span><span class="record-label">登記人:</span><span class="record-value">${r.registrar}</span></span>
                                             <span><span class="record-label">時數:</span><span class="record-value">${r.hours} 小時</span></span>
+                                            ${r.remarks ? `<span><span class="record-label">備註:</span><span class="record-value">${r.remarks}</span></span>` : ''}
                                         </div>
                                         <button class="btn btn-danger delete-record-btn" 
                                                 data-volunteer-id="${v.id}" 
@@ -236,21 +258,35 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.delete-record-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent row toggle
-                const volunteerId = parseInt(btn.getAttribute('data-volunteer-id'));
-                const recordId = parseInt(btn.getAttribute('data-record-id'));
+                const volunteerId = btn.getAttribute('data-volunteer-id');
+                const recordId = btn.getAttribute('data-record-id');
                 deleteRecord(volunteerId, recordId);
             });
         });
     }
 
-    function deleteRecord(volunteerId, recordId) {
-        const volunteer = mockVolunteers.find(v => v.id === volunteerId);
-        if (volunteer) {
-            volunteer.records = volunteer.records.filter(r => r.id !== recordId);
-            renderTable(mockVolunteers);
-            // Re-expand the row we were looking at
-            const detailRow = document.getElementById(`detail-${volunteerId}`);
-            if (detailRow) detailRow.classList.remove('hidden');
+    async function deleteRecord(volunteerId, recordId) {
+        const volunteer = currentVolunteers.find(v => v.id === volunteerId);
+        if (!volunteer) return;
+
+        const record = volunteer.records.find(r => r.id === recordId);
+        if (!record) return;
+
+        if (!confirm(`確定要刪除「${volunteer.name}」的這筆紀錄嗎？`)) return;
+
+        try {
+            const url = `https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/hours/${recordId}?volunteer=${encodeURIComponent(volunteer.name)}`;
+            const response = await fetch(url, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('刪除失敗');
+
+            alert('紀錄已成功刪除');
+            fetchVolunteers(); // Refresh list to reflect changes
+        } catch (error) {
+            console.error('Delete error:', error);
+            alert('刪除失敗：' + error.message);
         }
     }
 
