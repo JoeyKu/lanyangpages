@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
     const volunteerList = document.getElementById('volunteer-list');
     const refreshBtn = document.getElementById('refresh-btn');
+    const exportBtn = document.getElementById('export-btn');
     const loadingState = document.getElementById('loading-state');
 
     let currentVolunteers = [];
@@ -367,5 +368,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function exportToExcel() {
+        const originalText = exportBtn.textContent;
+        exportBtn.disabled = true;
+        exportBtn.textContent = '匯出中...';
+
+        try {
+            const response = await fetch('https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/export', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    logoutBtn.click();
+                    throw new Error('登入逾時，請重新登入');
+                }
+                throw new Error('匯出失敗');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Try to get filename from content-disposition
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let fileName = '義工時數紀錄.xlsx';
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-8'')?([^'";]+)['"]?/);
+                if (fileNameMatch && fileNameMatch[1]) {
+                    fileName = decodeURIComponent(fileNameMatch[1]);
+                }
+            }
+
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            console.error('Export error:', error);
+            alert('匯出失敗：' + error.message);
+        } finally {
+            exportBtn.disabled = false;
+            exportBtn.textContent = originalText;
+        }
+    }
+
     refreshBtn.addEventListener('click', fetchVolunteers);
+    exportBtn.addEventListener('click', exportToExcel);
 });
