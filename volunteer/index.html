@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    <div id="login-screen" class="screen full-screen">
+    <div id="login-screen" class="screen full-screen" style="display: none;">
         <div class="login-card glass">
             <div class="login-header">
                 <h1>義工時數管理系統</h1>
@@ -23,11 +23,11 @@
             <form id="login-form">
                 <div class="form-group">
                     <label for="username">帳號</label>
-                    <input type="text" id="username" placeholder="請輸入帳號 (admin)" required>
+                    <input type="text" id="username" placeholder="請輸入帳號" required>
                 </div>
                 <div class="form-group">
                     <label for="password">密碼</label>
-                    <input type="password" id="password" placeholder="請輸入密碼 (1234)" required>
+                    <input type="password" id="password" placeholder="請輸入密碼" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">登入</button>
                 <p id="login-error" class="error-msg"></p>

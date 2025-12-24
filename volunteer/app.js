@@ -9,25 +9,87 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingState = document.getElementById('loading-state');
 
     let currentVolunteers = [];
+    let loggedInChapter = '';
+    let authToken = localStorage.getItem('auth_token') || '';
+
+    // Initialize: Check if already logged in
+    if (authToken) {
+        loggedInChapter = localStorage.getItem('logged_in_chapter') || '';
+        document.getElementById('display-user').textContent = loggedInChapter;
+        loginScreen.style.display = 'none';
+        dashboardScreen.style.display = 'block';
+        fetchVolunteers();
+    } else {
+        loginScreen.style.display = 'flex';
+        dashboardScreen.style.display = 'none';
+    }
 
     // Login logic
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const loginBtn = loginForm.querySelector('button[type="submit"]');
+        const originalText = loginBtn.textContent;
+
         const user = document.getElementById('username').value;
         const pass = document.getElementById('password').value;
 
-        // Simple mock auth
-        if (user === 'admin' && pass === '1234') {
-            loginScreen.style.display = 'none';
-            dashboardScreen.style.display = 'block';
-            fetchVolunteers();
-        } else {
-            loginError.textContent = '帳號或密碼錯誤 (admin / 1234)';
+        // UI Loading state
+        loginBtn.disabled = true;
+        loginBtn.textContent = '登入中...';
+        loginError.textContent = '';
+
+        try {
+            const response = await fetch('https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chapter: user,
+                    password: pass
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || '帳號或密碼錯誤');
+            }
+
+            const result = await response.json();
+            console.log('Login Success:', result);
+
+            // JWT Handling: Save token (checking multiple fallback keys)
+            authToken = result.token || result.access_token || result.accessToken || result.idToken || '';
+            loggedInChapter = user;
+
+            if (authToken) {
+                localStorage.setItem('auth_token', authToken);
+                localStorage.setItem('logged_in_chapter', user);
+                document.getElementById('display-user').textContent = user;
+                loginScreen.style.display = 'none';
+                dashboardScreen.style.display = 'block';
+                fetchVolunteers();
+            } else {
+                console.error('No token found in response:', result);
+                throw new Error('伺服器未回傳認證金鑰，請聯絡管理員');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            loginError.textContent = error.message;
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = originalText;
         }
     });
 
     // Logout logic
     logoutBtn.addEventListener('click', () => {
+        // Clear local storage
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('logged_in_chapter');
+        authToken = '';
+        loggedInChapter = '';
+
         dashboardScreen.style.display = 'none';
         loginScreen.style.display = 'flex';
         volunteerList.innerHTML = '';
@@ -124,7 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/hours', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
                 },
                 body: JSON.stringify(payload)
             });
@@ -163,7 +226,18 @@ document.addEventListener('DOMContentLoaded', () => {
         volunteerList.innerHTML = '';
 
         try {
-            const response = await fetch('https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/hours?limit=500');
+            const response = await fetch('https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/hours?limit=500', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                // Token expired or invalid
+                logoutBtn.click();
+                throw new Error('登入逾時，請重新登入');
+            }
+
             if (!response.ok) throw new Error('無法取得資料');
 
             const data = await response.json();
@@ -277,7 +351,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const url = `https://4ca729h0o8.execute-api.ap-northeast-1.amazonaws.com/hours/${recordId}?volunteer=${encodeURIComponent(volunteer.name)}`;
             const response = await fetch(url, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
             });
 
             if (!response.ok) throw new Error('刪除失敗');
