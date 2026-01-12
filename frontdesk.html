@@ -186,19 +186,61 @@
 
     function formatText(text) {
       if (!text) return "";
-      return text
-        .replace(/<span style="color: green;">(.*?)<\/span>/g, '$1') // Strip legacy green spans
+      let formatted = text.replace(/<span style="color: green;">(.*?)<\/span>/g, '$1'); // Strip legacy green spans
+
+      // 1. Process [三聯單] table FIRST while newlines are still raw
+      formatted = formatted.replace(/\[三聯單\](.*?)(?=\[|$)/gs, (match, content) => {
+        const badge = '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">三聯單</span>';
+        let tableRows = '';
+        const lines = content.split(/\r?\n/);
+        let inlinePreamble = '';
+        let otherLines = [];
+
+        if (lines[0] && lines[0].trim()) {
+          inlinePreamble = `<span style="color: #4b5563; font-size: 0.9em; margin-left: 4px;">${lines[0].trim()}</span>`;
+          otherLines = lines.slice(1);
+        } else {
+          otherLines = lines;
+        }
+
+        let standalonePreamble = '';
+        otherLines.forEach(line => {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) return;
+
+          if (trimmedLine.includes(':')) {
+            const colonIndex = trimmedLine.indexOf(':');
+            const label = trimmedLine.substring(0, colonIndex).trim();
+            const value = trimmedLine.substring(colonIndex + 1).trim();
+            tableRows += `<tr style="border-bottom: 1px solid #f3f4f6;"><td style="padding: 10px 12px; background-color: #f9fafb; font-weight: 600; color: #374151; width: 30%; font-size: 0.95em; vertical-align: top;">${label}</td><td style="padding: 10px 12px; color: #4b5563; font-size: 0.95em;">${value}</td></tr>`;
+          } else {
+            standalonePreamble += `<div style="margin-top: 4px; color: #4b5563; font-style: italic; font-size: 0.9em;">${trimmedLine}</div>`;
+          }
+        });
+
+        if (tableRows) {
+          return `${badge}${inlinePreamble}${standalonePreamble}<table style="width: 100%; border-collapse: collapse; margin-top: 4px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background-color: white; table-layout: fixed;">${tableRows}</table>`;
+        }
+        return match;
+      });
+
+      // 2. Process other badges
+      formatted = formatted
+        .replace(/\[注意事項\]/g, '<span style="background-color: #b91c1c; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">注意事項</span>')
+        .replace(/\[佛光卡\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">佛光卡</span>')
+        .replace(/\[百萬人興學三聯單\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">百萬人興學三聯單</span>');
+
+      // 3. Process list patterns and other formatting
+      formatted = formatted
         .replace(/^[ \t]*-{2,}\s*(.*)$/gm, '<div style="margin-left: 1.5rem; display: flex; align-items: flex-start; gap: 0.5rem; color: #4b5563;"><span style="flex-shrink: 0;">↳</span><span>$1</span></div>')
         .replace(/^[ \t]*-\s*(.*)$/gm, '<div style="display: flex; align-items: flex-start; gap: 0.5rem; font-weight: 500;"><span style="flex-shrink: 0; color: #b45309;">🔸</span><span>$1</span></div>')
         .replace(/\n/g, "<br>")
         .replace(/<br><div/g, "<div")
         .replace(/<\/div><br>/g, "</div>")
         .replace(/\?([^?]+)\?/g, '<span style="background-color: red; color: white; padding: 2px 4px; border-radius: 4px;">?$1?</span>')
-        .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
-        .replace(/\[注意事項\]/g, '<span style="background-color: #b91c1c; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">注意事項</span>')
-        .replace(/\[佛光卡\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">佛光卡</span>')
-        .replace(/\[三聯單\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">三聯單</span>')
-        .replace(/\[百萬人興學三聯單\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">百萬人興學三聯單</span>');
+        .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>');
+
+      return formatted;
     }
 
     function renderFaqs(faqs) {
