@@ -184,6 +184,23 @@
       }
     }
 
+    function formatText(text) {
+      if (!text) return "";
+      return text
+        .replace(/<span style="color: green;">(.*?)<\/span>/g, '$1') // Strip legacy green spans
+        .replace(/^[ \t]*-{2,}\s*(.*)$/gm, '<div style="margin-left: 1.5rem; display: flex; align-items: flex-start; gap: 0.5rem; color: #4b5563;"><span style="flex-shrink: 0;">↳</span><span>$1</span></div>')
+        .replace(/^[ \t]*-\s*(.*)$/gm, '<div style="display: flex; align-items: flex-start; gap: 0.5rem; font-weight: 500;"><span style="flex-shrink: 0; color: #b45309;">🔸</span><span>$1</span></div>')
+        .replace(/\n/g, "<br>")
+        .replace(/<br><div/g, "<div")
+        .replace(/<\/div><br>/g, "</div>")
+        .replace(/\?([^?]+)\?/g, '<span style="background-color: red; color: white; padding: 2px 4px; border-radius: 4px;">?$1?</span>')
+        .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
+        .replace(/\[注意事項\]/g, '<span style="background-color: #b91c1c; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">注意事項</span>')
+        .replace(/\[佛光卡\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">佛光卡</span>')
+        .replace(/\[三聯單\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">三聯單</span>')
+        .replace(/\[百萬人興學三聯單\]/g, '<span style="background-color: #2d5a27; color: white; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; margin-right: 4px; display: inline-block;">百萬人興學三聯單</span>');
+    }
+
     function renderFaqs(faqs) {
       return faqs
         .map(
@@ -192,9 +209,7 @@
                 <summary class="text-lg md:text-5xl lg:text-xl cursor-pointer text-indigo-700 font-semibold">
                   ${faq.question}</summary>
                 <div class="mt-4 text-gray-700 leading-snug">
-                  ${faq.answer
-              .replace(/\n/g, "<br>")
-              .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')}
+                  ${formatText(faq.answer)}
                 </div>
               </details>
             `
@@ -205,21 +220,6 @@
     function renderEventBlocks(dataArray, blockPrefix) {
       return dataArray
         .map((e, index) => {
-          const formatText = (text) => {
-            if (!text) return "";
-            return text
-              .replace(/^[ \t]*-{2,}\s*(.*)$/gm, '<div style="margin-left: 1.5rem; display: flex; align-items: flex-start; gap: 0.5rem; color: #4b5563;"><span style="flex-shrink: 0;">↳</span><span>$1</span></div>')
-              .replace(/^[ \t]*-\s*(.*)$/gm, '<div style="display: flex; align-items: flex-start; gap: 0.5rem; font-weight: 500;"><span style="flex-shrink: 0; color: #b45309;">🔸</span><span>$1</span></div>')
-              .replace(/\n/g, "<br>")
-              .replace(/<br><div/g, "<div")
-              .replace(/<\/div><br>/g, "</div>")
-              .replace(/\?([^?]+)\?/g, '<span style="background-color: red; color: white; padding: 2px 4px; border-radius: 4px;">?$1?</span>')
-              .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
-              .replace(/\[佛光卡\]/g, '<span style="color: green; font-weight: bold;">[佛光卡]</span>')
-              .replace(/\[三聯單\]/g, '<span style="color: green; font-weight: bold;">[三聯單]</span>')
-              .replace(/\[百萬人興學三聯單\]/g, '<span style="color: green; font-weight: bold;">[百萬人興學三聯單]</span>');
-          };
-
           const warningText = e.warning
             ? `<div class="text-red-700 mt-4 leading-snug">${formatText(e.warning).replace(/<a\b([^>]*)>/g, '<a style="color: blue; text-decoration: underline;" $1>')}</div>`
             : "";
