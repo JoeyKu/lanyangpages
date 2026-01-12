@@ -1,124 +1,134 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <title>三聯單及佛光卡填單說明</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-      /* 一鍵放大：切到 html.text-zoom 時，整站字級按 rem 等比例放大 */
-      html.text-zoom { font-size: 150%; } /* 想更大可改 125% */
+<head>
+  <meta charset="UTF-8" />
+  <title>三聯單及佛光卡填單說明</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
 
-      /* 讓「例行活動 / 常見問答」這兩組標題列中的 h2 與按鈕字級 100% 同步 */
-      .section-row h2,
-      .section-row button {
-        font-size: inherit !important;
-        line-height: 1.25;
-      }
-    </style>
-  </head>
+  <style>
+    /* 一鍵放大：切到 html.text-zoom 時，整站字級按 rem 等比例放大 */
+    html.text-zoom {
+      font-size: 150%;
+    }
 
-  <body class="bg-gray-100 font-sans text-base sm:text-lg md:text-xl leading-relaxed">
-    <!-- 登入頁 -->
-    <div id="loginPage" class="min-h-screen flex items-center justify-center px-6 py-8 sm:px-4 sm:py-6 hidden">
-      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-4xl">
-        <h2 class="text-lg md:text-4xl lg:text-xl font-bold mb-6 text-center text-indigo-700">請輸入密碼</h2>
-        <input type="password" id="passwordInput" class="w-full p-4 border rounded mb-4 text-lg md:text-4xl lg:text-xl" placeholder="輸入密碼" />
-        <button onclick="submitPassword()" class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 text-lg md:text-4xl lg:text-xl">登入</button>
-        <p id="error" class="text-red-600 text-[22px] mt-3 text-center"></p>
-      </div>
+    /* 想更大可改 125% */
+
+    /* 讓「例行活動 / 常見問答」這兩組標題列中的 h2 與按鈕字級 100% 同步 */
+    .section-row h2,
+    .section-row button {
+      font-size: inherit !important;
+      line-height: 1.25;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 font-sans text-base sm:text-lg md:text-xl leading-relaxed">
+  <!-- 登入頁 -->
+  <div id="loginPage" class="min-h-screen flex items-center justify-center px-6 py-8 sm:px-4 sm:py-6 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-4xl">
+      <h2 class="text-lg md:text-4xl lg:text-xl font-bold mb-6 text-center text-indigo-700">請輸入密碼</h2>
+      <input type="password" id="passwordInput" class="w-full p-4 border rounded mb-4 text-lg md:text-4xl lg:text-xl"
+        placeholder="輸入密碼" />
+      <button onclick="submitPassword()"
+        class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 text-lg md:text-4xl lg:text-xl">登入</button>
+      <p id="error" class="text-red-600 text-[22px] mt-3 text-center"></p>
     </div>
+  </div>
 
-    <!-- 主畫面容器 -->
-    <div id="app" class="min-h-screen px-6 py-8 sm:px-4 sm:py-6 hidden"></div>
+  <!-- 主畫面容器 -->
+  <div id="app" class="min-h-screen px-6 py-8 sm:px-4 sm:py-6 hidden"></div>
 
-    <!-- 工具列（登入後顯示）：放大字體 / 登出 -->
-    <div id="toolbar" class="w-full sticky bottom-0 left-0 bg-white/90 backdrop-blur p-3 shadow flex gap-3 justify-center hidden">
-      <button id="zoomBtn" onclick="toggleFontSize()" class="px-4 py-3 rounded bg-green-600 text-white hover:bg-green-700 text-base md:text-lg">
-        放大字體
-      </button>
-      <button onclick="logout()" class="px-4 py-3 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-base md:text-lg">
-        登出
-      </button>
-    </div>
+  <!-- 工具列（登入後顯示）：放大字體 / 登出 -->
+  <div id="toolbar"
+    class="w-full sticky bottom-0 left-0 bg-white/90 backdrop-blur p-3 shadow flex gap-3 justify-center hidden">
+    <button id="zoomBtn" onclick="toggleFontSize()"
+      class="px-4 py-3 rounded bg-green-600 text-white hover:bg-green-700 text-base md:text-lg">
+      放大字體
+    </button>
+    <button onclick="logout()"
+      class="px-4 py-3 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-base md:text-lg">
+      登出
+    </button>
+  </div>
 
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        // 套用字體放大偏好（登入前後都生效）
-        applyZoomFromStorage();
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      // 套用字體放大偏好（登入前後都生效）
+      applyZoomFromStorage();
 
+      document.getElementById("loginPage").classList.remove("hidden");
+
+      const isLoggedIn = localStorage.getItem("isLoggedIn") === "yes";
+
+      if (isLoggedIn) {
+        loadMainApp();
+      } else {
         document.getElementById("loginPage").classList.remove("hidden");
+      }
+    });
 
-        const isLoggedIn = localStorage.getItem("isLoggedIn") === "yes";
+    async function submitPassword() {
+      const pw = document.getElementById("passwordInput").value.trim();
+      const errorDiv = document.getElementById("error");
+      //const loginUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/login";
+      const loginUrl = "https://yucq6ksf6ba3de2zsayin5s5wi0yekag.lambda-url.us-east-1.on.aws/login";
 
-        if (isLoggedIn) {
+      try {
+        const response = await fetch(loginUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pass: pw }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.token) {
+          localStorage.setItem("isLoggedIn", "yes");
+          localStorage.setItem("token", result.token);
           loadMainApp();
         } else {
-          document.getElementById("loginPage").classList.remove("hidden");
+          errorDiv.textContent = result?.message || "密碼錯誤，請再試一次。";
         }
-      });
-
-      async function submitPassword() {
-        const pw = document.getElementById("passwordInput").value.trim();
-        const errorDiv = document.getElementById("error");
-        //const loginUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/login";
-        const loginUrl = "https://yucq6ksf6ba3de2zsayin5s5wi0yekag.lambda-url.us-east-1.on.aws/login";
-
-        try {
-          const response = await fetch(loginUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pass: pw }),
-          });
-
-          const result = await response.json();
-
-          if (response.ok && result.token) {
-            localStorage.setItem("isLoggedIn", "yes");
-            localStorage.setItem("token", result.token);
-            loadMainApp();
-          } else {
-            errorDiv.textContent = result?.message || "密碼錯誤，請再試一次。";
-          }
-        } catch (error) {
-          console.error("Login request failed:", error);
-          errorDiv.textContent = "登入請求失敗，請檢查網路連線或稍後再試。";
-        }
+      } catch (error) {
+        console.error("Login request failed:", error);
+        errorDiv.textContent = "登入請求失敗，請檢查網路連線或稍後再試。";
       }
+    }
 
-      function loadMainApp() {
-        document.getElementById("loginPage").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-        document.getElementById("toolbar").classList.remove("hidden"); // 顯示工具列
-        applyZoomFromStorage(); // 讓按鈕文字顯示正確（放大/還原）
+    function loadMainApp() {
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("app").classList.remove("hidden");
+      document.getElementById("toolbar").classList.remove("hidden"); // 顯示工具列
+      applyZoomFromStorage(); // 讓按鈕文字顯示正確（放大/還原）
 
-        updateApp(); // 第一次載入時馬上更新一次
-      }
+      updateApp(); // 第一次載入時馬上更新一次
+    }
 
-      async function updateApp() {
-        //const getInfoUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/getinfo";
-        const getInfoUrl = "https://yucq6ksf6ba3de2zsayin5s5wi0yekag.lambda-url.us-east-1.on.aws/getinfo";
+    async function updateApp() {
+      //const getInfoUrl = "https://36abxtve73lsev23b5bs3264iq0ksxal.lambda-url.us-east-1.on.aws/getinfo";
+      const getInfoUrl = "https://yucq6ksf6ba3de2zsayin5s5wi0yekag.lambda-url.us-east-1.on.aws/getinfo";
 
-        try {
-          const token = localStorage.getItem("token");
-          if (!token) return logout();
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return logout();
 
-          const response = await fetch(getInfoUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + token,
-            },
-          });
+        const response = await fetch(getInfoUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+        });
 
-          if (!response.ok) return logout();
+        if (!response.ok) return logout();
 
-          const data = await response.json();
-          const { events, annualEvents, faqs } = data;
-          const app = document.getElementById("app");
+        const data = await response.json();
+        const { events, annualEvents, faqs } = data;
+        const app = document.getElementById("app");
 
-          app.innerHTML = `
+        app.innerHTML = `
             <div class="max-w-4xl mx-auto">
               <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-3xl font-bold text-center text-indigo-700">
                 三聯單及佛光卡填單說明
@@ -168,56 +178,62 @@
               </div>
             </div>
           `;
-        } catch (error) {
-          console.error("Failed to fetch app data:", error);
-          logout();
-        }
+      } catch (error) {
+        console.error("Failed to fetch app data:", error);
+        logout();
       }
+    }
 
-      function renderFaqs(faqs) {
-        return faqs
-          .map(
-            (faq) => `
+    function renderFaqs(faqs) {
+      return faqs
+        .map(
+          (faq) => `
               <details class="bg-white rounded shadow p-4 text-lg md:text-5xl lg:text-xl leading-relaxed">
                 <summary class="text-lg md:text-5xl lg:text-xl cursor-pointer text-indigo-700 font-semibold">
                   ${faq.question}</summary>
                 <div class="mt-4 text-gray-700 leading-snug">
                   ${faq.answer
-                    .replace(/\n/g, "<br>")
-                    .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')}
+              .replace(/\n/g, "<br>")
+              .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')}
                 </div>
               </details>
             `
-          )
-          .join("");
-      }
+        )
+        .join("");
+    }
 
-      function renderEventBlocks(dataArray, blockPrefix) {
-        return dataArray
-          .map((e, index) => {
-            const warningText = e.warning
-              ? `${e.warning
-                  .replace(/\n/g, "<br>")
-                  .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
-                  .replace(/<a\b([^>]*)>/g, '<a style="color: blue; text-decoration: underline;" $1>')}<br>`
-              : "";
-
-            const formattedDescription = e.description
+    function renderEventBlocks(dataArray, blockPrefix) {
+      return dataArray
+        .map((e, index) => {
+          const formatText = (text) => {
+            if (!text) return "";
+            return text
+              .replace(/^[ \t]*-{2,}\s*(.*)$/gm, '<div style="margin-left: 1.5rem; display: flex; align-items: flex-start; gap: 0.5rem; color: #4b5563;"><span style="flex-shrink: 0;">↳</span><span>$1</span></div>')
+              .replace(/^[ \t]*-\s*(.*)$/gm, '<div style="display: flex; align-items: flex-start; gap: 0.5rem; font-weight: 500;"><span style="flex-shrink: 0; color: #b45309;">🔸</span><span>$1</span></div>')
               .replace(/\n/g, "<br>")
+              .replace(/<br><div/g, "<div")
+              .replace(/<\/div><br>/g, "</div>")
               .replace(/\?([^?]+)\?/g, '<span style="background-color: red; color: white; padding: 2px 4px; border-radius: 4px;">?$1?</span>')
               .replace(/\*([^*]+)\*/g, '<span style="background-color: yellow; color: black; padding: 2px 4px; border-radius: 4px;">$1</span>')
               .replace(/\[佛光卡\]/g, '<span style="color: green; font-weight: bold;">[佛光卡]</span>')
               .replace(/\[三聯單\]/g, '<span style="color: green; font-weight: bold;">[三聯單]</span>')
               .replace(/\[百萬人興學三聯單\]/g, '<span style="color: green; font-weight: bold;">[百萬人興學三聯單]</span>');
+          };
 
-            let moreButton = "";
-            let detailContent = "";
-            if (e.detail) {
-              moreButton = `<button onclick="toggleDetails('${blockPrefix}-${index}')" class="text-indigo-600 text-lg md:text-5xl lg:text-xl mt-2">更多</button>`;
-              detailContent = `<div id="detail-${blockPrefix}-${index}" class="mt-2 text-gray-500 text-lg md:text-5xl lg:text-xl hidden !leading-relaxed">${e.detail.replace(/\n/g, "<br>")}</div>`;
-            }
+          const warningText = e.warning
+            ? `<div class="text-red-700 mt-4 leading-snug">${formatText(e.warning).replace(/<a\b([^>]*)>/g, '<a style="color: blue; text-decoration: underline;" $1>')}</div>`
+            : "";
 
-            return `
+          const formattedDescription = formatText(e.description);
+
+          let moreButton = "";
+          let detailContent = "";
+          if (e.detail) {
+            moreButton = `<button onclick="toggleDetails('${blockPrefix}-${index}')" class="text-indigo-600 text-lg md:text-5xl lg:text-xl mt-2">更多</button>`;
+            detailContent = `<div id="detail-${blockPrefix}-${index}" class="mt-2 text-gray-500 text-lg md:text-5xl lg:text-xl hidden !leading-relaxed">${e.detail.replace(/\n/g, "<br>")}</div>`;
+          }
+
+          return `
               <details class="bg-white rounded shadow p-4 text-lg md:text-5xl lg:text-xl leading-relaxed">
                 <summary class="text-lg md:text-5xl lg:text-xl cursor-pointer text-indigo-700 font-semibold">${e.title}</summary>
 
@@ -229,50 +245,50 @@
                 ${detailContent}
               </details>
             `;
-          })
-          .join("");
+        })
+        .join("");
+    }
+
+    function toggleDetails(id) {
+      const detailDiv = document.getElementById(`detail-${id}`);
+      if (detailDiv) {
+        detailDiv.classList.toggle("hidden");
       }
+    }
 
-      function toggleDetails(id) {
-        const detailDiv = document.getElementById(`detail-${id}`);
-        if (detailDiv) {
-          detailDiv.classList.toggle("hidden");
-        }
-      }
+    function toggleSection(sectionId, buttonId) {
+      const section = document.getElementById(sectionId);
+      const button = document.getElementById(buttonId);
 
-      function toggleSection(sectionId, buttonId) {
-        const section = document.getElementById(sectionId);
-        const button = document.getElementById(buttonId);
+      const isHidden = section.classList.contains("hidden");
+      section.classList.toggle("hidden");
 
-        const isHidden = section.classList.contains("hidden");
-        section.classList.toggle("hidden");
+      button.textContent = isHidden ? "收起 ▲" : "展開 ▼";
+    }
 
-        button.textContent = isHidden ? "收起 ▲" : "展開 ▼";
-      }
+    function toggleFontSize() {
+      const root = document.documentElement;
+      const turnedOn = root.classList.toggle("text-zoom");
+      localStorage.setItem("textZoom", turnedOn ? "on" : "off");
 
-      function toggleFontSize() {
-        const root = document.documentElement;
-        const turnedOn = root.classList.toggle("text-zoom");
-        localStorage.setItem("textZoom", turnedOn ? "on" : "off");
+      const btn = document.getElementById("zoomBtn");
+      if (btn) btn.textContent = turnedOn ? "還原字體" : "放大字體";
+    }
 
-        const btn = document.getElementById("zoomBtn");
-        if (btn) btn.textContent = turnedOn ? "還原字體" : "放大字體";
-      }
+    function applyZoomFromStorage() {
+      const turnedOn = localStorage.getItem("textZoom") === "on";
+      document.documentElement.classList.toggle("text-zoom", turnedOn);
 
-      function applyZoomFromStorage() {
-        const turnedOn = localStorage.getItem("textZoom") === "on";
-        document.documentElement.classList.toggle("text-zoom", turnedOn);
+      const btn = document.getElementById("zoomBtn");
+      if (btn) btn.textContent = turnedOn ? "還原字體" : "放大字體";
+    }
 
-        const btn = document.getElementById("zoomBtn");
-        if (btn) btn.textContent = turnedOn ? "還原字體" : "放大字體";
-      }
+    function logout() {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("token");
+      location.reload();
+    }
+  </script>
+</body>
 
-      function logout() {
-        localStorage.removeItem("isLoggedIn");
-        localStorage.removeItem("token");
-        location.reload();
-      }
-    </script>
-  </body>
 </html>
-
