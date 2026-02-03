@@ -122,10 +122,7 @@
         }
 
         .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         label {
@@ -136,16 +133,19 @@
             letter-spacing: 1px;
         }
 
-        textarea {
+        input,
+        textarea,
+        select {
             width: 100%;
-            min-height: 200px;
-            padding: 20px;
-            border-radius: 12px;
-            border: 2px solid #eee;
-            background: #fafafa;
-            font-family: inherit;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
             font-size: 16px;
-            line-height: 1.6;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 200px;
             resize: vertical;
             transition: var(--transition);
         }
@@ -155,6 +155,49 @@
             border-color: var(--accent-color);
             background: #fff;
             box-shadow: 0 0 0 4px rgba(212, 163, 115, 0.1);
+        }
+
+        /* Generator form specific styling */
+        textarea#description,
+        textarea#notes {
+            min-height: 80px;
+            max-height: 120px;
+        }
+
+        #tool-generator .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        #tool-generator .form-col {
+            flex: 1;
+        }
+
+        #tool-generator .form-col label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        #tool-generator .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        #tool-generator .checkbox-group label {
+            margin: 0;
+            font-size: 14px;
+            text-transform: none;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        #tool-generator input[type="checkbox"] {
+            width: auto;
+            margin: 0;
         }
 
         .actions {
@@ -202,8 +245,38 @@
             position: relative;
         }
 
+        /* Name selector styles */
+        .name-area {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+        }
+
+        #nameButtons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .name-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .name-btn.selected {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
         #output,
-        #chainOutput {
+        #chainOutput,
+        #messageOutput {
             font-family: inherit;
             font-size: 16px;
             color: var(--text-main);
@@ -344,13 +417,27 @@
                 </svg>
                 <span>姓名格式化</span>
             </a>
-            <a href="#" class="nav-link" onclick="showTool('chain')">
+            <a href="#" class="nav-link" onclick="showTool('names')">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3zM6 19a6 6 0 0112 0"></path>
+                </svg>
+                <span>姓名選取器</span>
+            </a>
+            <a href="#" class="nav-link" onclick="showTool('chain')" style="display:none">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
                     </path>
                 </svg>
                 <span>接龍取消</span>
+            </a>
+            <a href="#" class="nav-link" onclick="showTool('generator')" style="display:none">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3"></path>
+                </svg>
+                <span>接龍訊息產生器</span>
             </a>
         </div>
     </nav>
@@ -360,13 +447,13 @@
         <div id="tool-format" class="tool-section">
             <div class="header">
                 <h1>姓名格式化工具</h1>
-                <p>將帶有編號的姓名列表轉換為逗號分隔的格式，方便複製使用。</p>
+                <p>將接龍訊息姓名列表轉換為逗號分隔的格式，方便複製使用。</p>
             </div>
 
             <div class="tool-card">
                 <div class="input-group">
                     <label for="input">輸入原始清單</label>
-                    <textarea id="input" placeholder="1.王小明&#10;2.李大華&#10;3.張君雅..."></textarea>
+                    <textarea id="input" placeholder="xx活動，請接龍&#10;1. 哆啦A夢&#10;2. 皮卡丘&#10;3. 柯南&#10;4. 魯夫&#10;5. 唐老鴨&#10;6. 熊大"></textarea>
                 </div>
 
                 <div class="actions">
@@ -437,6 +524,104 @@
                     </svg>
                     複製結果
                 </button>
+            </div>
+        </div>
+
+        <!-- 接龍訊息產生器 -->
+        <div id="tool-generator" class="tool-section" style="display: none;">
+            <div class="header">
+                <h1>接龍訊息產生器</h1>
+                <p>選擇範本，輸入活動資訊，快速產生接龍訊息。</p>
+            </div>
+
+            <div class="tool-card">
+                <div class="input-group">
+                    <label for="template">選擇範本</label>
+                    <select id="template" onchange="onTemplateChange()">
+                        <option value="volunteer">義工接龍（標準格式）</option>
+                    </select>
+                </div>
+
+                <!-- Volunteer Template Form -->
+                <div id="volunteer-form">
+                    <div class="input-group">
+                        <label for="vol_activity">活動</label>
+                        <input id="vol_activity" type="text" placeholder="例：2026年兒童冬令營大寮義工" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="vol_date">日期</label>
+                            <input id="vol_date" type="text" placeholder="例：2026／1／28日(三)" />
+                        </div>
+                        <div class="form-col">
+                            <label for="vol_time">時間</label>
+                            <input id="vol_time" type="text" placeholder="例：8:30~12:00" />
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="vol_content">內容</label>
+                        <input id="vol_content" type="text" placeholder="例：午餐典座" />
+                    </div>
+
+                    <div class="input-group">
+                        <label for="vol_people">人數</label>
+                        <input id="vol_people" type="number" min="1" value="5" />
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn-primary" onclick="generateVolunteerMessage()">產生訊息</button>
+                        <button class="btn-secondary" onclick="clearVolunteerForm()">清除</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>產生結果 (可複製到 LINE)</label>
+                    <div class="output-group">
+                        <div id="messageOutput">尚未產生...</div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:12px;">
+                    <button class="btn-primary" style="flex:1" onclick="copyMessage()">複製訊息</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 姓名選取器 -->
+        <div id="tool-names" class="tool-section" style="display: none;">
+            <div class="header">
+                <h1>姓名選取器</h1>
+                <p>輸入姓名清單，產生按鈕後可點選並在下方以逗號分隔顯示，並可重置。</p>
+            </div>
+
+            <div class="tool-card">
+                <div class="input-group">
+                    <label for="namesInput">姓名清單（每行一個）</label>
+                    <textarea id="namesInput" placeholder="哆啦A夢&#10;皮卡丘&#10;柯南&#10;魯夫&#10;唐老鴨&#10;熊大"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-primary" onclick="generateNameButtons()">生成按鈕</button>
+                    <button class="btn-secondary" onclick="resetNames()">重置</button>
+                </div>
+
+                <div class="input-group">
+                    <label>姓名按鈕（點擊選取 / 取消）</label>
+                    <div class="output-group name-area">
+                        <div id="nameButtons">尚未產生按鈕</div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>已選姓名（逗號分隔）</label>
+                    <textarea id="selectedOutput" readonly placeholder="點選姓名按鈕，這裡會顯示已選姓名"></textarea>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:12px;">
+                    <button class="btn-primary" style="flex:1" onclick="copySelected()">複製選取</button>
+                </div>
             </div>
         </div>
     </main>
@@ -558,33 +743,42 @@
             }
             
             // 找出尾部連續空白編號的起始位置
+            // 調整：以最後一個「有編號」的項目為基準（即使之後有文字），
+            // 從該位置往回尋找連續的空白編號並視為尾部空白要保留
             let trailingEmptyStart = parsedLines.length;
+            let lastNumberedIndex = -1;
             for (let i = parsedLines.length - 1; i >= 0; i--) {
-                if (parsedLines[i].type === 'numbered' && parsedLines[i].isEmpty) {
-                    trailingEmptyStart = i;
-                } else {
+                if (parsedLines[i].type === 'numbered') {
+                    lastNumberedIndex = i;
                     break;
+                }
+            }
+            if (lastNumberedIndex !== -1) {
+                for (let i = lastNumberedIndex; i >= 0; i--) {
+                    if (parsedLines[i].type === 'numbered' && parsedLines[i].isEmpty) {
+                        trailingEmptyStart = i;
+                    } else {
+                        break;
+                    }
                 }
             }
             
             // 處理結果
+            // 需求：只移除中間的空白編號，保留其餘行的原始編號（包含尾部連續的空白編號）
             const resultLines = [];
-            let newNumber = 1;
-            
+
             for (let i = 0; i < parsedLines.length; i++) {
                 const item = parsedLines[i];
-                
+
                 if (item.type === 'text') {
                     resultLines.push(item.content);
                 } else if (item.type === 'numbered') {
                     if (i >= trailingEmptyStart) {
-                        // 尾部空白編號，保留並重新編號
-                        resultLines.push(newNumber + '.');
-                        newNumber++;
+                        // 尾部空白編號，保留原始編號且為空
+                        resultLines.push(item.number + '.');
                     } else if (!item.isEmpty) {
-                        // 有內容的編號行，重新編號
-                        resultLines.push(newNumber + '.' + item.content);
-                        newNumber++;
+                        // 有內容的編號行，保留原始編號與內容
+                        resultLines.push(item.number + '.' + item.content);
                     }
                     // 中間的空白編號會被跳過
                 }
@@ -609,6 +803,149 @@
                 setTimeout(() => toast.classList.remove('show'), 2000);
             });
         }
+
+        // 接龍訊息產生器相關功能
+        function onTemplateChange() {
+            // 可在此新增其他範本的邏輯
+        }
+
+        function generateVolunteerMessage() {
+            const activity = (document.getElementById('vol_activity').value || '').trim();
+            const date = (document.getElementById('vol_date').value || '').trim();
+            const time = (document.getElementById('vol_time').value || '').trim();
+            const content = (document.getElementById('vol_content').value || '').trim();
+            const people = parseInt(document.getElementById('vol_people').value) || 1;
+
+            if (!activity) { alert('請輸入活動'); return; }
+            if (!date) { alert('請輸入日期'); return; }
+            if (!time) { alert('請輸入時間'); return; }
+            if (!content) { alert('請輸入內容'); return; }
+
+            let parts = [];
+            parts.push('各位會員吉祥：');
+            parts.push(`【${activity}】`);
+            parts.push(`日期：${date} ${time}`);
+            parts.push(`${content}需要${people}位義工。請接龍：`);
+
+            // 生成編號列表
+            for (let i = 1; i <= people; i++) {
+                parts.push(`${i}.`);
+            }
+
+            const message = parts.join('\n');
+            document.getElementById('messageOutput').textContent = message;
+        }
+
+        function clearVolunteerForm() {
+            document.getElementById('vol_activity').value = '';
+            document.getElementById('vol_date').value = '';
+            document.getElementById('vol_time').value = '';
+            document.getElementById('vol_content').value = '';
+            document.getElementById('vol_people').value = '5';
+            document.getElementById('messageOutput').textContent = '尚未產生...';
+        }
+
+        function copyMessage() {
+            const result = document.getElementById('messageOutput').textContent;
+            if (result === '尚未產生...' || !result) return;
+            navigator.clipboard.writeText(result).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+
+        // 姓名選取器功能
+        const STORAGE_KEY = 'secretarytools_names';
+
+        function initNamesTool() {
+            // load stored names (if any) and render them on init
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const names = JSON.parse(stored);
+                    if (Array.isArray(names) && names.length) {
+                        renderNameButtons(names);
+                        const inp = document.getElementById('namesInput');
+                        if (inp) inp.value = names.join('\n');
+                    }
+                }
+            } catch (e) {
+                console.warn('讀取儲存名單失敗', e);
+            }
+        }
+
+        function generateNameButtons() {
+            const raw = document.getElementById('namesInput').value || '';
+            // support both real newlines and literal "\\n" sequences (e.g. pasted "張三\\n李四")
+            const normalized = raw.replace(/\\n/g, '\n');
+            const rawLines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            // strip leading numbering like "1.", "1、", "(1)", "[1]" etc.
+            const lines = rawLines.map(l => l.replace(/^\s*(?:\d+[.、。]|\(\d+\)|\[\d+\])\s*/, '').trim()).filter(l => l.length > 0);
+            if (lines.length === 0) {
+                alert('請先輸入至少一個姓名 (每行一個)');
+                return;
+            }
+            renderNameButtons(lines);
+            // save generated list to localStorage
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+            } catch (e) {
+                console.warn('無法儲存名單', e);
+            }
+        }
+
+        function renderNameButtons(names) {
+            const container = document.getElementById('nameButtons');
+            container.innerHTML = '';
+            names.forEach(name => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'name-btn';
+                btn.textContent = name;
+                btn.addEventListener('click', () => toggleNameSelection(btn, name));
+                container.appendChild(btn);
+            });
+            updateSelectedOutput();
+        }
+
+        function toggleNameSelection(btn, name) {
+            btn.classList.toggle('selected');
+            updateSelectedOutput();
+        }
+
+        function updateSelectedOutput() {
+            const container = document.getElementById('nameButtons');
+            if (!container) return;
+            const selected = Array.from(container.querySelectorAll('.name-btn.selected')).map(b => b.textContent.trim());
+            document.getElementById('selectedOutput').value = selected.join(',');
+        }
+
+        function copySelected() {
+            const text = document.getElementById('selectedOutput').value || '';
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+
+        // save/load removed — names are not persisted to browser storage
+
+        function resetNames() {
+            if (!confirm('確定要重置清單並清空畫面？')) return;
+            // clear stored list and UI
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+            document.getElementById('namesInput').value = '';
+            const container = document.getElementById('nameButtons');
+            if (container) container.innerHTML = '尚未產生按鈕';
+            document.getElementById('selectedOutput').value = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initNamesTool();
+        });
     </script>
 </body>
 
