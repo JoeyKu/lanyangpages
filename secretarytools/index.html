@@ -35,6 +35,8 @@
             color: var(--text-main);
             display: flex;
             min-height: 100vh;
+            font-size: 20px;
+            line-height: 1.75;
         }
 
         /* Sidebar */
@@ -54,7 +56,7 @@
 
         .logo {
             font-family: 'Outfit', sans-serif;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
             padding-left: 15px;
             margin-bottom: 20px;
@@ -72,6 +74,7 @@
             border-radius: 12px;
             text-decoration: none;
             color: var(--sidebar-text);
+            font-size: 15px;
             opacity: 0.7;
             transition: var(--transition);
             display: flex;
@@ -102,14 +105,14 @@
         }
 
         .header h1 {
-            font-size: 32px;
+            font-size: 42px;
             color: var(--primary-color);
             margin-bottom: 8px;
         }
 
         .header p {
             color: var(--text-secondary);
-            font-size: 16px;
+            font-size: px;
         }
 
         /* Tool Card */
@@ -122,15 +125,23 @@
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 14px;
         }
 
         label {
             font-weight: 600;
             color: var(--primary-color);
-            font-size: 14px;
+            font-size: 18px;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        /* Larger, normal-case labels inside tool cards (e.g. "姓名按鈕（點擊選取 / 取消）") */
+        .tool-card .input-group > label {
+            font-size: 22px;
+            text-transform: none;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
         }
 
         input,
@@ -140,7 +151,7 @@
             padding: 10px;
             border-radius: 8px;
             border: 1px solid #ccc;
-            font-size: 16px;
+            font-size: 20px;
             font-family: inherit;
         }
 
@@ -212,6 +223,7 @@
             border: none;
             cursor: pointer;
             font-weight: 600;
+            font-size: 18px;
             transition: var(--transition);
             display: flex;
             align-items: center;
@@ -257,15 +269,17 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 10px;
+            font-size: 20px; /* match #output / #chainOutput */
         }
 
         .name-btn {
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 14px 20px;
+            border-radius: 10px;
             background: #f0f0f0;
             border: 1px solid #ddd;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 18px;
         }
 
         .name-btn.selected {
@@ -278,7 +292,7 @@
         #chainOutput,
         #messageOutput {
             font-family: inherit;
-            font-size: 16px;
+            font-size: 20px;
             color: var(--text-main);
             word-break: break-all;
             white-space: pre-wrap;
@@ -359,11 +373,11 @@
             }
 
             .header h1 {
-                font-size: 22px;
+                font-size: 26px;
             }
 
             .header p {
-                font-size: 13px;
+                font-size: 16px;
             }
 
             .tool-card {
@@ -373,7 +387,7 @@
             textarea {
                 min-height: 150px;
                 padding: 12px;
-                font-size: 15px;
+                font-size: 17px;
             }
 
             .actions {
@@ -392,7 +406,7 @@
 
             #output,
             #chainOutput {
-                font-size: 14px;
+                font-size: 16px;
             }
 
             .copy-toast {
@@ -440,7 +454,6 @@
                 <span>接龍訊息產生器</span>
             </a>
         </div>
-        </div>
             <a href="help.html" class="nav-link" style="margin-top:auto;">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -448,7 +461,9 @@
                 </svg>
                 <span>說明</span>
             </a>
+            </div>
     </nav>
+
 
     <main>
         <!-- 姓名格式化工具 -->
@@ -461,7 +476,7 @@
             <div class="tool-card">
                 <div class="input-group">
                     <label for="input">輸入原始清單</label>
-                    <textarea id="input" placeholder="xx活動，請接龍&#10;1. 哆啦A夢&#10;2. 皮卡丘&#10;3. 柯南&#10;4. 魯夫&#10;5. 唐老鴨&#10;6. 熊大"></textarea>
+                    <textarea id="input" placeholder="OOO活動，請接龍&#10;1. 哆啦A夢&#10;2. 皮卡丘&#10;3. 柯南&#10;4. 魯夫&#10;5. 唐老鴨&#10;6. 熊大"></textarea>
                 </div>
 
                 <div class="actions">
@@ -616,10 +631,14 @@
                 </div>
 
                 <div class="input-group">
-                    <label>姓名按鈕（點擊選取 / 取消）</label>
+                    <label>姓名按鈕 (點擊選取/取消)</label>
                     <div class="output-group name-area">
                         <div id="nameButtons">尚未產生按鈕</div>
                     </div>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:12px;">
+                    <button id="clearSelectionBtn" class="btn-secondary" onclick="clearSelection()" style="display:none">取消選取</button>
                 </div>
 
                 <div class="input-group">
@@ -927,6 +946,11 @@
             if (!container) return;
             const selected = Array.from(container.querySelectorAll('.name-btn.selected')).map(b => b.textContent.trim());
             document.getElementById('selectedOutput').value = selected.join(',');
+            // show/hide the clear-selection button depending on whether any name is selected
+            const clearBtn = document.getElementById('clearSelectionBtn');
+            if (clearBtn) {
+                clearBtn.style.display = selected.length > 0 ? 'inline-flex' : 'none';
+            }
         }
 
         function copySelected() {
@@ -937,6 +961,14 @@
                 toast.classList.add('show');
                 setTimeout(() => toast.classList.remove('show'), 2000);
             });
+        }
+
+        function clearSelection() {
+            const container = document.getElementById('nameButtons');
+            if (!container) return;
+            const selected = container.querySelectorAll('.name-btn.selected');
+            selected.forEach(btn => btn.classList.remove('selected'));
+            updateSelectedOutput();
         }
 
         // save/load removed — names are not persisted to browser storage
