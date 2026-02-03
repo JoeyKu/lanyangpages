@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>說明 — 秘書工具箱</title>
+  <style>
+    body { font-family: Noto Sans TC, system-ui, sans-serif; background:#fffaf3; color:#3d2c1b; padding:32px; }
+    h1 { color:#a87a4f }
+    h2 { color:#6b4f35 }
+    section { background:#fff; padding:18px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.06); margin-bottom:18px }
+    pre { background:#f6f6f6; padding:12px; border-radius:6px; overflow:auto }
+    .note{font-size:14px;color:#6b4f35}
+    a.button{ display:inline-block; margin-top:8px; padding:8px 12px; background:#a87a4f; color:white; border-radius:8px; text-decoration:none }
+  </style>
+</head>
+<body>
+  <h1>說明頁</h1>
+  <p class="note">本頁說明工具中「接龍姓名匯出」與「快速名單產出」兩個功能的操作流程與注意事項。</p>
+
+  <section>
+    <h2>接龍姓名匯出（將 LINE 接龍轉成逗號分隔名單）</h2>
+    <ol>
+      <li>切到左側選單的「接龍姓名匯出」。</li>
+      <li>在上方文字框貼上從 LINE 複製的接龍訊息（通常第一行會是活動標題，下面為編號清單）。</li>
+      <li>按「立即轉換」按鈕。</li>
+      <li>下方的「轉換結果」會顯示整理好的逗號分隔名單，按下方「複製結果」即可複製到剪貼簿，貼到會務系統或 Excel。</li>
+    </ol>
+    <h4>支援與處理細節</h4>
+    <ul>
+      <li>會自動找出有編號的區段（例如「1. 王小明」到最後一個編號列），並只處理該區段。</li>
+      <li>支援拆分符號：換行、逗號、頓號、分號等。</li>
+      <li>會移除常見編號格式與尾端註記（例如「(主任)」），留下乾淨的姓名。</li>
+    </ul>
+    <p class="note">範例輸入：</p>
+    <pre>xx活動，請接龍:
+1. 哆啦A夢
+2. 皮卡丘
+3. 柯南
+4. 魯夫
+5. 唐老鴨
+6. 熊大</pre>
+    <p class="note">範例輸出（可複製）：</p>
+    <pre>哆啦A夢,皮卡丘,柯南,魯夫,唐老鴨,熊大</pre>
+  </section>
+
+  <section>
+    <h2>快速名單產出（把姓名清單轉成可點選的按鈕並輸出選取名單）</h2>
+    <ol>
+      <li>切到左側選單的「快速名單產出」。</li>
+      <li>在上方輸入框貼上或輸入姓名清單（每行一個）。</li>
+      <li>按「生成按鈕」。系統會自動產生一個姓名按鈕列。</li>
+      <li>點擊按鈕可以選取或取消選取。已選姓名會在下方以「逗號,」隔開的文字框即時更新。</li>
+      <li>按「複製選取」即可把已選姓名複製出去。</li>
+      <li>若要清空與重置，按「重置」會清除畫面並同時刪除儲存在瀏覽器的名單（如果已儲存）。</li>
+    </ol>
+    <h4>支援與注意</h4>
+    <ul>
+      <li>生成後系統會自動把名單儲存在瀏覽器的 <code>localStorage</code>（若你清除瀏覽器資料或使用無痕模式，儲存會失效）。</li>
+    </ul>
+    <p class="note">範例輸入：</p>
+    <pre>哆啦A夢
+皮卡丘
+柯南
+魯夫
+唐老鴨
+熊大</pre>
+
+  </section>
+
+  <p><a class="button" href="index.html">回工具頁</a></p>
+</body>
+</html>
