@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>秘書室工具箱</title>
+    <title>秘書工具箱</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Outfit:wght@400;600&display=swap"
         rel="stylesheet">
@@ -50,7 +50,8 @@
             gap: 30px;
             position: sticky;
             top: 0;
-            height: 100vh;
+            height: auto; /* 改為自動高度，避免側欄超出主要內容 */
+            align-self: flex-start; /* 不要在 flex 高度上拉伸 */
             flex-shrink: 0;
         }
 
@@ -74,7 +75,7 @@
             border-radius: 12px;
             text-decoration: none;
             color: var(--sidebar-text);
-            font-size: 15px;
+            font-size: 16px;
             opacity: 0.7;
             transition: var(--transition);
             display: flex;
@@ -267,25 +268,34 @@
         #nameButtons {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 12px;
             margin-top: 10px;
-            font-size: 20px; /* match #output / #chainOutput */
+            font-size: 20px;
         }
 
         .name-btn {
-            padding: 14px 20px;
-            border-radius: 10px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
+            padding: 10px 22px;
+            border-radius: 999px;
+            background: #eaf3f8;
+            border: 1px solid rgba(26,59,78,0.06);
             cursor: pointer;
             font-weight: 700;
             font-size: 18px;
+            color: #27444f;
+            box-shadow: 0 6px 12px rgba(32,45,60,0.04);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .name-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(32,45,60,0.06);
         }
 
         .name-btn.selected {
             background: var(--primary-color);
             color: #fff;
             border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(168,122,79,0.18);
         }
 
         #output,
@@ -454,7 +464,7 @@
                 <span>接龍訊息產生器</span>
             </a>
         </div>
-            <a href="help.html" class="nav-link" style="margin-top:auto;">
+            <a href="help.html" class="nav-link" style="margin-top:24px; margin-bottom:12px;">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 2a10 10 0 100 20 10 10 0 000-20zm.75 14.5h-1.5v-1.5h1.5v1.5zm0-3.5h-1.5V7h1.5v6z"></path>
@@ -476,7 +486,7 @@
             <div class="tool-card">
                 <div class="input-group">
                     <label for="input">輸入原始清單</label>
-                    <textarea id="input" placeholder="OOO活動，請接龍&#10;1. 哆啦A夢&#10;2. 皮卡丘&#10;3. 柯南&#10;4. 魯夫&#10;5. 唐老鴨&#10;6. 熊大"></textarea>
+                    <textarea id="input" placeholder="OOO活動，請接龍&#10;1. 哆啦A夢&#10;2. 唐老鴨&#10;3. 柯南"></textarea>
                 </div>
 
                 <div class="actions">
@@ -491,9 +501,9 @@
                 </div>
 
                 <div class="input-group">
-                    <label>轉換結果</label>
+                    <label>轉換結果（可編輯）</label>
                     <div class="output-group">
-                        <div id="output">尚未轉換...</div>
+                        <textarea id="output" placeholder="尚未轉換..."></textarea>
                     </div>
                 </div>
 
@@ -622,7 +632,7 @@
             <div class="tool-card">
                 <div class="input-group">
                     <label for="namesInput">姓名清單（每行一個）</label>
-                    <textarea id="namesInput" placeholder="哆啦A夢&#10;皮卡丘&#10;柯南&#10;魯夫&#10;唐老鴨&#10;熊大"></textarea>
+                    <textarea id="namesInput" placeholder="哆啦A夢&#10;唐老鴨&#10;柯南"></textarea>
                 </div>
 
                 <div class="actions">
@@ -637,13 +647,11 @@
                     </div>
                 </div>
 
-                <div style="display:flex;gap:12px;margin-top:12px;">
-                    <button id="clearSelectionBtn" class="btn-secondary" onclick="clearSelection()" style="display:none">取消選取</button>
-                </div>
+                <!-- 已移除「取消選取」按鈕，改以點擊按鈕或手動編輯 textarea 來取消選取 -->
 
                 <div class="input-group">
-                    <label>已選姓名（逗號分隔）</label>
-                    <textarea id="selectedOutput" readonly placeholder="點選姓名按鈕，這裡會顯示已選姓名"></textarea>
+                    <label>已選姓名（逗號分隔，亦可手動編輯）</label>
+                    <textarea id="selectedOutput" placeholder="點選姓名按鈕，或直接輸入姓名（用逗號分隔）"></textarea>
                 </div>
 
                 <div style="display:flex;gap:12px;margin-top:12px;">
@@ -717,16 +725,16 @@
                 .filter(name => name.length > 0);
 
             const result = names.join(',');
-            document.getElementById('output').textContent = result;
+            setOutputValue(result);
         }
 
         function clearAll() {
             document.getElementById('input').value = '';
-            document.getElementById('output').textContent = '尚未轉換...';
+            setOutputValue('尚未轉換...');
         }
 
         function copyResult() {
-            const result = document.getElementById('output').textContent;
+            const result = getOutputValue();
             if (result === '尚未轉換...' || !result) return;
 
             navigator.clipboard.writeText(result).then(() => {
@@ -885,6 +893,35 @@
         // 姓名選取器功能
         const STORAGE_KEY = 'secretarytools_names';
 
+        // Helper for reading/writing the conversion output which may be a div or textarea
+        function getOutputValue() {
+            const el = document.getElementById('output');
+            if (!el) return '';
+            return (typeof el.value !== 'undefined') ? el.value : el.textContent;
+        }
+
+        function setOutputValue(v) {
+            const el = document.getElementById('output');
+            if (!el) return;
+            if (typeof el.value !== 'undefined') {
+                el.value = v;
+            } else {
+                el.textContent = v;
+            }
+        }
+
+                // 將側欄高度調整為與主內容等高，保持左右底部對齊
+                function syncNavHeight() {
+                    const nav = document.querySelector('nav');
+                    const main = document.querySelector('main');
+                    if (!nav || !main) return;
+                    // 先清除內聯高度，讓 layout 自然計算（避免累積錯誤）
+                    nav.style.height = 'auto';
+                    // 以主內容的 offsetHeight 作為基準
+                    const h = main.offsetHeight;
+                    nav.style.height = h + 'px';
+                }
+
         function initNamesTool() {
             // load stored names (if any) and render them on init
             try {
@@ -953,6 +990,30 @@
             }
         }
 
+        // 當使用者在 textarea 手動輸入 / 編輯已選姓名時，同步回按鈕的選取狀態
+        function syncSelectionFromTextarea() {
+            const container = document.getElementById('nameButtons');
+            if (!container) return;
+            const raw = (document.getElementById('selectedOutput').value || '');
+            const names = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            const namesLower = new Set(names.map(n => n.toLowerCase()));
+            const buttons = Array.from(container.querySelectorAll('.name-btn'));
+            buttons.forEach(btn => {
+                const text = (btn.textContent || '').trim();
+                if (namesLower.has(text.toLowerCase())) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+            // 更新清除按鈕顯示（不要覆寫 textarea，保留使用者輸入）
+            const clearBtn = document.getElementById('clearSelectionBtn');
+            if (clearBtn) {
+                const anySelected = buttons.some(b => b.classList.contains('selected'));
+                clearBtn.style.display = anySelected ? 'inline-flex' : 'none';
+            }
+        }
+
         function copySelected() {
             const text = document.getElementById('selectedOutput').value || '';
             if (!text) return;
@@ -985,6 +1046,16 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initNamesTool();
+            const selectedOutput = document.getElementById('selectedOutput');
+            if (selectedOutput) {
+                // 在使用者輸入時，同步按鈕狀態
+                selectedOutput.addEventListener('input', syncSelectionFromTextarea);
+            }
+            // 同步側欄高度並在視窗大小變動時更新
+            syncNavHeight();
+            // 小延遲再執行一次以處理字型或圖片載入導致的高度變化
+            setTimeout(syncNavHeight, 120);
+            window.addEventListener('resize', syncNavHeight);
         });
     </script>
 </body>
