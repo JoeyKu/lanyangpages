@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>三皈五戒釋疑</title>
+  <style>
+    :root{
+      --base:20px;
+      --bg:#fbfaf6;
+      --text:#1b1b1b;
+      --muted:#7b6f65;
+      --accent:#8b6b4a;
+      --radius:12px;
+    }
+    html{font-size:var(--base);-webkit-text-size-adjust:100%}
+    body{font-family:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text);}
+    .wrap{max-width:880px;margin:28px auto;padding:18px}
+    .topbar{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px}
+    .brand{display:flex;align-items:center;gap:14px;justify-content:center;width:100%}
+    .logo{width:44px;height:44px;border-radius:8px;border:1px solid rgba(0,0,0,0.04);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700;font-size:1.1rem}
+    h1{font-size:2rem;margin:0;color:var(--text);text-align:center;font-weight:800;letter-spacing:0.01em;padding:6px 0}
+    .subtitle{color:var(--muted);font-size:0.95rem}
+    .controls{display:flex;gap:10px;align-items:center;justify-content:center;width:100%}
+    .search input{border:1px solid rgba(0,0,0,0.06);background:var(--card);padding:10px 12px;border-radius:10px;outline:none;font-size:1rem;color:var(--text);width:260px;max-width:86%}
+    .btn{min-width:74px}
+    .btn{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:8px 12px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:600}
+    .section-title{margin:18px 0 8px;color:var(--accent);font-size:1.02rem}
+    .faq{display:block}
+    details{width:100%;background:transparent;border-radius:var(--radius);margin:16px 0;padding:0}
+    summary{list-style:none;display:block;padding:16px 18px 16px 18px;margin:0;border-radius:10px;background:var(--card);cursor:pointer;font-weight:700;color:var(--accent);font-size:1.02rem;border:1px solid rgba(0,0,0,0.04);position:relative;padding-right:56px}
+    summary:focus{outline:3px solid rgba(139,107,74,0.12);outline-offset:3px}
+    summary .q{display:block}
+    .chev{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;transition:transform .22s ease;color:var(--muted)}
+    details[open] summary{border-color:rgba(139,107,74,0.12);box-shadow:0 8px 20px rgba(27,27,27,0.04)}
+    details[open] .chev{transform:translateY(-50%) rotate(90deg);color:var(--accent)}
+    .answer{padding:18px 22px 28px;background:transparent;font-size:1.06rem;color:var(--text);line-height:2}
+    .answer p{margin:0 0 1rem;line-height:2;text-indent:2em}
+    @media (max-width:720px){:root{--base:21px}.search input{width:160px}.wrap{padding:14px} h1{font-size:1.6rem}}
+  </style>
+  <script>
+    // keyboard, search, expand/collapse
+    document.addEventListener('DOMContentLoaded',function(){
+      const details = Array.from(document.querySelectorAll('details'));
+      // Clean up common copied formatting inside answers:
+      // - remove sequences of &nbsp; (non-breaking spaces)
+      // - convert groups of <br> into separate <p> blocks
+      // - if element already contains <p>, leave paragraph structure intact
+      document.querySelectorAll('.answer').forEach(a=>{
+        // normalize non-breaking spaces to plain spaces
+        a.innerHTML = (a.innerHTML || '').replace(/(&nbsp;|\u00A0)+/g,' ');
+        // if author already has <p> tags, skip structural rewrite
+        if(a.querySelector('p')) return;
+
+        // turn two-or-more <br> into paragraph separators, single <br> -> newline
+        let html = a.innerHTML.replace(/(<br\s*\/?>\s*){2,}/gi,'\n\n');
+        html = html.replace(/<br\s*\/?>/gi,'\n');
+
+        // use a temporary div to decode any remaining HTML
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const decoded = tmp.innerHTML;
+
+        // split on two-or-more newlines to paragraphs, preserve single-line breaks as <br>
+        const parts = decoded.split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
+        a.innerHTML = parts.map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
+      });
+      details.forEach(function(d){
+        const s = d.querySelector('summary');
+        s.setAttribute('tabindex', '0');
+        s.setAttribute('role','button');
+        s.setAttribute('aria-expanded', d.hasAttribute('open') ? 'true' : 'false');
+        s.addEventListener('click', ()=> s.setAttribute('aria-expanded', d.hasAttribute('open') ? 'true' : 'false'));
+        s.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); if(d.hasAttribute('open')) d.removeAttribute('open'); else d.setAttribute('open',''); s.setAttribute('aria-expanded', d.hasAttribute('open') ? 'true' : 'false'); } });
+      });
+
+      // search
+      const input = document.getElementById('faq-search');
+      if(input){
+        input.addEventListener('input', function(){
+          const q = this.value.trim().toLowerCase();
+          details.forEach(d=>{
+            const text = (d.innerText||'').toLowerCase();
+            d.style.display = (!q || text.indexOf(q)!==-1) ? 'block' : 'none';
+          });
+        });
+      }
+
+      // expand / collapse
+      const expandBtn = document.getElementById('expand-all');
+      const collapseBtn = document.getElementById('collapse-all');
+      if(expandBtn) expandBtn.addEventListener('click', ()=> details.forEach(d=>{ d.setAttribute('open',''); d.querySelector('summary').setAttribute('aria-expanded','true'); }));
+      if(collapseBtn) collapseBtn.addEventListener('click', ()=> details.forEach(d=>{ d.removeAttribute('open'); d.querySelector('summary').setAttribute('aria-expanded','false'); }));
+    });
+  </script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <h1>三皈五戒釋疑</h1>
+    </div>
+    <div class="controls">
+      <div class="search"><input id="faq-search" placeholder="搜尋問題或答案" aria-label="搜尋問題"/></div>
+      <button id="expand-all" class="btn">展開</button>
+      <button id="collapse-all" class="btn">收合</button>
+    </div>
+  </div>
+  <br>
+  <div class="faq">
+    <h2 style="margin-top:6px;color:#0b5fff;font-size:1.2rem">「皈依三寶」的相關問題</h2>
+    <details>
+      <summary><span class="q">信仰佛教一定要皈依嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>有人說，我本來就信仰佛教，平時也有燒香禮拜，為什麼一定要參加皈依呢？我們知道，政治上你想參加任何黨派，沒有經過宣誓，就不能成為那個黨的黨員；擔任總統等公職，也要宣誓才算正式就職。男女兩性結婚，必須舉行結婚典禮，經過公眾承認，在法律上才能合法生效。</p><p>做一個佛教徒，必須經過皈依三寶的程序，在皈依時，自己以虔誠的心和佛陀接心，佛陀再以慈悲威德灌注到你的身心，如此感應道交之後，你才能成為佛教信徒；假如沒有經過皈依這個儀禮，只是拜拜、燒香，都不算佛教徒，只能算是一個佛教的尊敬者。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">皈依三寶需要吃素嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>有人說，我可以皈依三寶，但不能吃素，因此關心：皈依三寶 以後，是不是一定要吃素呢？其實皈依三寶並不一定要吃素，吃素是生活習慣，是道德問題；皈依三寶是信仰的確認，與素食沒有關係。有一些不皈依的人，他們基於健康、道德或習慣等因素，都可以吃素，但發心皈依的人，不一定要吃素。皈依三寶是表示我信仰佛教，成為佛教徒，不再信仰其他宗教，所以皈依三寶以後要「改性不改宗」，也就是改變不好的性格，但是除了佛教以外，不再改信其他宗教。不過，皈依以後雖然不一定要吃素，如能減少殺生， 還是很重要的修行。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">皈依三寶以後，萬一將來改信他教，會遭到天譴嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>今天大家在此皈依三寶，有人或許會擔心，萬一將來我碰上什麼因緣而不再信仰佛教了，甚至改信其它宗教，會不會如一般人所說的遭到天打雷劈，會有災難降臨嗎？ </p><p>不會的！佛教不是用神權來控制我們的信仰，佛教是重視信仰自由的宗教，歷史上有許多異教徒改宗皈信佛教，我們都把他們看 作是「升學」一樣；假如佛教徒皈依以後，因故不再信仰佛教，頂多只是有損自己的信用、承諾，但不會遭到天打雷劈。所謂「遭天譴」的說法，那是邪教利用神權來控制人的方法，佛教不會這麼做，佛教的信仰是建立在自己心甘情願、發心立願上，佛菩薩絕對不會降災殃給我們。 </p><p>其實，現在世界各地不乏信仰兩種宗教的事例。當然，佛教的信仰講究純潔、專一，所謂「一心念佛」、「一心持名」、「一心皈命」；
+能夠一心一意、一師一道最好，如果不得已，也只有方便行事了。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">皈依三寶是拜師父嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>佛教裡經常把信徒看作是自己私人所有，因此常聽說：「某某信徒是某某法師的徒弟。」其實皈依三寶時，主持皈依的法師只是為我們做個證盟，證明我們是三寶弟子，是佛教徒，因此皈依不是拜師父。皈依是表示信仰，信仰何其神聖；拜師父是世間上的禮儀，即使今天我在此主持三皈五戒典禮，也只是證明的老師，因為我也是佛法僧三寶的弟子之一，我只是比你們早入道而已。所以皈依三寶是表示我信仰了佛教，願意以佛法為人生的指南，是服膺佛教的真理，並不是拜某人為師父。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">皈依三寶以後可以祭拜神明嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>有人會問：過去我拜的是媽祖、城隍、王爺等神明，現在皈依三寶了，以後還可以拜他們嗎？當然可以！我們平時見到長輩、老師、聖賢，都會禮敬，甚至對不同宗教信仰的人，也會握手、點頭，表示禮貌。人和人都需要互相尊重、禮敬了，為什麼不可以對神明尊敬、拜拜呢？只是我們要知道，拜拜、恭敬和皈依、信仰是不一樣的，拜拜是一時的，皈依是一生一世的，尊敬不同於信仰，所以皈依以後可以超越神明的信仰，不為神權所控制，這才是重要的。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">皈依以後，可以繼續祭拜祖先、宗親嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>中國人一向重視孝道，提倡「慎終追遠」，每遇逢年過節都要祭拜祖先，因此有人擔心：我現在皈依三寶了，以後還能祭祖先以盡孝思嗎？當然可以！皈依三寶之後對於正派而非旁門左道的神明都可以禮拜了，何況佛教是提倡孝道的宗教，因此對於祖先、宗親，當然可以繼續尊敬、祭祀。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">皈依以後，可以到其他道場禮佛嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>今天大家在佛光山道場宣誓皈依，佛光山成為你們法身慧命的道場，今後是不是可以到其他寺院去禮佛呢？這個問題毫無疑義的「當然可以！」因為寺院道場雖然不一樣，但佛祖都是同一個，不論是哪裡的佛祖，並不需要妄加分別。 </p><p>不過，今天大家在佛光山皈依，「傳承」上確實是有一些不同，所以有一點大家要認識清楚：佛光山是你們皈依的根本道場，屬臨濟宗的法脈，佛光山以外的其他寺院，就如朋友一樣；這就如同法律規定，男女結婚的對象只能一個，其餘的只能是朋友的關係。因此，今天大家在佛光山皈依了，以後可以到別的寺院隨喜參加活動，但是要記得，佛光山是各位求受三皈五戒的根本道場。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">皈依以後，需要奉持什麼戒律嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>皈依三寶是表示自己從此信仰佛教，成為三寶佛法僧的弟子，不再信仰其他宗教，所以是確定信仰目標的表示，並不需要受持什麼戒律。不過，如果勉強說有什麼戒律需要遵守的話，那也只有一條，就是皈依者需要信守自己皈依時的宣誓，即：皈依佛，盡形壽不皈依天魔外道；皈依法，盡形壽不皈依外道邪說；皈依僧，盡形壽不皈依外道門徒。 </p><p>但是，這些誓願並不包括對正當的教派，而是針對一些沒有歷史、沒有傳承、沒有教義的邪教，或者以欺世盜名為尚的邪說而言，因為邪教、邪說，千萬不可以皈依。 </p><p>皈依三寶雖然沒有戒律的限制，然而皈依後大家在言行上總要有一些改變，才能顯示自己和一般人不一樣了。例如，要不斷想到：我是佛教徒了、我要反省自覺、我要行佛慈悲、我要參與佛教活動、我要護持佛教事業等等。此外，皈依三寶的人一定要有正知正見，要深信因果，要能「諸惡莫作，眾善奉行」，如此才能獲得佛法的受用，才能得到信仰的利益。</p></div>
+    </details>
+    <br>
+    <h2 style="margin-top:18px;color:#0b5fff;font-size:1.2rem">「受持五戒」的相關問題</h2>
+    <details>
+      <summary><span class="q">受戒是束縛嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>一般人認為受了戒以後，生活裡「這樣不行，那樣不能」，不是增加束縛，不是很不自由嗎？因此有人說：何必受戒，自找束縛呢！ </p><p>其實，我們到監獄裡去調查，凡是身繫囹圄失去自由的人，探究其原因，都是觸犯了五戒。譬如：殺人、傷害、毀容，是犯了殺生戒；貪汙、侵占、竊盜、勒索、搶劫、綁票，是犯了偷盜戒；強暴、嫖妓、拐騙、重婚、販賣人口、妨礙風化，是犯了邪淫戒；毀謗、背信、誣告、偽證、造謠、栽贓、恐嚇，是犯了妄語戒；販毒、吸毒、運毒、吸食菸酒等，凡是刺激性的食品，能傷害人的神智，都是毒品，是犯了飲酒戒。由於犯了五戒，於是身陷牢獄，失去自由。所以受戒也是守法，能夠受持五戒，真實認識五戒的人，才能享有真正的自由。因此，戒的真義是自由，而非束縛。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">在國家有國法，在佛教有五戒，國家的刑法與五戒有什麼不同嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>佛教徒受持戒法，就好比學生遵守校規，人民恪守法律一般；不同的是，校規、法律是來自外在的約束，屬於他律；而佛教的戒律，是發自內心的自我要求，屬於自律。 </p><p>也就是說，國家的法律是用外力規範人、強迫人不可以犯罪；而佛教的五戒，則是自己本身心甘情願奉行的，不去冒犯這五種惡事。所以，國家的刑法是處罰犯罪於已然，佛教的戒律是防範犯罪於未然，兩者的信行功德是不一樣的。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">受持五戒後，一定要吃素嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>不一定，就如皈依三寶一樣，在飲食上並沒有特別的限制，只是受持五戒後，雖然戒律上沒有限制你要吃什麼、不能吃什麼？不過佛教的信仰，總是教人慈悲、有道德、不要殺生。在佛法裡有所謂「三淨肉」、「肉邊菜」，也有六齋日、吃早齋等，都是一種方便，所以受戒後，應當自我淨化身心，以期成為一個慈悲、有道德的行者。</p><p>有人說，佛教講「因果報應」，我們吃豬、馬、牛、羊，將來會有投胎成為豬、馬、牛、羊的果報；我們打死蒼蠅螞蟻，也會成為蒼蠅螞蟻，那麼我們如果殺人，將來不就可以再生為人了嗎？</p><p>這是一種謬誤的見解，執著這種邪見的人就是「破見」。「破見」的人比「破戒」更可怕。破戒是違犯戒法，是個人行為上的過失，可以懺悔糾正；破見是謬解真理，是根本思想上的錯誤。一個破見的人，在見解上無法再接受佛法真理，就永遠與佛道無緣，因此破戒可以懺悔，破見不通懺悔。</p><p>在佛教裡，一個人破戒並非可恥，只要至誠懺悔，仍有重生的希望；而一個破見的人，則如病入膏肓，無藥可救，這就如同在政治上，思想犯的罪過比較嚴重。在佛教的戒律上，錯誤的思想見解，如「身見」、「邊見」、「邪見」、「見取見」、「戒禁取見」等五種昧於因果的邪惡見解，都是煩惱的根源，也是障道的根本。所以一個修學佛法的人，首先要培養正知正見，須知受了戒，行為有了依循的標準，懂得自我約束，縱有所犯，也能懺悔。因此戒不可怕，有戒才和平，有戒才安全，有戒才有保障。</p></div>
+    </details>
+    
+    <details>
+      <summary><span class="q">受持五戒之後，如果在日常生活中不小心打死蚊蠅、蟲蟻，也算是殺生嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>從佛教的戒律來講，殺生有兩種，一叫突吉羅（輕垢罪），一是波羅夷（極重罪）。波羅夷是不可救的意思，也就是「棄罪」，殺人才會構成「波羅夷」罪，這是戒律中的根本大戒，是不通懺悔的。 </p><p>日常生活中，無意間殺害蟑螂、蟲蟻，是犯突吉羅，屬於惡作，雖然一樣有罪，但跟殺人不一樣。這種殺生雖有過失，但可通懺悔，可以補救，可以將功折罪，例如有的人以放生、護生來滅罪，也有的人用懺悔、發願來消業。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">受戒以後萬一犯了戒，怎麼辦呢？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>有人認為受戒難免會犯戒，不受戒就不必擔憂會犯戒。事實上，受戒後縱使犯戒，因為有慚愧心，懂得懺悔，罪過較小，還是有得度的機會。不受戒的人，犯了戒，不知懺悔，罪過加重，因此沉淪三途惡道。所以，寧可受戒而犯戒悔過，也不要不受戒而犯戒；因為受戒才有得度的機會，不受戒就永無成佛的可能。何況不受戒，並不代表做錯事就沒有罪過，不受戒而犯戒，仍然有罪，仍然難逃因果業報。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">佛教的戒律受持之後，究竟有什麼利益呢？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>受持五戒是人道的根本，一個人受持五戒，會有無盡的利益。根據《灌頂經》說：我們受持五戒，必感得廿五名善神的護佑。《月燈三昧經》也記載，持戒清淨者能獲得十種利益，即：1. 滿足一切智，2. 如佛所學而學，3. 智者不毀，4. 不退誓願，5. 安住於行，6. 棄捨生死，7. 慕樂涅槃，8. 得無纏心，9. 得勝三昧，10. 不乏信財。 </p><p>此外，如果我們不殺生而護生，自然能獲得健康長壽；不偷盜而布施，自然能發財享受富貴；不邪淫而尊重他人的名節，自然家庭和諧美滿；不妄語而讚歎他人，自然能獲得善名美譽；不喝酒而遠離毒品的誘惑，自然身體健康，智慧清明。</p></div>
+    </details>
+    <details>
+      <summary><span class="q">受持五戒之後，應該再求受其他什麼戒法嗎？</span><span class="chev">▶</span></summary>
+      <div class="answer"><p>受持五戒是盡形壽受持，不是一日一夜受持而已；五戒可以全部受持，也可以隨分受持。在家居士人人都可以就著自己的情況，選擇自己容易受持的一戒、二戒，乃至三戒、四戒，精進受持，漸漸達到五戒圓滿。甚至可以進一步再發心向上受持菩薩戒，它有「十重四十八輕戒」。能夠發菩提心來成就菩提事業，不但可以使入世的事業順利、家庭圓滿，出世的精神世界也會更加開闊。如此逍遙法界、自由自在，真是人生最美好的境界了。</p></div>
+    </details>
+  </div>
+</div>
+</body>
+</html>
