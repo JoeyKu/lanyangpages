@@ -11,6 +11,9 @@
       --text:#1b1b1b;
       --muted:#7b6f65;
       --accent:#8b6b4a;
+      /* softened warm tones */
+      --primary-color:#d5af8b;
+      --accent-color:#e6caa8;
       --radius:12px;
     }
     html{font-size:var(--base);-webkit-text-size-adjust:100%}
@@ -28,11 +31,16 @@
     .section-title{margin:18px 0 8px;color:var(--accent);font-size:1.02rem}
     .faq{display:block}
     details{width:100%;background:transparent;border-radius:var(--radius);margin:16px 0;padding:0}
-    summary{list-style:none;display:block;padding:16px 18px 16px 18px;margin:0;border-radius:10px;background:var(--card);cursor:pointer;font-weight:700;color:var(--accent);font-size:1.02rem;border:1px solid rgba(0,0,0,0.04);position:relative;padding-right:56px}
+    /* Use only a left accent bar for summaries; no filled background */
+    summary{list-style:none;display:block;padding:14px 20px;margin:0;border-radius:8px;background:transparent;cursor:pointer;font-weight:800;color:var(--accent);font-size:1.06rem;border:none;position:relative;padding-right:56px;box-shadow:none;transition:background .12s ease,transform .12s ease}
+    /* subtle hover to aid discoverability without filling the whole block */
+    summary:hover{background:rgba(0,0,0,0.03)}
+    summary::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:6px;border-radius:6px;background:var(--accent-color)}
+    summary .q{display:block}
     summary:focus{outline:3px solid rgba(139,107,74,0.12);outline-offset:3px}
     summary .q{display:block}
-    .chev{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;transition:transform .22s ease;color:var(--muted)}
-    details[open] summary{border-color:rgba(139,107,74,0.12);box-shadow:0 8px 20px rgba(27,27,27,0.04)}
+    .chev{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;transition:transform .22s ease;color:var(--accent)}
+    details[open] summary{box-shadow:0 8px 20px rgba(27,27,27,0.04)}
     details[open] .chev{transform:translateY(-50%) rotate(90deg);color:var(--accent)}
     .answer{padding:18px 22px 28px;background:transparent;font-size:1.06rem;color:var(--text);line-height:2}
     .answer p{margin:0 0 1rem;line-height:2;text-indent:2em}
