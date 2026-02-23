@@ -39,7 +39,6 @@
             line-height: 1.75;
         }
 
-        /* Sidebar */
         nav {
             width: 280px;
             background-color: var(--sidebar-bg);
@@ -50,8 +49,8 @@
             gap: 30px;
             position: sticky;
             top: 0;
-            height: auto; /* 改為自動高度，避免側欄超出主要內容 */
-            align-self: flex-start; /* 不要在 flex 高度上拉伸 */
+            height: auto;
+            min-height: 100vh;
             flex-shrink: 0;
         }
 
@@ -94,7 +93,6 @@
             background-color: rgba(255, 255, 255, 0.05);
         }
 
-        /* Main Content */
         main {
             flex-grow: 1;
             padding: 60px;
@@ -113,10 +111,8 @@
 
         .header p {
             color: var(--text-secondary);
-            font-size: px;
         }
 
-        /* Tool Card */
         .tool-card {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -137,7 +133,6 @@
             letter-spacing: 1px;
         }
 
-        /* Larger, normal-case labels inside tool cards (e.g. "姓名按鈕（點擊選取 / 取消）") */
         .tool-card .input-group > label {
             font-size: 22px;
             text-transform: none;
@@ -169,7 +164,6 @@
             box-shadow: 0 0 0 4px rgba(212, 163, 115, 0.1);
         }
 
-        /* Generator form specific styling */
         textarea#description,
         textarea#notes {
             min-height: 80px;
@@ -190,26 +184,6 @@
             display: block;
             margin-bottom: 6px;
             font-size: 13px;
-        }
-
-        #tool-generator .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px;
-        }
-
-        #tool-generator .checkbox-group label {
-            margin: 0;
-            font-size: 14px;
-            text-transform: none;
-            letter-spacing: 0;
-            cursor: pointer;
-        }
-
-        #tool-generator input[type="checkbox"] {
-            width: auto;
-            margin: 0;
         }
 
         .actions {
@@ -258,6 +232,56 @@
             position: relative;
         }
 
+        /* ── Group bar (names tool) ── */
+        .group-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .group-bar > label {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary-color);
+            white-space: nowrap;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        #groupSelect {
+            flex: 1;
+            min-width: 150px;
+            max-width: 280px;
+            padding: 10px 36px 10px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #d4b896;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a87a4f' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+            appearance: none;
+            font-size: 18px;
+            font-family: inherit;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+            width: auto;
+        }
+        #groupSelect:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(212,163,115,0.15); }
+
+        .icon-btn {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            border: 1.5px solid #c4a47c;
+            background: #fff;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #a87a4f;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+        .icon-btn:hover { background: var(--primary-color); color: #fff; border-color: var(--primary-color); transform: translateY(-2px); }
+        .icon-btn.danger { color: #c0392b; border-color: #e8b4ae; }
+        .icon-btn.danger:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+        .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; }
+
         /* Name selector styles */
         .name-area {
             display: flex;
@@ -271,18 +295,24 @@
             gap: 12px;
             margin-top: 10px;
             font-size: 20px;
+            min-height: 44px;
+        }
+        #nameButtons.empty::after {
+            content: '尚未產生按鈕';
+            color: #bbb;
+            font-size: 16px;
+            line-height: 44px;
         }
 
         .name-btn {
             padding: 10px 22px;
             border-radius: 999px;
-            background: #eaf3f8;
-            border: 1px solid rgba(26,59,78,0.06);
+            background: #fff;
+            border: 1.5px solid #c4a47c;
             cursor: pointer;
             font-weight: 700;
             font-size: 18px;
-            color: #27444f;
-            box-shadow: 0 6px 12px rgba(32,45,60,0.04);
+            color: #3d2c1b;
             transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
         }
 
@@ -328,103 +358,27 @@
             opacity: 1;
         }
 
-        /* 平板 */
         @media (max-width: 900px) {
-            nav {
-                width: 80px;
-                padding: 40px 10px;
-            }
-
-            .logo,
-            .nav-link span {
-                display: none;
-            }
-
-            main {
-                padding: 30px;
-            }
+            nav { width: 80px; padding: 40px 10px; }
+            .logo, .nav-link span { display: none; }
+            main { padding: 30px; }
         }
 
-        /* 手機 */
         @media (max-width: 640px) {
-            nav {
-                width: 60px;
-                padding: 20px 8px;
-            }
-
-            .logo {
-                display: none;
-            }
-
-            .nav-links {
-                gap: 8px;
-            }
-
-            .nav-link {
-                padding: 12px 8px;
-                flex-direction: column;
-                gap: 4px;
-                text-align: center;
-            }
-
-            .nav-link span {
-                display: block;
-                font-size: 9px;
-                line-height: 1.2;
-            }
-
-            .nav-link svg {
-                width: 20px;
-                height: 20px;
-            }
-
-            main {
-                padding: 20px;
-            }
-
-            .header h1 {
-                font-size: 26px;
-            }
-
-            .header p {
-                font-size: 16px;
-            }
-
-            .tool-card {
-                padding: 16px;
-            }
-
-            textarea {
-                min-height: 150px;
-                padding: 12px;
-                font-size: 17px;
-            }
-
-            .actions {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .actions button {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .output-group {
-                padding: 12px;
-            }
-
-            #output,
-            #chainOutput {
-                font-size: 16px;
-            }
-
-            .copy-toast {
-                bottom: 30px;
-                right: 20px;
-                left: auto;
-                text-align: center;
-            }
+            nav { width: 60px; padding: 20px 8px; }
+            .logo { display: none; }
+            .nav-links { gap: 8px; }
+            .nav-link { padding: 12px 8px; flex-direction: column; gap: 4px; text-align: center; }
+            .nav-link span { display: block; font-size: 9px; line-height: 1.2; }
+            .nav-link svg { width: 20px; height: 20px; }
+            main { padding: 20px; }
+            .header h1 { font-size: 26px; }
+            .tool-card { padding: 16px; }
+            textarea { min-height: 150px; padding: 12px; font-size: 17px; }
+            .actions { flex-direction: column; gap: 10px; }
+            .actions button { width: 100%; justify-content: center; }
+            .output-group { padding: 12px; }
+            #output, #chainOutput { font-size: 16px; }
         }
     </style>
 </head>
@@ -433,7 +387,7 @@
     <nav>
         <div class="logo">秘書工具箱</div>
         <div class="nav-links">
-            <a href="#" class="nav-link active" onclick="showTool('format')">
+            <a href="#" class="nav-link active" onclick="showTool('format', this)">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
@@ -441,39 +395,22 @@
                 </svg>
                 <span>接龍姓名匯出</span>
             </a>
-            <a href="#" class="nav-link" onclick="showTool('names')">
+            <a href="#" class="nav-link" onclick="showTool('names', this)">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3zM6 19a6 6 0 0112 0"></path>
                 </svg>
                 <span>快速名單產出</span>
             </a>
-            <a href="#" class="nav-link" onclick="showTool('chain')" style="display:none">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
-                    </path>
-                </svg>
-                <span>接龍取消</span>
-            </a>
-            <a href="#" class="nav-link" onclick="showTool('generator')" style="display:none">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3"></path>
-                </svg>
-                <span>接龍訊息產生器</span>
-            </a>
-        </div>
-            <a href="help.html" class="nav-link" style="margin-top:24px; margin-bottom:12px;">
+            <a href="help.html" class="nav-link" style="margin-top:24px;">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 2a10 10 0 100 20 10 10 0 000-20zm.75 14.5h-1.5v-1.5h1.5v1.5zm0-3.5h-1.5V7h1.5v6z"></path>
                 </svg>
                 <span>說明</span>
             </a>
-            </div>
+        </div>
     </nav>
-
 
     <main>
         <!-- 姓名格式化工具 -->
@@ -492,8 +429,7 @@
                 <div class="actions">
                     <button class="btn-primary" onclick="formatNames()">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                         立即轉換
                     </button>
@@ -518,145 +454,56 @@
             </div>
         </div>
 
-        <!-- 接龍取消工具 -->
-        <div id="tool-chain" class="tool-section" style="display: none;">
-            <div class="header">
-                <h1>接龍取消工具</h1>
-                <p>移除接龍中的空白項目，並重新編號，保持連續序號。</p>
-            </div>
-
-            <div class="tool-card">
-                <div class="input-group">
-                    <label for="chainInput">輸入接龍內容</label>
-                    <textarea id="chainInput" placeholder="請接龍&#10;1. xxx&#10;2. yyy&#10;3.&#10;4. zzz"></textarea>
-                </div>
-
-                <div class="actions">
-                    <button class="btn-primary" onclick="processChain()">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        整理接龍
-                    </button>
-                    <button class="btn-secondary" onclick="clearChain()">清除</button>
-                </div>
-
-                <div class="input-group">
-                    <label>整理結果</label>
-                    <div class="output-group">
-                        <div id="chainOutput">尚未整理...</div>
-                    </div>
-                </div>
-
-                <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="copyChainResult()">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
-                        </path>
-                    </svg>
-                    複製結果
-                </button>
-            </div>
-        </div>
-
-        <!-- 接龍訊息產生器 -->
-        <div id="tool-generator" class="tool-section" style="display: none;">
-            <div class="header">
-                <h1>接龍訊息產生器</h1>
-                <p>選擇範本，輸入活動資訊，快速產生接龍訊息。</p>
-            </div>
-
-            <div class="tool-card">
-                <div class="input-group">
-                    <label for="template">選擇範本</label>
-                    <select id="template" onchange="onTemplateChange()">
-                        <option value="volunteer">義工接龍（標準格式）</option>
-                    </select>
-                </div>
-
-                <!-- Volunteer Template Form -->
-                <div id="volunteer-form">
-                    <div class="input-group">
-                        <label for="vol_activity">活動</label>
-                        <input id="vol_activity" type="text" placeholder="例：2026年兒童冬令營大寮義工" />
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="vol_date">日期</label>
-                            <input id="vol_date" type="text" placeholder="例：2026／1／28日(三)" />
-                        </div>
-                        <div class="form-col">
-                            <label for="vol_time">時間</label>
-                            <input id="vol_time" type="text" placeholder="例：8:30~12:00" />
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="vol_content">內容</label>
-                        <input id="vol_content" type="text" placeholder="例：午餐典座" />
-                    </div>
-
-                    <div class="input-group">
-                        <label for="vol_people">人數</label>
-                        <input id="vol_people" type="number" min="1" value="5" />
-                    </div>
-
-                    <div class="actions">
-                        <button class="btn-primary" onclick="generateVolunteerMessage()">產生訊息</button>
-                        <button class="btn-secondary" onclick="clearVolunteerForm()">清除</button>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>產生結果 (可複製到 LINE)</label>
-                    <div class="output-group">
-                        <div id="messageOutput">尚未產生...</div>
-                    </div>
-                </div>
-
-                <div style="display:flex;gap:12px;margin-top:12px;">
-                    <button class="btn-primary" style="flex:1" onclick="copyMessage()">複製訊息</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 姓名選取器 -->
+        <!-- 快速名單產出（多組版） -->
         <div id="tool-names" class="tool-section" style="display: none;">
             <div class="header">
                 <h1>快速名單產出</h1>
-                <p>輸入姓名清單，產生按鈕後可點選並在下方以逗號分隔顯示，並可重置。</p>
+                <p>多組名單管理，點選姓名即可快速匯出逗號分隔清單。</p>
             </div>
 
             <div class="tool-card">
+                <!-- Group bar -->
+                <div class="group-bar">
+                    <label>名單組：</label>
+                    <select id="groupSelect" onchange="onSelectChange()"></select>
+                    <button class="icon-btn danger" title="刪除此名單組" onclick="deleteGroup()" style="font-size:18px; color:#c0392b;">🗑</button>
+                </div>
+
                 <div class="input-group">
                     <label for="namesInput">姓名清單（每行一個）</label>
-                    <textarea id="namesInput" placeholder="哆啦A夢&#10;唐老鴨&#10;柯南"></textarea>
+                    <textarea id="namesInput" placeholder="哆啦A夢&#10;唐老鴨&#10;柯南" style="min-height:110px;"></textarea>
                 </div>
 
                 <div class="actions">
-                    <button class="btn-primary" onclick="generateNameButtons()">生成按鈕</button>
-                    <button class="btn-secondary" onclick="resetNames()">重置</button>
+                    <button class="btn-primary" onclick="generateNameButtons()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        產生按鈕
+                    </button>
+                    <button class="btn-secondary" onclick="saveGroup()">儲存此組</button>
                 </div>
 
                 <div class="input-group">
-                    <label>姓名按鈕 (點擊選取/取消)</label>
+                    <label>姓名按鈕（點擊選取 / 取消）</label>
                     <div class="output-group name-area">
-                        <div id="nameButtons">尚未產生按鈕</div>
+                        <div id="nameButtons" class="empty"></div>
                     </div>
                 </div>
 
-                <!-- 已移除「取消選取」按鈕，改以點擊按鈕或手動編輯 textarea 來取消選取 -->
-
-                <div class="input-group">
-                    <label>已選姓名（逗號分隔，亦可手動編輯）</label>
-                    <textarea id="selectedOutput" placeholder="點選姓名按鈕，或直接輸入姓名（用逗號分隔）"></textarea>
+                <div class="input-group" style="margin-top:20px;">
+                    <label>已選姓名（逗號分隔，可手動編輯）</label>
+                    <div class="output-group">
+                        <textarea id="selectedOutput" style="min-height:56px;background:transparent;border:none;padding:0;resize:none;" placeholder="點選姓名按鈕，或直接輸入姓名（用逗號分隔）"></textarea>
+                    </div>
                 </div>
 
-                <div style="display:flex;gap:12px;margin-top:12px;">
-                    <button class="btn-primary" style="flex:1" onclick="copySelected()">複製選取</button>
-                </div>
+                <button class="btn-primary" style="width:100%;justify-content:center;margin-top:14px;" onclick="copySelected()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    複製已選姓名
+                </button>
             </div>
         </div>
     </main>
@@ -664,400 +511,190 @@
     <div id="toast" class="copy-toast">已複製到剪貼簿！</div>
 
     <script>
-        // 工具切換功能
-        function showTool(toolName) {
-            // 隱藏所有工具區塊
-            document.querySelectorAll('.tool-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            // 顯示選中的工具
+        // ── Tool switcher ──
+        function showTool(toolName, el) {
+            document.querySelectorAll('.tool-section').forEach(s => s.style.display = 'none');
             document.getElementById('tool-' + toolName).style.display = 'block';
-            
-            // 更新導航列的active狀態
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if (el) el.classList.add('active');
         }
 
-        // 姓名格式化功能
+        // ── Format tool ──
         function formatNames() {
             const input = document.getElementById('input').value;
-            if (!input.trim()) {
-                alert('請先輸入文字');
-                return;
-            }
-
-            // 處理邏輯：
-            // 1. 找到第一個與最後一個編號行，僅取該範圍內的行來處理（移除開頭說明與最後編號後的文字）
-            // 2. 使用正則表達式拆分清單，支援：換行、頓號 (、)、逗號 (,)、分號 (;)
-            // 3. 移除開頭的編號格式 (如 1. 1、 (1) 等)
-            // 4. 移除結尾的註記格式 (如 (義工) 、（主任）等)
-            // 5. 去除首尾空白，並過濾掉空值
-
+            if (!input.trim()) { alert('請先輸入文字'); return; }
             const lines = input.split('\n');
-            let firstLineIndex = -1;
-            let lastLineIndex = -1;
+            let firstLineIndex = -1, lastLineIndex = -1;
             const numRegex = /^\s*\d+[.、。]/;
-
             for (let i = 0; i < lines.length; i++) {
                 if (numRegex.test(lines[i])) {
                     if (firstLineIndex === -1) firstLineIndex = i;
                     lastLineIndex = i;
                 }
             }
-
             let textToProcess = input;
-            if (firstLineIndex !== -1 && lastLineIndex !== -1) {
-                textToProcess = lines.slice(firstLineIndex, lastLineIndex + 1).join('\n');
-            }
-
-            const delimiters = /[\n,，、;；]/;
-            const names = textToProcess.split(delimiters)
+            if (firstLineIndex !== -1) textToProcess = lines.slice(firstLineIndex, lastLineIndex + 1).join('\n');
+            const names = textToProcess.split(/[\n,，、;；]/)
                 .map(item => {
                     let name = item.trim();
-                    // 移除開頭的編號或括號 (如 1. 或 (1) 等)
                     name = name.replace(/^[0-9\s.、。()（）]+/, '').trim();
-                    // 移除結尾的 (xx) 或 （xx）格式
                     name = name.replace(/[\s(（][^()（）]*[)）]$/, '').trim();
                     return name;
                 })
                 .filter(name => name.length > 0);
-
-            const result = names.join(',');
-            setOutputValue(result);
+            document.getElementById('output').value = names.join(',');
         }
 
         function clearAll() {
             document.getElementById('input').value = '';
-            setOutputValue('尚未轉換...');
+            document.getElementById('output').value = '';
         }
 
         function copyResult() {
-            const result = getOutputValue();
-            if (result === '尚未轉換...' || !result) return;
-
-            navigator.clipboard.writeText(result).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            });
+            const result = document.getElementById('output').value;
+            if (!result) return;
+            navigator.clipboard.writeText(result).then(() => showToast('已複製到剪貼簿！'));
         }
 
-        // 接龍取消功能
-        function processChain() {
-            const input = document.getElementById('chainInput').value;
-            if (!input.trim()) {
-                alert('請先輸入接龍內容');
+        // ── Multi-group names tool ──
+        const STORE_KEY = 'nameGroups_v1';
+        function uid() { return Math.random().toString(36).slice(2, 9); }
+
+        function loadState() {
+            try {
+                const d = JSON.parse(localStorage.getItem(STORE_KEY));
+                if (d && d.groups && d.groups.length) return d;
+            } catch(e) {}
+            // 遷移舊版資料
+            const id = uid();
+            let defaultNames = [];
+            try {
+                const old = JSON.parse(localStorage.getItem('secretarytools_names'));
+                if (Array.isArray(old) && old.length) defaultNames = old;
+            } catch(e) {}
+            return { activeId: id, groups: [{ id, name: '預設名單', names: defaultNames }] };
+        }
+
+        function saveState() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+        let state = loadState();
+        function activeGroup() { return state.groups.find(g => g.id === state.activeId) || state.groups[0]; }
+
+        function renderGroupSelect() {
+            const sel = document.getElementById('groupSelect');
+            sel.innerHTML = '';
+            state.groups.forEach(g => {
+                const o = document.createElement('option');
+                o.value = g.id; o.textContent = g.name;
+                if (g.id === state.activeId) o.selected = true;
+                sel.appendChild(o);
+            });
+            const add = document.createElement('option');
+            add.value = '__add__'; add.textContent = '＋ 新增名單組';
+            sel.appendChild(add);
+        }
+
+        function onSelectChange() {
+            const val = document.getElementById('groupSelect').value;
+            if (val === '__add__') {
+                renderGroupSelect();
+                const name = prompt('新名單組名稱：', '新名單');
+                if (!name || !name.trim()) return;
+                const newG = { id: uid(), name: name.trim(), names: [] };
+                state.groups.push(newG);
+                state.activeId = newG.id;
+                saveState(); renderGroupSelect(); loadGroupUI();
                 return;
             }
-
-            const lines = input.split('\n');
-            
-            // 先找出所有編號行，區分有內容和空白的
-            const parsedLines = [];
-            for (const line of lines) {
-                const trimmedLine = line.trim();
-                const match = trimmedLine.match(/^(\d+)[.、。]\s*(.*)$/);
-                
-                if (match) {
-                    // 移除內容開頭多餘的點號，避免 35..xxx 問題
-                    let content = match[2].trim().replace(/^[.、。]+/, '').trim();
-                    parsedLines.push({
-                        type: 'numbered',
-                        number: parseInt(match[1]),
-                        content: content,
-                        isEmpty: content.length === 0
-                    });
-                } else if (trimmedLine.length > 0) {
-                    parsedLines.push({
-                        type: 'text',
-                        content: trimmedLine
-                    });
-                }
-            }
-            
-            // 找出尾部連續空白編號的起始位置
-            // 調整：以最後一個「有編號」的項目為基準（即使之後有文字），
-            // 從該位置往回尋找連續的空白編號並視為尾部空白要保留
-            let trailingEmptyStart = parsedLines.length;
-            let lastNumberedIndex = -1;
-            for (let i = parsedLines.length - 1; i >= 0; i--) {
-                if (parsedLines[i].type === 'numbered') {
-                    lastNumberedIndex = i;
-                    break;
-                }
-            }
-            if (lastNumberedIndex !== -1) {
-                for (let i = lastNumberedIndex; i >= 0; i--) {
-                    if (parsedLines[i].type === 'numbered' && parsedLines[i].isEmpty) {
-                        trailingEmptyStart = i;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            
-            // 處理結果
-            // 需求：只移除中間的空白編號，保留其餘行的原始編號（包含尾部連續的空白編號）
-            const resultLines = [];
-
-            for (let i = 0; i < parsedLines.length; i++) {
-                const item = parsedLines[i];
-
-                if (item.type === 'text') {
-                    resultLines.push(item.content);
-                } else if (item.type === 'numbered') {
-                    if (i >= trailingEmptyStart) {
-                        // 尾部空白編號，保留原始編號且為空
-                        resultLines.push(item.number + '.');
-                    } else if (!item.isEmpty) {
-                        // 有內容的編號行，保留原始編號與內容
-                        resultLines.push(item.number + '.' + item.content);
-                    }
-                    // 中間的空白編號會被跳過
-                }
-            }
-
-            const result = resultLines.join('\n');
-            document.getElementById('chainOutput').textContent = result;
+            state.activeId = val;
+            saveState();
+            loadGroupUI();
         }
 
-        function clearChain() {
-            document.getElementById('chainInput').value = '';
-            document.getElementById('chainOutput').textContent = '尚未整理...';
-        }
-
-        function copyChainResult() {
-            const result = document.getElementById('chainOutput').textContent;
-            if (result === '尚未整理...' || !result) return;
-
-            navigator.clipboard.writeText(result).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            });
-        }
-
-        // 接龍訊息產生器相關功能
-        function onTemplateChange() {
-            // 可在此新增其他範本的邏輯
-        }
-
-        function generateVolunteerMessage() {
-            const activity = (document.getElementById('vol_activity').value || '').trim();
-            const date = (document.getElementById('vol_date').value || '').trim();
-            const time = (document.getElementById('vol_time').value || '').trim();
-            const content = (document.getElementById('vol_content').value || '').trim();
-            const people = parseInt(document.getElementById('vol_people').value) || 1;
-
-            if (!activity) { alert('請輸入活動'); return; }
-            if (!date) { alert('請輸入日期'); return; }
-            if (!time) { alert('請輸入時間'); return; }
-            if (!content) { alert('請輸入內容'); return; }
-
-            let parts = [];
-            parts.push('各位會員吉祥：');
-            parts.push(`【${activity}】`);
-            parts.push(`日期：${date} ${time}`);
-            parts.push(`${content}需要${people}位義工。請接龍：`);
-
-            // 生成編號列表
-            for (let i = 1; i <= people; i++) {
-                parts.push(`${i}.`);
-            }
-
-            const message = parts.join('\n');
-            document.getElementById('messageOutput').textContent = message;
-        }
-
-        function clearVolunteerForm() {
-            document.getElementById('vol_activity').value = '';
-            document.getElementById('vol_date').value = '';
-            document.getElementById('vol_time').value = '';
-            document.getElementById('vol_content').value = '';
-            document.getElementById('vol_people').value = '5';
-            document.getElementById('messageOutput').textContent = '尚未產生...';
-        }
-
-        function copyMessage() {
-            const result = document.getElementById('messageOutput').textContent;
-            if (result === '尚未產生...' || !result) return;
-            navigator.clipboard.writeText(result).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            });
-        }
-
-        // 姓名選取器功能
-        const STORAGE_KEY = 'secretarytools_names';
-
-        // Helper for reading/writing the conversion output which may be a div or textarea
-        function getOutputValue() {
-            const el = document.getElementById('output');
-            if (!el) return '';
-            return (typeof el.value !== 'undefined') ? el.value : el.textContent;
-        }
-
-        function setOutputValue(v) {
-            const el = document.getElementById('output');
-            if (!el) return;
-            if (typeof el.value !== 'undefined') {
-                el.value = v;
+        function loadGroupUI() {
+            const g = activeGroup();
+            document.getElementById('namesInput').value = g.names.join('\n');
+            if (g.names.length) {
+                renderNameButtons(g.names);
             } else {
-                el.textContent = v;
+                const c = document.getElementById('nameButtons');
+                c.innerHTML = ''; c.className = 'empty';
             }
+            document.getElementById('selectedOutput').value = '';
         }
 
-                // 將側欄高度調整為與主內容等高，保持左右底部對齊
-                function syncNavHeight() {
-                    const nav = document.querySelector('nav');
-                    const main = document.querySelector('main');
-                    if (!nav || !main) return;
-                    // 先清除內聯高度，讓 layout 自然計算（避免累積錯誤）
-                    nav.style.height = 'auto';
-                    // 以主內容的 offsetHeight 作為基準
-                    const h = main.offsetHeight;
-                    nav.style.height = h + 'px';
-                }
+        function deleteGroup() {
+            if (state.groups.length <= 1) { showToast('至少需要保留一組名單'); return; }
+            if (!confirm(`確定要刪除「${activeGroup().name}」？`)) return;
+            state.groups = state.groups.filter(g => g.id !== state.activeId);
+            state.activeId = state.groups[0].id;
+            saveState(); renderGroupSelect(); loadGroupUI();
+        }
 
-        function initNamesTool() {
-            // load stored names (if any) and render them on init
-            try {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    const names = JSON.parse(stored);
-                    if (Array.isArray(names) && names.length) {
-                        renderNameButtons(names);
-                        const inp = document.getElementById('namesInput');
-                        if (inp) inp.value = names.join('\n');
-                    }
-                }
-            } catch (e) {
-                console.warn('讀取儲存名單失敗', e);
-            }
+        function saveGroup() {
+            const names = parseNamesInput();
+            if (!names.length) { alert('請先輸入至少一個姓名'); return; }
+            activeGroup().names = names;
+            saveState();
+            showToast(`已儲存至「${activeGroup().name}」`);
+        }
+
+        function parseNamesInput() {
+            return (document.getElementById('namesInput').value || '')
+                .split('\n')
+                .map(l => l.replace(/^\s*(?:\d+[.、。]|\(\d+\))\s*/, '').trim())
+                .filter(Boolean);
         }
 
         function generateNameButtons() {
-            const raw = document.getElementById('namesInput').value || '';
-            // support both real newlines and literal "\\n" sequences (e.g. pasted "張三\\n李四")
-            const normalized = raw.replace(/\\n/g, '\n');
-            const rawLines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            // strip leading numbering like "1.", "1、", "(1)", "[1]" etc.
-            const lines = rawLines.map(l => l.replace(/^\s*(?:\d+[.、。]|\(\d+\)|\[\d+\])\s*/, '').trim()).filter(l => l.length > 0);
-            if (lines.length === 0) {
-                alert('請先輸入至少一個姓名 (每行一個)');
-                return;
-            }
-            renderNameButtons(lines);
-            // save generated list to localStorage
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
-            } catch (e) {
-                console.warn('無法儲存名單', e);
-            }
+            const names = parseNamesInput();
+            if (!names.length) { alert('請先輸入至少一個姓名'); return; }
+            renderNameButtons(names);
         }
 
         function renderNameButtons(names) {
-            const container = document.getElementById('nameButtons');
-            container.innerHTML = '';
+            const c = document.getElementById('nameButtons');
+            c.innerHTML = ''; c.className = '';
             names.forEach(name => {
                 const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'name-btn';
-                btn.textContent = name;
-                btn.addEventListener('click', () => toggleNameSelection(btn, name));
-                container.appendChild(btn);
+                btn.type = 'button'; btn.className = 'name-btn'; btn.textContent = name;
+                btn.onclick = () => { btn.classList.toggle('selected'); updateSelectedOutput(); };
+                c.appendChild(btn);
             });
-            updateSelectedOutput();
-        }
-
-        function toggleNameSelection(btn, name) {
-            btn.classList.toggle('selected');
             updateSelectedOutput();
         }
 
         function updateSelectedOutput() {
-            const container = document.getElementById('nameButtons');
-            if (!container) return;
-            const selected = Array.from(container.querySelectorAll('.name-btn.selected')).map(b => b.textContent.trim());
-            document.getElementById('selectedOutput').value = selected.join(',');
-            // show/hide the clear-selection button depending on whether any name is selected
-            const clearBtn = document.getElementById('clearSelectionBtn');
-            if (clearBtn) {
-                clearBtn.style.display = selected.length > 0 ? 'inline-flex' : 'none';
-            }
-        }
-
-        // 當使用者在 textarea 手動輸入 / 編輯已選姓名時，同步回按鈕的選取狀態
-        function syncSelectionFromTextarea() {
-            const container = document.getElementById('nameButtons');
-            if (!container) return;
-            const raw = (document.getElementById('selectedOutput').value || '');
-            const names = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
-            const namesLower = new Set(names.map(n => n.toLowerCase()));
-            const buttons = Array.from(container.querySelectorAll('.name-btn'));
-            buttons.forEach(btn => {
-                const text = (btn.textContent || '').trim();
-                if (namesLower.has(text.toLowerCase())) {
-                    btn.classList.add('selected');
-                } else {
-                    btn.classList.remove('selected');
-                }
-            });
-            // 更新清除按鈕顯示（不要覆寫 textarea，保留使用者輸入）
-            const clearBtn = document.getElementById('clearSelectionBtn');
-            if (clearBtn) {
-                const anySelected = buttons.some(b => b.classList.contains('selected'));
-                clearBtn.style.display = anySelected ? 'inline-flex' : 'none';
-            }
+            const sel = Array.from(document.querySelectorAll('.name-btn.selected')).map(b => b.textContent);
+            document.getElementById('selectedOutput').value = sel.join(',');
         }
 
         function copySelected() {
-            const text = document.getElementById('selectedOutput').value || '';
-            if (!text) return;
-            navigator.clipboard.writeText(text).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            });
-        }
-
-        function clearSelection() {
-            const container = document.getElementById('nameButtons');
-            if (!container) return;
-            const selected = container.querySelectorAll('.name-btn.selected');
-            selected.forEach(btn => btn.classList.remove('selected'));
-            updateSelectedOutput();
-        }
-
-        // save/load removed — names are not persisted to browser storage
-
-        function resetNames() {
-            if (!confirm('確定要重置清單並清空畫面？')) return;
-            // clear stored list and UI
-            try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
-            document.getElementById('namesInput').value = '';
-            const container = document.getElementById('nameButtons');
-            if (container) container.innerHTML = '尚未產生按鈕';
-            document.getElementById('selectedOutput').value = '';
+            const text = document.getElementById('selectedOutput').value.trim();
+            if (!text) { showToast('尚未選取任何姓名'); return; }
+            navigator.clipboard.writeText(text).then(() => showToast('已複製到剪貼簿！'));
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            initNamesTool();
-            const selectedOutput = document.getElementById('selectedOutput');
-            if (selectedOutput) {
-                // 在使用者輸入時，同步按鈕狀態
-                selectedOutput.addEventListener('input', syncSelectionFromTextarea);
+            renderGroupSelect();
+            loadGroupUI();
+            const sel = document.getElementById('selectedOutput');
+            if (sel) {
+                sel.addEventListener('input', function() {
+                    const set = new Set(this.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
+                    document.querySelectorAll('.name-btn').forEach(b => {
+                        b.classList.toggle('selected', set.has(b.textContent.trim().toLowerCase()));
+                    });
+                });
             }
-            // 同步側欄高度並在視窗大小變動時更新
-            syncNavHeight();
-            // 小延遲再執行一次以處理字型或圖片載入導致的高度變化
-            setTimeout(syncNavHeight, 120);
-            window.addEventListener('resize', syncNavHeight);
         });
+
+        // ── Toast ──
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+        }
     </script>
 </body>
-
 </html>
