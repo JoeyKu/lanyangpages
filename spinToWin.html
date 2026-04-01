@@ -6,14 +6,24 @@
   <title>🎡 活動分發轉盤</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary-bg: #fdfaf3;
+      --secondary-bg: #ffffff;
+      --text-color: #3d2c1b;
+      --primary-color: #a87a4f;
+      --accent-color: #d4a373;
+      --border-color: #e8dcc4;
+      --font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+    }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
+      font-family: var(--font-family);
+      background-color: var(--primary-bg);
+      color: var(--text-color);
       min-height: 100vh;
       padding: 20px;
     }
@@ -25,17 +35,21 @@
     .header {
       text-align: center;
       margin-bottom: 30px;
-      text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .header h1 {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--accent-color);
+      padding-bottom: 10px;
+      display: inline-block;
+      margin-bottom: 15px;
     }
     .panel {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border-radius: 16px;
+      background: var(--secondary-bg);
+      border-radius: 12px;
       padding: 30px;
       margin-bottom: 25px;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border-color);
     }
     .settings {
       display: flex;
@@ -49,26 +63,27 @@
       flex-direction: column;
     }
     label {
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 8px;
-      font-size: 15px;
-      color: rgba(255,255,255,0.9);
+      font-size: 16px;
+      color: var(--text-color);
     }
     textarea {
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: #fff;
+      background: var(--secondary-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
       padding: 15px;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 15px;
       resize: vertical;
-      line-height: 1.5;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      line-height: 1.6;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: var(--font-family);
     }
     textarea:focus { 
       outline: none; 
-      border-color: #00F5D4; 
-      box-shadow: 0 0 0 3px rgba(0, 245, 212, 0.2); 
+      border-color: var(--primary-color); 
+      box-shadow: 0 0 0 3px rgba(168, 122, 79, 0.15); 
     }
     .actions { 
       width: 100%; 
@@ -79,25 +94,26 @@
     }
     .btn {
       padding: 12px 24px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: none;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: background-color 0.3s, transform 0.2s;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      font-family: var(--font-family);
     }
-    .btn.primary { background: #00F5D4; color: #000; box-shadow: 0 4px 15px rgba(0,245,212,0.3); }
-    .btn.primary:hover { background: #00C4AA; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,245,212,0.4); }
-    .btn.outline { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.3); color: #fff; }
-    .btn.outline:hover { background: rgba(255,255,255,0.15); border-color: #fff; transform: translateY(-2px); }
-    .btn.success { background: #8AC926; color: #fff; box-shadow: 0 4px 15px rgba(138,201,38,0.3); }
-    .btn.success:hover { background: #6E9F1D; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(138,201,38,0.4); }
+    .btn.primary { background: var(--primary-color); color: white; }
+    .btn.primary:hover { background: var(--accent-color); transform: translateY(-2px); }
+    .btn.outline { background: var(--secondary-bg); border: 1px solid var(--primary-color); color: var(--primary-color); }
+    .btn.outline:hover { background: var(--primary-bg); transform: translateY(-2px); }
+    .btn.success { background: #8b5e34; color: white; }
+    .btn.success:hover { background: #684523; transform: translateY(-2px); }
 
     .interaction {
-      display: none; /* Initially hidden */
+      display: none;
       flex-direction: column;
       align-items: center;
       gap: 40px;
@@ -113,10 +129,11 @@
       position: relative;
       width: 450px;
       height: 450px;
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--secondary-bg);
       border-radius: 50%;
-      box-shadow: 0 0 50px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.05);
-      padding: 10px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+      border: 8px solid var(--primary-bg);
+      padding: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -132,10 +149,9 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 55px;
-      color: #FF595E;
+      color: #b84343;
       z-index: 10;
-      text-shadow: 0 4px 10px rgba(0,0,0,0.6);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .zones-section {
       display: flex;
@@ -147,65 +163,71 @@
     .zone-btn {
       padding: 15px 35px;
       border-radius: 50px;
-      background: linear-gradient(135deg, #9B5DE5, #F15BB5);
-      color: #fff;
+      background: var(--primary-color);
+      color: white;
       border: none;
       font-size: 18px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      transition: transform 0.2s, background-color 0.2s, opacity 0.2s;
+      font-family: var(--font-family);
     }
     .zone-btn:hover:not(:disabled) {
-      transform: translateY(-4px) scale(1.03);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      transform: translateY(-4px);
+      background: var(--accent-color);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
     }
     .zone-btn:active:not(:disabled) {
-      transform: translateY(0) scale(0.98);
+      transform: translateY(0);
     }
     .zone-btn:disabled {
-      opacity: 0.4;
+      opacity: 0.5;
       cursor: not-allowed;
       filter: grayscale(0.5);
     }
 
     table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
       margin-top: 20px;
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
-      background: rgba(0,0,0,0.2);
+      background: var(--secondary-bg);
+      border: 1px solid var(--border-color);
     }
     th, td {
       padding: 16px;
       text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid var(--border-color);
     }
     th {
-      background: rgba(255,255,255,0.08);
-      font-weight: 600;
+      background: var(--primary-bg);
+      font-weight: 700;
       font-size: 16px;
-      color: rgba(255,255,255,0.9);
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--accent-color);
     }
-    td { font-size: 15px; }
+    td { font-size: 15px; color: var(--text-color); }
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody tr:hover { background: #faf5eb; }
     
     .table-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
-    .table-header h2 { margin: 0; font-size: 22px; }
+    .table-header h2 { margin: 0; font-size: 22px; color: var(--primary-color); font-weight: 700; }
     .badge {
       display: inline-block;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 6px;
-      background: rgba(255,255,255,0.1);
-      font-size: 13px;
+      background: var(--primary-bg);
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      font-size: 14px;
+      font-weight: 700;
     }
 
     /* responsive */
@@ -224,7 +246,7 @@
 <div class="container">
   <div class="header">
      <h1>🎡 活動分發轉盤</h1>
-     <p style="color: rgba(255,255,255,0.7); margin-top: -10px;">輸入活動與督導區後，按下督導區按鈕進行隨機分發</p>
+     <p style="color: #66503c; font-size: 15px;">輸入活動與督導區後，按下督導區按鈕進行隨機分發</p>
   </div>
   
   <div class="panel settings">
@@ -268,7 +290,7 @@
            </tr>
         </thead>
         <tbody>
-           <tr><td colspan="2" style="text-align: center; color: rgba(255,255,255,0.5);">請先確認設定</td></tr>
+           <tr><td colspan="2" style="text-align: center; color: #a29180;">請先確認設定</td></tr>
         </tbody>
      </table>
   </div>
@@ -281,11 +303,11 @@
   let isSpinning = false;
   let currentAngle = 0;
   
-  // Premium vibrant palette
+  // Warm, natural temple palette
   let colors = [
-    "#FF595E", "#FFCA3A", "#8AC926", "#1982C4", "#6A4C93", 
-    "#F15BB5", "#00F5D4", "#9B5DE5", "#00BBF9", "#FEE440", 
-    "#F72585", "#7209B7", "#3A0CA3", "#4361EE", "#4CC9F0"
+    "#d4a373", "#e9c46a", "#f4a261", "#e76f51", "#8ab17d", 
+    "#e29578", "#c89f74", "#cfba9e", "#f2cc8f", "#bc6c25",
+    "#dda15e", "#b5838d", "#e5989b", "#ffb4a2", "#c1a57b"
   ];
   
   let canvas = document.getElementById('wheelCanvas');
@@ -334,7 +356,7 @@
     tbody.innerHTML = '';
     
     if(allItems.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: rgba(255,255,255,0.5);">請先確認設定</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: #a29180;">請先確認設定</td></tr>';
       return;
     }
     
@@ -342,12 +364,12 @@
       let tr = document.createElement('tr');
       // Style assigned rows differently
       if(item.zone) {
-        tr.style.background = "rgba(255,255,255,0.05)";
+        tr.style.background = "#faf5eb";
       }
-      let zoneHtml = item.zone ? `<span class="badge" style="background: rgba(155, 93, 229, 0.4); border: 1px solid rgba(155, 93, 229, 0.8);">${item.zone}</span>` : '<span style="color: rgba(255,255,255,0.3)">-</span>';
+      let zoneHtml = item.zone ? `<span class="badge">${item.zone}</span>` : '<span style="color: #c9bcae">-</span>';
       
       tr.innerHTML = `
-        <td style="${item.zone ? 'color: rgba(255,255,255,0.7); font-weight: 500;' : 'font-weight: 600;'}">${item.name}</td>
+        <td style="${item.zone ? 'color: #66503c; font-weight: 500;' : 'color: #3d2c1b; font-weight: 700;'}">${item.name}</td>
         <td>${zoneHtml}</td>
       `;
       tbody.appendChild(tr);
@@ -379,12 +401,12 @@
     if(pendingItems.length === 0) {
        // Completed State
        ctx.beginPath();
-       ctx.fillStyle = 'rgba(255,255,255,0.1)';
+       ctx.fillStyle = '#fdfaf3';
        ctx.arc(cx, cy, radius, 0, Math.PI*2);
        ctx.fill();
        
-       ctx.fillStyle = '#fff';
-       ctx.font = 'bold 36px Inter';
+       ctx.fillStyle = '#a87a4f';
+       ctx.font = 'bold 36px "Noto Sans TC"';
        ctx.textAlign = 'center';
        ctx.textBaseline = 'middle';
        ctx.fillText('✨ 所有活動已分發完畢 ✨', cx, cy);
@@ -404,8 +426,8 @@
        ctx.fill();
        
        // Add stroke for nice separation
-       ctx.lineWidth = 4;
-       ctx.strokeStyle = "rgba(0,0,0,0.2)";
+       ctx.lineWidth = 3;
+       ctx.strokeStyle = "#ffffff";
        ctx.stroke();
        
        // Draw Text
@@ -418,14 +440,14 @@
        // Rotate text to follow slice direction
        ctx.rotate(textAngle);
        
-       ctx.fillStyle = '#fff';
+       ctx.fillStyle = '#ffffff';
        // Adjust font size based on slice count
        let fontSize = pendingItems.length > 15 ? 18 : 28;
-       ctx.font = `bold ${fontSize}px Inter`;
+       ctx.font = `bold ${fontSize}px "Noto Sans TC"`;
        ctx.textAlign = 'center';
        ctx.textBaseline = 'middle';
        // Add shadow to text for readability
-       ctx.shadowColor = 'rgba(0,0,0,0.5)';
+       ctx.shadowColor = 'rgba(0,0,0,0.3)';
        ctx.shadowBlur = 4;
        ctx.shadowOffsetX = 1;
        ctx.shadowOffsetY = 1;
@@ -438,11 +460,11 @@
     
     // Draw Center Decor Circle
     ctx.beginPath();
-    ctx.fillStyle = '#111';
+    ctx.fillStyle = '#ffffff';
     ctx.arc(cx, cy, radius * 0.15, 0, Math.PI*2);
     ctx.fill();
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#d4a373';
     ctx.stroke();
   }
 
@@ -510,7 +532,7 @@
              document.getElementById('resetBtn').disabled = false;
              
              if(pendingItems.length > 0) {
-                document.querySelectorAll('.zone-btn').forEach(b => b.disabled = false);
+                 document.querySelectorAll('.zone-btn').forEach(b => b.disabled = false);
              } else {
                 // Trigger Confetti!
                 triggerConfetti();
@@ -570,7 +592,8 @@
     if(!confirm("確定要清除所有已設定的資料並重置嗎？")) return;
     
     document.getElementById('activitiesInput').value = '';
-    document.getElementById('zonesInput').value = '';
+    // We can keep the default zones
+    document.getElementById('zonesInput').value = '第一區\n第二區';
     document.getElementById('interactionPanel').style.display = 'none';
     document.getElementById('downloadBtn').style.display = 'none';
     
