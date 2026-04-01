@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎡 活動分發轉盤</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding-bottom: 50px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .settings {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .input-group {
+      flex: 1;
+      min-width: 250px;
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: rgba(255,255,255,0.9);
+    }
+    textarea {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 15px;
+      resize: vertical;
+      line-height: 1.5;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    textarea:focus { 
+      outline: none; 
+      border-color: #00F5D4; 
+      box-shadow: 0 0 0 3px rgba(0, 245, 212, 0.2); 
+    }
+    .actions { 
+      width: 100%; 
+      display: flex; 
+      gap: 15px; 
+      justify-content: flex-end; 
+      margin-top: 10px;
+    }
+    .btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn.primary { background: #00F5D4; color: #000; box-shadow: 0 4px 15px rgba(0,245,212,0.3); }
+    .btn.primary:hover { background: #00C4AA; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,245,212,0.4); }
+    .btn.outline { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.3); color: #fff; }
+    .btn.outline:hover { background: rgba(255,255,255,0.15); border-color: #fff; transform: translateY(-2px); }
+    .btn.success { background: #8AC926; color: #fff; box-shadow: 0 4px 15px rgba(138,201,38,0.3); }
+    .btn.success:hover { background: #6E9F1D; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(138,201,38,0.4); }
+
+    .interaction {
+      display: none; /* Initially hidden */
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .wheel-wrapper {
+      position: relative;
+      margin-top: 20px;
+    }
+    .wheel-container {
+      position: relative;
+      width: 450px;
+      height: 450px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 50%;
+      box-shadow: 0 0 50px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.05);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    .pointer {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 55px;
+      color: #FF595E;
+      z-index: 10;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .zones-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      width: 100%;
+    }
+    .zone-btn {
+      padding: 15px 35px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #9B5DE5, #F15BB5);
+      color: #fff;
+      border: none;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    }
+    .zone-btn:hover:not(:disabled) {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+    .zone-btn:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
+    }
+    .zone-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.2);
+    }
+    th, td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    th {
+      background: rgba(255,255,255,0.08);
+      font-weight: 600;
+      font-size: 16px;
+      color: rgba(255,255,255,0.9);
+    }
+    td { font-size: 15px; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .table-header h2 { margin: 0; font-size: 22px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.1);
+      font-size: 13px;
+    }
+
+    /* responsive */
+    @media(max-width: 600px) {
+      .wheel-container { width: 300px; height: 300px; }
+      .pointer { top: -25px; font-size: 45px; }
+      .input-group { min-width: 100%; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+      .table-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+     <h1>🎡 活動分發轉盤</h1>
+     <p style="color: rgba(255,255,255,0.7); margin-top: -10px;">輸入活動與督導區後，按下督導區按鈕進行隨機分發</p>
+  </div>
+  
+  <div class="panel settings">
+     <div class="input-group">
+        <label>活動清單 (一行一個)</label>
+        <textarea id="activitiesInput" rows="6" placeholder="活動 1&#10;活動 2&#10;活動 3"></textarea>
+     </div>
+     <div class="input-group">
+        <label>督導區清單 (一行一個)</label>
+        <textarea id="zonesInput" rows="6" placeholder="第一區&#10;第二區">第一區
+第二區</textarea>
+     </div>
+     <div class="actions">
+        <button id="resetBtn" class="btn outline">↺ 重置資料</button>
+        <button id="confirmBtn" class="btn primary">✓ 確認設定，開始分發</button>
+     </div>
+  </div>
+
+  <div class="panel interaction" id="interactionPanel">
+     <div class="wheel-wrapper">
+       <div class="pointer">▼</div>
+       <div class="wheel-container">
+          <canvas id="wheelCanvas" width="800" height="800"></canvas>
+       </div>
+     </div>
+     <div class="zones-section" id="zonesSection">
+        <!-- Buttons will be generated here -->
+     </div>
+  </div>
+
+  <div class="panel output">
+     <div class="table-header">
+       <h2>分發結果</h2>
+       <button id="downloadBtn" class="btn success" style="display: none;">⬇ 下載 Excel</button>
+     </div>
+     <table id="resultTable">
+        <thead>
+           <tr>
+             <th style="width: 60%;">活動名稱</th>
+             <th style="width: 40%;">督導區</th>
+           </tr>
+        </thead>
+        <tbody>
+           <tr><td colspan="2" style="text-align: center; color: rgba(255,255,255,0.5);">請先確認設定</td></tr>
+        </tbody>
+     </table>
+  </div>
+</div>
+
+<script>
+  let allItems = [];
+  let pendingItems = [];
+  let zones = [];
+  let isSpinning = false;
+  let currentAngle = 0;
+  
+  // Premium vibrant palette
+  let colors = [
+    "#FF595E", "#FFCA3A", "#8AC926", "#1982C4", "#6A4C93", 
+    "#F15BB5", "#00F5D4", "#9B5DE5", "#00BBF9", "#FEE440", 
+    "#F72585", "#7209B7", "#3A0CA3", "#4361EE", "#4CC9F0"
+  ];
+  
+  let canvas = document.getElementById('wheelCanvas');
+  let ctx = canvas.getContext('2d');
+
+  document.getElementById('confirmBtn').addEventListener('click', initData);
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
+  document.getElementById('downloadBtn').addEventListener('click', downloadExcel);
+
+  // Parse text inputs and prepare structured data
+  function initData() {
+    let actText = document.getElementById('activitiesInput').value;
+    let zoneText = document.getElementById('zonesInput').value;
+    
+    let parsedActivities = actText.split('\n').map(s => s.trim()).filter(s => s);
+    let parsedZones = zoneText.split('\n').map(s => s.trim()).filter(s => s);
+    
+    if(parsedActivities.length === 0 || parsedZones.length === 0) {
+       alert("請輸入至少一個活動與一個督導區喲！");
+       return;
+    }
+    
+    // Initialize state mapping
+    allItems = parsedActivities.map(name => ({ name, zone: '' }));
+    pendingItems = [...parsedActivities];
+    zones = [...parsedZones];
+    currentAngle = 0;
+    
+    // Update Views
+    renderTable();
+    renderZones();
+    drawWheel();
+    
+    document.getElementById('interactionPanel').style.display = 'flex';
+    document.getElementById('downloadBtn').style.display = 'inline-flex';
+    
+    // Smooth scroll down to interaction panel
+    setTimeout(()=> {
+      document.getElementById('interactionPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  // Draw or update the result table
+  function renderTable() {
+    let tbody = document.querySelector('#resultTable tbody');
+    tbody.innerHTML = '';
+    
+    if(allItems.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: rgba(255,255,255,0.5);">請先確認設定</td></tr>';
+      return;
+    }
+    
+    allItems.forEach(item => {
+      let tr = document.createElement('tr');
+      // Style assigned rows differently
+      if(item.zone) {
+        tr.style.background = "rgba(255,255,255,0.05)";
+      }
+      let zoneHtml = item.zone ? `<span class="badge" style="background: rgba(155, 93, 229, 0.4); border: 1px solid rgba(155, 93, 229, 0.8);">${item.zone}</span>` : '<span style="color: rgba(255,255,255,0.3)">-</span>';
+      
+      tr.innerHTML = `
+        <td style="${item.zone ? 'color: rgba(255,255,255,0.7); font-weight: 500;' : 'font-weight: 600;'}">${item.name}</td>
+        <td>${zoneHtml}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Generate buttons for each zone based on user input
+  function renderZones() {
+    let section = document.getElementById('zonesSection');
+    section.innerHTML = '';
+    zones.forEach(zone => {
+      let btn = document.createElement('button');
+      btn.className = 'zone-btn';
+      btn.innerHTML = `${zone}`; // ✨ 
+      btn.onclick = () => spinForZone(zone);
+      section.appendChild(btn);
+    });
+  }
+
+  // Canvas drawing logic for the Wheel
+  function drawWheel() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    let cx = canvas.width / 2;
+    let cy = canvas.height / 2;
+    // slightly smaller than half width to leave margin
+    let radius = cx - 20; 
+    
+    if(pendingItems.length === 0) {
+       // Completed State
+       ctx.beginPath();
+       ctx.fillStyle = 'rgba(255,255,255,0.1)';
+       ctx.arc(cx, cy, radius, 0, Math.PI*2);
+       ctx.fill();
+       
+       ctx.fillStyle = '#fff';
+       ctx.font = 'bold 36px Inter';
+       ctx.textAlign = 'center';
+       ctx.textBaseline = 'middle';
+       ctx.fillText('✨ 所有活動已分發完畢 ✨', cx, cy);
+       return;
+    }
+    
+    let arc = Math.PI * 2 / pendingItems.length;
+    
+    for(let i = 0; i < pendingItems.length; i++) {
+       let angle = currentAngle + i * arc;
+       
+       // Draw slice
+       ctx.beginPath();
+       ctx.fillStyle = colors[i % colors.length];
+       ctx.moveTo(cx, cy);
+       ctx.arc(cx, cy, radius, angle, angle + arc);
+       ctx.fill();
+       
+       // Add stroke for nice separation
+       ctx.lineWidth = 4;
+       ctx.strokeStyle = "rgba(0,0,0,0.2)";
+       ctx.stroke();
+       
+       // Draw Text
+       ctx.save();
+       // Position text at ~65% of radius outwards
+       let textRadius = radius * 0.65;
+       let textAngle = angle + arc / 2;
+       
+       ctx.translate(cx + Math.cos(textAngle) * textRadius, cy + Math.sin(textAngle) * textRadius);
+       // Rotate text to follow slice direction
+       ctx.rotate(textAngle);
+       
+       ctx.fillStyle = '#fff';
+       // Adjust font size based on slice count
+       let fontSize = pendingItems.length > 15 ? 18 : 28;
+       ctx.font = `bold ${fontSize}px Inter`;
+       ctx.textAlign = 'center';
+       ctx.textBaseline = 'middle';
+       // Add shadow to text for readability
+       ctx.shadowColor = 'rgba(0,0,0,0.5)';
+       ctx.shadowBlur = 4;
+       ctx.shadowOffsetX = 1;
+       ctx.shadowOffsetY = 1;
+       
+       let text = pendingItems[i];
+       if(text.length > 10) text = text.substring(0, 9) + '...';
+       ctx.fillText(text, 0, 0);
+       ctx.restore();
+    }
+    
+    // Draw Center Decor Circle
+    ctx.beginPath();
+    ctx.fillStyle = '#111';
+    ctx.arc(cx, cy, radius * 0.15, 0, Math.PI*2);
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+  }
+
+  // Spin logic and easing animation
+  function spinForZone(zoneName) {
+    if(isSpinning || pendingItems.length === 0) return;
+    isSpinning = true;
+    
+    // Disable interaction while spinning
+    document.querySelectorAll('.zone-btn').forEach(b => b.disabled = true);
+    document.getElementById('confirmBtn').disabled = true;
+    document.getElementById('resetBtn').disabled = true;
+    
+    // Randomly pick a winning item
+    let targetIndex = Math.floor(Math.random() * pendingItems.length);
+    let arc = Math.PI * 2 / pendingItems.length;
+    
+    // Calculate final angle pointing TOP (-PI/2)
+    // The center of the winning slice should land on -PI/2
+    let targetAngleForPointer = -Math.PI / 2;
+    let finalAngle = targetAngleForPointer - (targetIndex * arc + arc / 2);
+    
+    // Add extra spins (5 to 8 full rotations) for effect
+    let extraSpins = Math.floor(Math.random() * 4) + 5;
+    finalAngle += extraSpins * Math.PI * 2; 
+    
+    let startAngle = currentAngle;
+    let diff = finalAngle - startAngle;
+    let duration = 3500; // ms
+    let startTime = null;
+    
+    function animate(time) {
+       if(!startTime) startTime = time;
+       let elapsed = time - startTime;
+       
+       if(elapsed < duration) {
+          // Easing: easeOutQuart
+          let t = elapsed / duration;
+          let ease = 1 - Math.pow(1 - t, 4); 
+          currentAngle = startAngle + diff * ease;
+          drawWheel();
+          requestAnimationFrame(animate);
+       } else {
+          // Animation Complete
+          currentAngle = finalAngle % (Math.PI * 2);
+          
+          let winnerName = pendingItems[targetIndex];
+          
+          // Flash winning state on wheel briefly
+          flashWinner(winnerName, () => {
+             // Assign in data
+             let itemRef = allItems.find(i => i.name === winnerName);
+             if(itemRef) itemRef.zone = zoneName;
+             
+             // Remove from pending
+             pendingItems.splice(targetIndex, 1);
+             
+             // Render Update
+             renderTable();
+             drawWheel();
+             isSpinning = false;
+             
+             // Restore buttons
+             document.getElementById('confirmBtn').disabled = false;
+             document.getElementById('resetBtn').disabled = false;
+             
+             if(pendingItems.length > 0) {
+                document.querySelectorAll('.zone-btn').forEach(b => b.disabled = false);
+             } else {
+                // Trigger Confetti!
+                triggerConfetti();
+             }
+          });
+       }
+    }
+    
+    requestAnimationFrame(animate);
+  }
+
+  // Highlight effect after spin stops
+  function flashWinner(winnerName, callback) {
+    drawWheel();
+    // Fill screen with a slight flash or just run callback immediately
+    // For now, let's keep it snappy
+    setTimeout(callback, 200);
+  }
+
+  // Simple Confetti effect
+  function triggerConfetti() {
+    var count = 200;
+    var defaults = { origin: { y: 0.7 } };
+
+    function fire(particleRatio, opts) {
+      confetti(Object.assign({}, defaults, opts, {
+        particleCount: Math.floor(count * particleRatio)
+      }));
+    }
+
+    fire(0.25, { spread: 26, startVelocity: 55 });
+    fire(0.2, { spread: 60 });
+    fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+    fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+    fire(0.1, { spread: 120, startVelocity: 45 });
+  }
+
+  // Export Table to Excel
+  function downloadExcel() {
+    if(allItems.length === 0) return;
+    
+    let ws_data = [["活動名稱", "督導區"]];
+    allItems.forEach(i => {
+       ws_data.push([i.name, i.zone || "未分發"]);
+    });
+    
+    // Using SheetJS
+    let ws = XLSX.utils.aoa_to_sheet(ws_data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "分配結果");
+    
+    XLSX.writeFile(wb, "活動督導區分發結果.xlsx");
+  }
+
+  // Reset Everything
+  function resetAll() {
+    if(!confirm("確定要清除所有已設定的資料並重置嗎？")) return;
+    
+    document.getElementById('activitiesInput').value = '';
+    document.getElementById('zonesInput').value = '';
+    document.getElementById('interactionPanel').style.display = 'none';
+    document.getElementById('downloadBtn').style.display = 'none';
+    
+    allItems = [];
+    pendingItems = [];
+    zones = [];
+    currentAngle = 0;
+    isSpinning = false;
+    
+    renderTable();
+    // Re-enable in case it was stuck
+    document.getElementById('confirmBtn').disabled = false;
+  }
+</script>
+
+</body>
+</html>
