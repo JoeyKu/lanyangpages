@@ -402,6 +402,13 @@
                 </svg>
                 <span>快速名單產出</span>
             </a>
+            <a href="convertMeetingWord.html" class="nav-link">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>轉換會議文件</span>
+            </a>
             <a href="help.html" class="nav-link" style="margin-top:24px;">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -440,6 +447,13 @@
                     <label>轉換結果（可編輯）</label>
                     <div class="output-group">
                         <textarea id="output" placeholder="尚未轉換..."></textarea>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>結構化結果（JSON）</label>
+                    <div class="output-group">
+                        <textarea id="outputStructured" placeholder="尚未轉換...（將輸出 JSON 結構）" style="min-height:140px; white-space:pre-wrap; font-family:monospace;"></textarea>
                     </div>
                 </div>
 
@@ -534,15 +548,28 @@
             }
             let textToProcess = input;
             if (firstLineIndex !== -1) textToProcess = lines.slice(firstLineIndex, lastLineIndex + 1).join('\n');
-            const names = textToProcess.split(/[\n,，、;；]/)
-                .map(item => {
-                    let name = item.trim();
-                    name = name.replace(/^[0-9\s.、。()（）]+/, '').trim();
-                    name = name.replace(/[\s(（][^()（）]*[)）]$/, '').trim();
-                    return name;
-                })
-                .filter(name => name.length > 0);
-            document.getElementById('output').value = names.join(',');
+
+            const items = textToProcess.split(/[\n,，、;；]/).map(s => s.trim()).filter(Boolean);
+            const parsed = items.map(item => {
+                // 移除前置編號或多餘空白
+                const raw = item.replace(/^[0-9\s.、。()（）]+/, '').trim();
+                // 先移除尾部括號描述
+                let base = raw.replace(/[\s(（][^()（）]*[)）]$/, '').trim();
+                let name = base;
+                let note = '';
+                // 如果有用破折號、冒號或空白分隔的備註，嘗試分離：例如 "尤秀華-五戎複戒..."
+                const m = base.match(/^(.*?)[\-–—:\：\s]+(.+)$/);
+                if (m) {
+                    name = m[1].trim();
+                    note = m[2].trim().replace(/[。\.]+$/,'');
+                }
+                name = name.replace(/\s+/g, ' ').trim();
+                return { name, note, raw: item };
+            });
+
+            document.getElementById('output').value = parsed.map(p => p.name).join(',');
+            const outStructured = document.getElementById('outputStructured');
+            if (outStructured) outStructured.value = JSON.stringify(parsed, null, 2);
         }
 
         function clearAll() {
