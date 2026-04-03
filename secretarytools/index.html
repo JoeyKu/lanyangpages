@@ -450,12 +450,6 @@
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label>結構化結果（JSON）</label>
-                    <div class="output-group">
-                        <textarea id="outputStructured" placeholder="尚未轉換...（將輸出 JSON 結構）" style="min-height:140px; white-space:pre-wrap; font-family:monospace;"></textarea>
-                    </div>
-                </div>
 
                 <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="copyResult()">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -557,7 +551,7 @@
                 let base = raw.replace(/[\s(（][^()（）]*[)）]$/, '').trim();
                 let name = base;
                 let note = '';
-                // 如果有用破折號、冒號或空白分隔的備註，嘗試分離：例如 "尤秀華-五戎複戒..."
+                // 如果有用破折號、冒號或空白分隔的備註，嘗試分離：例如 "王小明-五戎複戒..."
                 const m = base.match(/^(.*?)[\-–—:\：\s]+(.+)$/);
                 if (m) {
                     name = m[1].trim();
