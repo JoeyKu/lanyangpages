@@ -208,7 +208,7 @@
     <main>
         <div class="header">
             <h1>轉換會議文件</h1>
-            <p>自動修改月例會 Word 文件中的日期、時間、地點等資訊。</p>
+            <p>自動修改聯合月例會 Word 文件中的日期、時間、地點等資訊，以利分會使用。</p>
         </div>
 
         <div class="tool-card">
@@ -308,7 +308,6 @@
         const loadingDiv = document.getElementById('loading');
         const alertBox   = document.getElementById('alertBox');
 
-        // ── localStorage：地點、分會名稱、主席、司儀、電腦 ──
         const LS_FIELDS = ['room', 'name', 'chairman', 'mc', 'computer'];
 
         function saveToLocalStorage() {
@@ -330,7 +329,6 @@
             document.getElementById(id).addEventListener('input', saveToLocalStorage);
         });
 
-        // ── 驗證 ──
         function validateDate(dateStr) {
             if (!dateStr) return false;
             const d = new Date(dateStr);
@@ -353,12 +351,10 @@
             showError('timeError', validateTime(this.value) ? '' : '請輸入正確的時間格式 HH:MM');
         });
 
-        // ── 轉義，防止 Python 三引號字串斷裂 ──
         function escapePy(str) {
             return str.replace(/\\/g, '\\\\').replace(/"""/g, '\\"\\"\\"');
         }
 
-        // ── 主流程 ──
         async function submitForm() {
             const dateValue     = document.getElementById('date').value.trim();
             const timeValue     = document.getElementById('time').value.trim();
@@ -406,6 +402,7 @@
                 const pythonCode = `
 from docx import Document
 from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 from docx.shared import Pt
 from datetime import datetime
 
@@ -480,31 +477,50 @@ def replace_in_document(doc, old_text, new_text, font_size=None):
                     replace_text_in_paragraph(para, old_text, new_text, font_size)
 
 def style_text_in_paragraph(paragraph, search_text):
-    if search_text not in paragraph.text:
+    """將段落中所有出現的 search_text 標記為粗體 + 灰色底色（標楷體）"""
+    full_text = "".join(run.text for run in paragraph.runs)
+    if search_text not in full_text:
         return False
-    font_name = paragraph.runs[0].font.name if paragraph.runs else None
-    font_size = paragraph.runs[0].font.size if paragraph.runs else None
-    full_text = paragraph.text
+
+    # 掃描所有 runs 取得字體資訊，不只取 runs[0]
+    font_name = "標楷體"
+    font_size = None
+    for run in paragraph.runs:
+        if run.font.name:
+            font_name = run.font.name
+        if run.font.size:
+            font_size = run.font.size
+        if font_size:
+            break
+
+    # 清除段落並重建 runs
     paragraph.clear()
     parts = full_text.split(search_text)
     for i, part in enumerate(parts):
+        # 普通文字 run
         if part:
             run = paragraph.add_run(part)
-            if font_name:
-                run.font.name = font_name
-                if run._element.rPr is not None:
-                    run._element.rPr.rFonts.set(qn('w:eastAsia'), font_name)
+            run.font.name = font_name
+            rPr = run._element.get_or_add_rPr()
+            rPr.rFonts.set(qn('w:eastAsia'), font_name)
             if font_size:
                 run.font.size = font_size
+
+        # 分會名稱 run：粗體 + 灰色底色
         if i < len(parts) - 1:
             run = paragraph.add_run(search_text)
             run.bold = True
-            run.italic = True
             run.font.name = "標楷體"
-            if run._element.rPr is not None:
-                run._element.rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
+            rPr = run._element.get_or_add_rPr()
+            rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
             if font_size:
                 run.font.size = font_size
+            # 加灰色底色（CCCCCC = 淺灰，黑白列印約 20% 灰）
+            shd = OxmlElement('w:shd')
+            shd.set(qn('w:val'), 'clear')
+            shd.set(qn('w:color'), 'auto')
+            shd.set(qn('w:fill'), 'CCCCCC')
+            rPr.append(shd)
     return True
 
 def delete_textbox_containing(doc, search_text):
@@ -551,7 +567,7 @@ def modify_docx():
     new_title = f"{name_str}月例會活動討論案"
     replace_in_document(doc, "聯合月例會活動討論案", new_title, font_size=20)
 
-    # 分會名稱加粗斜體（標楷體）
+    # 分會名稱加粗體 + 灰色底色（全文件所有出現位置）
     for tb in doc.tables:
         for row in tb.rows:
             for cell in row.cells:
@@ -573,17 +589,42 @@ modify_docx()
                 const blob = new Blob([outputData], {
                     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                 });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                const yearMonthMatch = file.name.match(/(\d+年\d+月)/); const newName = yearMonthMatch ? `${yearMonthMatch[1]}${nameValue}月例會.docx` : file.name.replace('.docx', '_修改版.docx');
-                a.href = url;
-                a.download = newName;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
+                const yearMonthMatch = file.name.match(/(\d+年\d+月)/);
+                const newName = yearMonthMatch
+                    ? `${yearMonthMatch[1]}${nameValue}月例會.docx`
+                    : file.name.replace('.docx', '_修改版.docx');
 
-                alertBox.innerText = '✅ 檔案修改完成並已下載';
+                if (window.showSaveFilePicker) {
+                    try {
+                        const fileHandle = await window.showSaveFilePicker({
+                            suggestedName: newName,
+                            types: [{
+                                description: 'Word 文件',
+                                accept: { 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }
+                            }]
+                        });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(blob);
+                        await writable.close();
+                        alertBox.innerText = '✅ 檔案已儲存完成';
+                    } catch (e) {
+                        if (e.name !== 'AbortError') throw e;
+                        alertBox.innerText = '⚠️ 已取消儲存';
+                        alertBox.style.color = '#e67e22';
+                        alertBox.style.display = 'block';
+                        return;
+                    }
+                } else {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = newName;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    alertBox.innerText = '✅ 檔案修改完成並已下載';
+                }
                 alertBox.style.color = '#27ae60';
                 alertBox.style.display = 'block';
 
@@ -598,7 +639,6 @@ modify_docx()
             }
         }
 
-        // ── Pyodide 初始化 ──
         async function initPyodide() {
             try {
                 pyodide = await loadPyodide();
@@ -621,8 +661,8 @@ modify_docx()
         }
 
         window.addEventListener('load', () => {
-            loadFromLocalStorage();   // 先從 localStorage 讀回資料
-            initPyodide();            // 再初始化 Pyodide
+            loadFromLocalStorage();
+            initPyodide();
         });
     </script>
 </body>
