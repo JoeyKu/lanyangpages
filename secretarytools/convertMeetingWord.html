@@ -308,7 +308,7 @@
         const loadingDiv = document.getElementById('loading');
         const alertBox   = document.getElementById('alertBox');
 
-        const LS_FIELDS = ['room', 'name', 'chairman', 'mc', 'computer'];
+        const LS_FIELDS = ['time', 'room', 'name', 'chairman', 'mc', 'computer'];
 
         function saveToLocalStorage() {
             LS_FIELDS.forEach(id => {
@@ -476,7 +476,64 @@ def replace_in_document(doc, old_text, new_text, font_size=None):
                 for para in cell.paragraphs:
                     replace_text_in_paragraph(para, old_text, new_text, font_size)
 
-def style_text_in_paragraph(paragraph, search_text):
+
+def style_text_in_paragraph(paragraph, search_text, cell=None):
+    """將段落中出現的 search_text 標記為粗體 + 黃色底色，
+       如果傳入 cell，則同時把整個儲存格背景設為黃色"""
+    full_text = "".join(run.text for run in paragraph.runs)
+    if search_text not in full_text:
+        return False
+
+    # --- 文字樣式處理（粗體 + 黃色文字底色）---
+    font_name = "標楷體"
+    font_size = None
+    for run in paragraph.runs:
+        if run.font.name:
+            font_name = run.font.name
+        if run.font.size:
+            font_size = run.font.size
+        if font_size:
+            break
+
+    paragraph.clear()
+    parts = full_text.split(search_text)
+    for i, part in enumerate(parts):
+        if part:
+            run = paragraph.add_run(part)
+            run.font.name = font_name
+            rPr = run._element.get_or_add_rPr()
+            rPr.rFonts.set(qn('w:eastAsia'), font_name)
+            if font_size:
+                run.font.size = font_size
+
+        if i < len(parts) - 1:
+            run = paragraph.add_run(search_text)
+            run.bold = True
+            run.font.name = "標楷體"
+            rPr = run._element.get_or_add_rPr()
+            rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
+            if font_size:
+                run.font.size = font_size
+            
+            # 文字本身黃色底色（可保留或移除）
+            shd = OxmlElement('w:shd')
+            shd.set(qn('w:val'), 'clear')
+            shd.set(qn('w:color'), 'auto')
+            shd.set(qn('w:fill'), 'FFFF00')   # 文字底色黃色
+            rPr.append(shd)
+
+    # --- 新增：如果有傳入 cell，則把整個儲存格背景設為黃色 ---
+    if cell is not None:
+        tcPr = cell._element.get_or_add_tcPr()
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'), 'clear')
+        shd.set(qn('w:color'), 'auto')
+        shd.set(qn('w:fill'), 'FFFF00')   # 整個儲存格黃色背景
+        tcPr.append(shd)
+
+    return True
+
+def style_text_in_paragraph_old(paragraph, search_text):
     """將段落中所有出現的 search_text 標記為粗體 + 灰色底色（標楷體）"""
     full_text = "".join(run.text for run in paragraph.runs)
     if search_text not in full_text:
@@ -519,7 +576,7 @@ def style_text_in_paragraph(paragraph, search_text):
             shd = OxmlElement('w:shd')
             shd.set(qn('w:val'), 'clear')
             shd.set(qn('w:color'), 'auto')
-            shd.set(qn('w:fill'), 'CCCCCC')
+            shd.set(qn('w:fill'), 'FFFF00')
             rPr.append(shd)
     return True
 
@@ -572,7 +629,7 @@ def modify_docx():
         for row in tb.rows:
             for cell in row.cells:
                 for para in cell.paragraphs:
-                    style_text_in_paragraph(para, name_str)
+                    style_text_in_paragraph(para, name_str, cell=cell)
 
     # 刪除文字框
     delete_textbox_containing(doc, "聯合月例會】")
