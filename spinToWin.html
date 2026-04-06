@@ -487,13 +487,16 @@
     let targetAngleForPointer = -Math.PI / 2;
     let finalAngle = targetAngleForPointer - (targetIndex * arc + arc / 2);
     
-    // Add extra spins (5 to 8 full rotations) for effect
-    let extraSpins = Math.floor(Math.random() * 4) + 5;
+    // Faster spin when only one item is left
+    let isLastItem = pendingItems.length === 1;
+    
+    // Add extra spins (5 to 8 full rotations) for effect, reduce if last item
+    let extraSpins = isLastItem ? 2 : Math.floor(Math.random() * 4) + 5;
     finalAngle += extraSpins * Math.PI * 2; 
     
     let startAngle = currentAngle;
     let diff = finalAngle - startAngle;
-    let duration = 3500; // ms
+    let duration = isLastItem ? 1000 : 3500; // ms
     let startTime = null;
     
     function animate(time) {
