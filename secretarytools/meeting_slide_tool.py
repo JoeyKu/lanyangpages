@@ -404,6 +404,105 @@ def insert_report_slides(dest_prs, report_path: Path, keyword="工作報告"):
     print(f"   ✅ 插入完成（共 {n} 張）")
 
 
+def extract_proposal_summary_text(doc_path):
+    """
+    從 Word 文檔中擷取特定提案文字的總結。
+    1. 找到 "宣讀上次決議案執行成效" -> 擷取【提案】、案由、執行成效
+    2. 找到 "總會提案討論" 或 "別院提案討論" -> 擷取【提案】、案由，並加上 "執行辦法: "
+    3. 遇到 "各類宣導" 停止。
+    """
+    import zipfile
+    import xml.etree.ElementTree as ET
+    
+    output_lines = []
+    try:
+        with zipfile.ZipFile(str(doc_path), 'r') as z:
+            content = z.read('word/document.xml')
+            root = ET.fromstring(content)
+            namespaces = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+            
+            body = root.find(f".//{{{namespaces['w']}}}body")
+            paragraphs = []
+            if body is not None:
+                for child in body:
+                    if child.tag == f"{{{namespaces['w']}}}p":
+                        text = ''.join(t.text for t in child.findall('.//w:t', namespaces) if t.text)
+                        if text:
+                            paragraphs.append(text.strip())
+
+            # 狀態追蹤
+            in_effect_section = False
+            # 狀態追蹤
+            in_effect_section = False
+            in_discussion_section = False
+            last_marker = None # 記錄上一個處理的欄位 (aa, bb)
+            
+            for text in paragraphs:
+                # 檢查區域切換
+                if '宣讀上次決議案執行成效' in text:
+                    in_effect_section = True
+                    in_discussion_section = False
+                    last_marker = None
+                    output_lines.append(f"\n====================宣讀上次決議案執行成效====================")
+                    continue
+                if '總會提案討論' in text:
+                    in_effect_section = False
+                    in_discussion_section = True
+                    last_marker = None
+                    output_lines.append(f"\n====================總會提案討論====================")
+                    continue
+                if '別院提案討論' in text:
+                    in_effect_section = False
+                    in_discussion_section = True
+                    last_marker = None
+                    output_lines.append(f"\n====================別院提案討論====================")
+                    continue
+                if '各類宣導' in text:
+                    in_effect_section = False
+                    in_discussion_section = False
+                    break
+                
+                stripped = text.replace(' ', '').replace('　', '')
+
+                # 區域內處理
+                if in_effect_section:
+                    if text.startswith('【提案') and '】' in text:
+                        if last_marker == 'bb':
+                            output_lines.append("") # 提案間留空行
+                        output_lines.append(text)
+                        last_marker = 'pro'
+                    elif stripped.startswith('案由：') or stripped.startswith('案由:'):
+                        output_lines.append(text)
+                        last_marker = 'aa'
+                    elif stripped.startswith('執行成效：') or stripped.startswith('執行成效:') or stripped.startswith('執行辦法：') or stripped.startswith('執行辦法:'):
+                        output_lines.append(text)
+                        last_marker = 'bb'
+                    elif last_marker in ['aa', 'bb']:
+                        # 延續上一行內容 (多行處理)
+                        output_lines.append(text)
+                
+                elif in_discussion_section:
+                    if text.startswith('【提案') and '】' in text:
+                        output_lines.append(text)
+                        last_marker = 'pro'
+                    elif stripped.startswith('案由：') or stripped.startswith('案由:'):
+                        output_lines.append(text)
+                        output_lines.append("執行辦法: ")
+                        output_lines.append("") # 提案間留空行
+                        last_marker = 'aa'
+                    elif last_marker == 'aa':
+                        if any(k in stripped for k in ['說明', '討論', '辦法']):
+                            last_marker = 'skip'
+                        else:
+                            # 案由的多行內容 (在遇到說明、討論、辦法之前)
+                            output_lines.insert(-2, text)
+                            
+    except Exception as e:
+        return f"⚠️ 文字擷取失敗: {e}"
+        
+    return "\n".join(output_lines).strip()
+
+
 # ── 主流程 ────────────────────────────────────────────────────────────────────
 
 def replace_pptx(input_path, mapping, output_path, report_path=None, doc_path=None, debug=False):
@@ -436,4 +535,10 @@ def run_replace(year, month, speaker, supervisor, has_report, has_doc):
     doc_path = Path('/doc.docx') if has_doc else None
     
     replace_pptx(input_path, mapping, output_path, report_path=report_path, doc_path=doc_path, debug=False)
-    return True
+    
+    # 擷取文字回傳給前端
+    summary_text = ""
+    if has_doc:
+        summary_text = extract_proposal_summary_text(doc_path)
+        
+    return summary_text

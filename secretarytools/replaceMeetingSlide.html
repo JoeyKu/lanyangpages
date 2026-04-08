@@ -477,6 +477,30 @@
             </div>
 
             <div id="alertBox" style="display:none; text-align:center; margin-top:20px; font-size:17px;"></div>
+
+            <div id="summarySection" style="display:none; margin-top:40px;">
+                <div class="section-title">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    提案文字摘要
+                </div>
+                <div class="tool-card" style="padding: 24px;">
+                    <textarea id="summaryText" readonly
+                        style="width: 100%; height: 300px; font-family: 'Noto Sans TC', monospace; font-size: 16px; padding: 15px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9; resize: vertical; margin-bottom: 20px;"></textarea>
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button type="button" id="copyBtn" class="btn-primary" onclick="copyToClipboard()"
+                            style="background-color: var(--accent-color);">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-7 10h7m-7-3h7m-7-3h7" />
+                            </svg>
+                            複製文字
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -566,7 +590,15 @@
 
                 // 3. Call the Python wrapper
                 const pyCall = `run_replace('${yearVal}', '${monthVal}', '${speakerVal}', '${supervisorVal}', ${hasReport ? 'True' : 'False'}, ${hasDoc ? 'True' : 'False'})`
-                await pyodide.runPythonAsync(pyCall);
+                const resultText = await pyodide.runPythonAsync(pyCall);
+
+                // 顯示摘要文字
+                if (resultText && resultText.trim()) {
+                    document.getElementById('summaryText').value = resultText;
+                    document.getElementById('summarySection').style.display = 'block';
+                } else {
+                    document.getElementById('summarySection').style.display = 'none';
+                }
 
                 // 4. Extract output
                 const outputData = pyodide.FS.readFile('/output.pptx');
@@ -618,6 +650,23 @@
                 loadingDiv.style.display = 'none';
                 submitBtn.disabled = false;
             }
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('summaryText').value;
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = document.getElementById('copyBtn');
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = `
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    已複製！
+                `;
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                }, 2000);
+            });
         }
 
         async function preloadTemplate() {
