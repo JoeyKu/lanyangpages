@@ -302,12 +302,24 @@ def _insert_slide(dest_prs, src_slide, after_index, used_partnames: set):
     prs_elm  = dest_prs.part._element
     sldIdLst = prs_elm.find(qn("p:sldIdLst"))
 
-    # 1. 選 layout
-    src_layout_pn = src_slide.slide_layout.part.partname
+    # 1. 選 layout (優先使用名稱匹配)
+    src_layout_name = src_slide.slide_layout.name
     dest_layout = next(
-        (l for l in dest_prs.slide_layouts if l.part.partname == src_layout_pn),
-        dest_prs.slide_layouts[0]
+        (l for l in dest_prs.slide_layouts if l.name == src_layout_name),
+        None
     )
+    
+    # 若名稱沒對到，嘗試匹配內部路徑 (相容舊邏輯)
+    if dest_layout is None:
+        src_layout_pn = src_slide.slide_layout.part.partname
+        dest_layout = next(
+            (l for l in dest_prs.slide_layouts if l.part.partname == src_layout_pn),
+            None
+        )
+    
+    # 若都沒對到，回退至常用內容版面 (通常 index 1 是內容頁，比 index 0 的標題頁合適)
+    if dest_layout is None:
+        dest_layout = dest_prs.slide_layouts[1] if len(dest_prs.slide_layouts) > 1 else dest_prs.slide_layouts[0]
 
     # 2. add_slide → 取得有合法 sldId 的新 slide
     new_slide = dest_prs.slides.add_slide(dest_layout)
@@ -315,6 +327,24 @@ def _insert_slide(dest_prs, src_slide, after_index, used_partnames: set):
 
     # 3. 換掉 XML（深度複製 src）
     new_part._element = deepcopy(src_slide.part._element)
+
+    # 【核心修正】移除從來源帶過來的背景設定，強制讓它繼承目標版面 (dest_layout) 的底圖
+    # 背景可能在 p:sld/p:bg 或 p:sld/p:cSld/p:bg
+    # 使用 find 搭配 qn 處理命空間，避免 XPath 表達式錯誤
+    bg = new_part._element.find(qn('p:bg'))
+    if bg is not None:
+        new_part._element.remove(bg)
+        
+    cSld = new_part._element.find(qn('p:cSld'))
+    if cSld is not None:
+        bg = cSld.find(qn('p:bg'))
+        if bg is not None:
+            cSld.remove(bg)
+
+    # 【核心修正 2】確保「隱藏背景圖形」選項沒有被勾選 (showMasterSp="0")
+    # 如果來源投影片勾選了此項，搬過來後會看不到母片的底圖。
+    if 'showMasterSp' in new_part._element.attrib:
+        del new_part._element.attrib['showMasterSp']
 
     # 4. 清掉所有舊 rels，重新建立
     new_part._rels._rels.clear()
@@ -359,8 +389,14 @@ def _insert_slide(dest_prs, src_slide, after_index, used_partnames: set):
         _set_rel(new_part, rId, rel.reltype, new_media)
 
     # 5. 把 sldId 移到 after_index 之後
+    _reposition_slide(dest_prs, new_slide, after_index)
+
+
+def _reposition_slide(prs, slide, after_index):
+    """將投影片移動到 after_index 之後"""
+    sldIdLst = prs.part._element.find(qn("p:sldIdLst"))
     all_sldIds = list(sldIdLst.findall(qn("p:sldId")))
-    last_el = all_sldIds[-1]
+    last_el = all_sldIds[-1]  # add_slide 產生的那張永遠在最後
     sldIdLst.remove(last_el)
 
     all_sldIds = list(sldIdLst.findall(qn("p:sldId")))
@@ -402,6 +438,77 @@ def insert_report_slides(dest_prs, report_path: Path, keyword="工作報告"):
                       used_partnames=used_partnames)
 
     print(f"   ✅ 插入完成（共 {n} 張）")
+
+
+def _matches_pattern(text, patterns):
+    import fnmatch
+    # 移除空格與全形空格以增加比對強度
+    t = text.replace(' ', '').replace('　', '').strip()
+    for p in patterns:
+        p_clean = p.replace(' ', '').replace('　', '').strip()
+        if '*' in p_clean:
+            # 使用 fnmatch，前後補 * 確保只要包含即可
+            if fnmatch.fnmatch(t, f'*{p_clean}*'):
+                return True
+        elif p_clean in t:
+            return True
+    return False
+
+
+def insert_external_proposal_slides(dest_prs, src_path, start_keyword="提案討論", end_keyword="臨時動議"):
+    src_prs = Presentation(str(src_path))
+    
+    # 定義規則
+    EXCLUDE_KEYWORDS = ["*月份聯合月例會"]
+    TEXT_ONLY_KEYWORDS = ["各類宣導", "榮譽榜", "重要活動訊息", "*月份活動訊息", "*活動預告"]
+    
+    start_idx = -1
+    end_idx = len(src_prs.slides)
+    
+    for i, slide in enumerate(src_prs.slides):
+        text = _slide_text(slide)
+        if start_idx == -1 and start_keyword in text:
+            start_idx = i
+        elif start_idx != -1 and end_keyword in text:
+            end_idx = i
+            break
+            
+    if start_idx == -1:
+        print(f"⚠️  在來源檔案「{src_path.name}」中找不到「{start_keyword}」標題，跳過插入。", file=sys.stderr)
+        return
+
+    slides_to_insert = list(src_prs.slides)[start_idx + 1:end_idx]
+    if not slides_to_insert:
+        return
+        
+    print(f"📋 從「{src_path.name}」擷取「{start_keyword}」至「{end_keyword}」（共 {len(slides_to_insert)} 張）...")
+    
+    # 尋找目標簡報的插入點
+    dest_idx = next(
+        (i for i, s in enumerate(dest_prs.slides) if start_keyword in _slide_text(s)), None
+    )
+    if dest_idx is None:
+        print(f"⚠️  目標簡報中找不到「{start_keyword}」的分隔投影片，將附加到最後。", file=sys.stderr)
+        dest_idx = len(dest_prs.slides) - 1
+        
+    used_partnames = _collect_used_partnames(dest_prs)
+    
+    current_dest_offset = 0
+    for src_slide in slides_to_insert:
+        slide_text = _slide_text(src_slide)
+        
+        # 1. 檢查是否排除
+        if _matches_pattern(slide_text, EXCLUDE_KEYWORDS):
+            print(f"   ⏩ 跳過投影片：{slide_text.splitlines()[0][:15]}...")
+            continue
+            
+        target_idx = dest_idx + current_dest_offset
+        
+        # 2. 一般完整複製
+        _insert_slide(dest_prs, src_slide, after_index=target_idx, used_partnames=used_partnames)
+        current_dest_offset += 1
+    
+    print(f"   ✅ 提案簡報插入完成（共 {len(slides_to_insert)} 張）")
 
 
 def extract_proposal_summary_text(doc_path):
@@ -505,7 +612,7 @@ def extract_proposal_summary_text(doc_path):
 
 # ── 主流程 ────────────────────────────────────────────────────────────────────
 
-def replace_pptx(input_path, mapping, output_path, report_path=None, doc_path=None, debug=False):
+def replace_pptx(input_path, mapping, output_path, report_path=None, doc_path=None, proposal_path=None, debug=False):
     prs = Presentation(str(input_path))
     for slide in prs.slides:
         for shape in slide.shapes:
@@ -515,6 +622,8 @@ def replace_pptx(input_path, mapping, output_path, report_path=None, doc_path=No
                 process_shape(shape, mapping, debug)
     if report_path is not None:
         insert_report_slides(prs, report_path)
+    if proposal_path is not None:
+        insert_external_proposal_slides(prs, proposal_path)
     if doc_path is not None:
         insert_proposal_slides(prs, doc_path, debug)
     prs.save(str(output_path))
@@ -523,7 +632,7 @@ def replace_pptx(input_path, mapping, output_path, report_path=None, doc_path=No
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
-def run_replace(year, month, speaker, supervisor, has_report, has_doc):
+def run_replace(year, month, speaker, supervisor, has_report, has_doc, has_proposal):
     mapping = {
         "[[Title]]":    f"{year}年{month}月月例會",
         "[[宣講員]]":   speaker,
@@ -533,12 +642,60 @@ def run_replace(year, month, speaker, supervisor, has_report, has_doc):
     output_path = Path('/output.pptx')
     report_path = Path('/report.pptx') if has_report else None
     doc_path = Path('/doc.docx') if has_doc else None
+    proposal_path = Path('/proposal.pptx') if has_proposal else None
     
-    replace_pptx(input_path, mapping, output_path, report_path=report_path, doc_path=doc_path, debug=False)
+    replace_pptx(input_path, mapping, output_path, report_path=report_path, doc_path=doc_path, proposal_path=proposal_path, debug=False)
     
     # 擷取文字回傳給前端
     summary_text = ""
     if has_doc:
         summary_text = extract_proposal_summary_text(doc_path)
-        
     return summary_text
+        
+def main():
+    parser = argparse.ArgumentParser(description="替換 PPTX 佔位符並合併報告投影片。")
+    parser.add_argument("input", help="輸入的 .pptx 檔案路徑")
+    parser.add_argument("--year", required=True, help="年份")
+    parser.add_argument("--month", required=True, help="月份")
+    parser.add_argument("--speaker", required=True, help="宣講員姓名")
+    parser.add_argument("--supervisor", required=True, help="上級指導姓名")
+    parser.add_argument("--report", help="選填：要插入的報告 .pptx 檔案路徑")
+    parser.add_argument("--proposal", help="選填：聯合月例會的提案 .pptx 檔案路徑")
+    parser.add_argument("--doc", help="選填：要匯入提案的 .docx 檔案路徑")
+    parser.add_argument("--debug", action="store_true", help="印出 XML 診斷資訊")
+
+    args = parser.parse_args()
+
+    input_path = Path(args.input)
+    if not input_path.exists():
+        print(f"❌ 找不到輸入檔案：{input_path}", file=sys.stderr)
+        sys.exit(1)
+
+    output_path = input_path.with_name(f"{input_path.stem}_replaced.pptx")
+    report_path = Path(args.report) if args.report else None
+    proposal_path = Path(args.proposal) if args.proposal else None
+    doc_path = Path(args.doc) if args.doc else None
+
+    mapping = {
+        "[[Title]]":    f"{args.year}年{args.month}月月例會",
+        "[[宣講員]]":   args.speaker,
+        "[[上級指導]]": args.supervisor,
+    }
+
+    replace_pptx(
+        input_path, mapping, output_path,
+        report_path=report_path,
+        proposal_path=proposal_path,
+        doc_path=doc_path,
+        debug=args.debug
+    )
+
+    if doc_path:
+        print("\n--- 提取的提案文字摘要 ---")
+        print(extract_proposal_summary_text(doc_path))
+        print("--------------------------\n")
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        main()

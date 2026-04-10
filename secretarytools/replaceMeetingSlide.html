@@ -451,6 +451,16 @@
                 </div>
 
                 <div class="input-group">
+                    <label for="proposalFile">聯合月例會提案簡報 (.pptx) <span
+                            style="font-size:13px; font-weight:normal; color:#888;">[選填] 從「提案討論」至「臨時動議」擷取</span></label>
+                    <div class="file-drop-area">
+                        <div class="file-drop-text">點擊或拖放檔案至此</div>
+                        <div class="file-name"></div>
+                        <input type="file" id="proposalFile" name="proposalFile" accept=".pptx">
+                    </div>
+                </div>
+
+                <div class="input-group">
                     <label for="docFile">上次會議紀錄 (.docx) <span
                             style="font-size:13px; font-weight:normal; color:#888;">[選填] 會自動在「提案」匯入</span></label>
                     <div class="file-drop-area">
@@ -585,11 +595,19 @@
                     hasDoc = true;
                 }
 
+                let hasProposal = false;
+                const proposalInput = document.getElementById('proposalFile');
+                if (proposalInput.files[0]) {
+                    const proposalData = await proposalInput.files[0].arrayBuffer();
+                    pyodide.FS.writeFile('/proposal.pptx', new Uint8Array(proposalData));
+                    hasProposal = true;
+                }
+
                 // 2. Load Python Code
                 await pyodide.runPythonAsync(pyScript);
 
                 // 3. Call the Python wrapper
-                const pyCall = `run_replace('${yearVal}', '${monthVal}', '${speakerVal}', '${supervisorVal}', ${hasReport ? 'True' : 'False'}, ${hasDoc ? 'True' : 'False'})`
+                const pyCall = `run_replace('${yearVal}', '${monthVal}', '${speakerVal}', '${supervisorVal}', ${hasReport ? 'True' : 'False'}, ${hasDoc ? 'True' : 'False'}, ${hasProposal ? 'True' : 'False'})`
                 const resultText = await pyodide.runPythonAsync(pyCall);
 
                 // 顯示摘要文字
