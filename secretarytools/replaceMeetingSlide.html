@@ -332,22 +332,22 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="templateFile">公版簡報 (.pptx)</label>
+                    <label for="templateFile">公版簡報 (<span style="color:#e74c3c;">.pptx</span>)</label>
                     <div id="templateStatus" style="font-size:15px; margin-bottom:8px; color:var(--text-secondary);">
                         連線中，檢查伺服器公版檔案...
                     </div>
                     <div class="file-drop-area">
-                        <div class="file-drop-text">點擊或拖放檔案至此 (上傳可覆蓋預設)</div>
+                        <div class="file-drop-text">點擊或拖放檔案至此 (僅限 .pptx)</div>
                         <div class="file-name"></div>
                         <input type="file" id="templateFile" name="templateFile" accept=".pptx">
                     </div>
                 </div>
 
                 <div class="input-group">
-                    <label for="reportFile">分會工作報告(.pptx) <span
+                    <label for="reportFile">分會工作報告 (<span style="color:#e74c3c;">.pptx</span>) <span
                             style="font-size:13px; font-weight:normal; color:#888;">[選填] 會自動插入在「工作報告」之後</span></label>
                     <div class="file-drop-area">
-                        <div class="file-drop-text">點擊或拖放檔案至此</div>
+                        <div class="file-drop-text">點擊或拖放檔案至此 (不支援 .ppt)</div>
                         <div class="file-name"></div>
                         <input type="file" id="reportFile" name="reportFile" accept=".pptx">
                     </div>
@@ -364,10 +364,10 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="proposalFile">聯合月例會投影片 (.pptx)<span
+                    <label for="proposalFile">聯合月例會投影片 (<span style="color:#e74c3c;">.pptx</span>)<span
                             style="font-size:13px; font-weight:normal; color:#888;">[選填] 從「提案討論」至「臨時動議」擷取</span></label>
                     <div class="file-drop-area">
-                        <div class="file-drop-text">點擊或拖放檔案至此</div>
+                        <div class="file-drop-text">點擊或拖放檔案至此 (不支援 .ppt)</div>
                         <div class="file-name"></div>
                         <input type="file" id="proposalFile" name="proposalFile" accept=".pptx">
                     </div>
@@ -479,14 +479,25 @@
                 // 1. Write files to Pyodide FS
                 let templateData;
                 if (templateInput.files[0]) {
+                    const fileName = templateInput.files[0].name.toLowerCase();
+                    if (fileName.endsWith('.ppt')) {
+                        throw new Error('公版簡報：不支援舊版 .ppt 格式。請使用 .pptx 格式。');
+                    }
+                    console.log('Writing template file:', templateInput.files[0].name, templateInput.files[0].size, 'bytes');
                     templateData = await templateInput.files[0].arrayBuffer();
                 } else {
+                    console.log('Using preloaded template buffer:', preloadedTemplateBuffer ? preloadedTemplateBuffer.byteLength : 0, 'bytes');
                     templateData = preloadedTemplateBuffer;
                 }
                 pyodide.FS.writeFile('/slide-template.pptx', new Uint8Array(templateData));
 
                 let hasReport = false;
                 if (reportInput.files[0]) {
+                    const fileName = reportInput.files[0].name.toLowerCase();
+                    if (fileName.endsWith('.ppt')) {
+                        throw new Error('工作報告：不支援舊版 .ppt 格式。請先將其另存為 .pptx。');
+                    }
+                    console.log('Writing report file:', reportInput.files[0].name, reportInput.files[0].size, 'bytes');
                     const reportData = await reportInput.files[0].arrayBuffer();
                     pyodide.FS.writeFile('/report.pptx', new Uint8Array(reportData));
                     hasReport = true;
@@ -494,6 +505,7 @@
 
                 let hasDoc = false;
                 if (docInput.files[0]) {
+                    console.log('Writing doc file:', docInput.files[0].name, docInput.files[0].size, 'bytes');
                     const docData = await docInput.files[0].arrayBuffer();
                     pyodide.FS.writeFile('/doc.docx', new Uint8Array(docData));
                     hasDoc = true;
@@ -502,7 +514,15 @@
                 let hasProposal = false;
                 const proposalInput = document.getElementById('proposalFile');
                 if (proposalInput.files[0]) {
+                    const fileName = proposalInput.files[0].name.toLowerCase();
+                    if (fileName.endsWith('.ppt')) {
+                        throw new Error('不支援舊版 .ppt 格式。請先在 PowerPoint 中將檔案「另存新檔」為 .pptx 格式後再重新上傳。');
+                    }
+                    console.log('Writing proposal file:', proposalInput.files[0].name, proposalInput.files[0].size, 'bytes');
                     const proposalData = await proposalInput.files[0].arrayBuffer();
+                    if (proposalData.byteLength === 0) {
+                        throw new Error('提案簡報檔案大小為 0，請確認檔案是否正確。');
+                    }
                     pyodide.FS.writeFile('/proposal.pptx', new Uint8Array(proposalData));
                     hasProposal = true;
                 }
@@ -644,6 +664,16 @@
 
                 input.addEventListener('change', () => {
                     if (input.files.length > 0) {
+                        const fileName = input.files[0].name.toLowerCase();
+                        if (fileName.endsWith('.ppt')) {
+                            alert('❌ 不支援舊版 .ppt 格式。\n\n請在 PowerPoint 中將檔案「另存新檔」為 .pptx 格式後再重新上傳。');
+                            input.value = ''; // Clear the input
+                            nameDisplay.textContent = '';
+                            area.style.borderColor = '';
+                            area.style.background = '';
+                            defaultText.style.display = 'block';
+                            return;
+                        }
                         nameDisplay.textContent = '已選擇：' + input.files[0].name;
                         area.style.borderColor = 'var(--primary-color)';
                         area.style.background = 'rgba(168, 122, 79, 0.05)';
