@@ -35,72 +35,24 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             display: flex;
+            justify-content: center;
+            align-items: flex-start;
             min-height: 100vh;
             font-size: 20px;
             line-height: 1.75;
-        }
-
-        nav {
-            width: 280px;
-            background-color: var(--sidebar-bg);
-            color: var(--sidebar-text);
             padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            position: sticky;
-            top: 0;
-            min-height: 100vh;
-            flex-shrink: 0;
-        }
-
-        .logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 20px;
-            font-weight: 600;
-            padding-left: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--accent-color);
-        }
-
-        .nav-links {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .nav-link {
-            padding: 15px 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            color: var(--sidebar-text);
-            font-size: 16px;
-            opacity: 0.7;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.1);
-            opacity: 1;
-            font-weight: 600;
-        }
-
-        .nav-link:hover {
-            opacity: 1;
-            background-color: rgba(255, 255, 255, 0.05);
         }
 
         main {
-            flex-grow: 1;
-            padding: 60px;
-            max-width: 1200px;
+            width: 100%;
+            max-width: 900px;
+            flex-grow: 0;
         }
 
         .header {
             margin-bottom: 40px;
+            text-align: center;
+            position: relative;
         }
 
         .header h1 {
@@ -111,6 +63,23 @@
 
         .header p {
             color: var(--text-secondary);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .back-btn:hover {
+            color: var(--accent-color);
+            transform: translateX(-5px);
         }
 
         .tool-card {
@@ -282,18 +251,8 @@
         }
 
         @media (max-width:900px) {
-            nav {
-                width: 80px;
-                padding: 40px 10px;
-            }
-
-            .logo,
-            .nav-link span {
-                display: none;
-            }
-
             main {
-                padding: 30px;
+                max-width: 100%;
             }
 
             .input-row {
@@ -302,33 +261,12 @@
         }
 
         @media (max-width:640px) {
-            nav {
-                width: 60px;
-                padding: 20px 8px;
-            }
-
-            .logo {
-                display: none;
-            }
-
-            .nav-link {
-                padding: 12px 8px;
-                flex-direction: column;
-                gap: 4px;
-                text-align: center;
-            }
-
-            .nav-link span {
-                display: block;
-                font-size: 9px;
-            }
-
             main {
-                padding: 20px;
+                padding: 0;
             }
 
             .header h1 {
-                font-size: 26px;
+                font-size: 28px;
             }
 
             .tool-card {
@@ -343,51 +281,16 @@
 </head>
 
 <body>
-    <nav>
-        <div class="logo">秘書工具箱</div>
-        <div class="nav-links">
-            <a href="index.html" class="nav-link">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span>接龍姓名匯出</span>
-            </a>
-            <a href="index.html" class="nav-link">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3zM6 19a6 6 0 0112 0" />
-                </svg>
-                <span>快速名單產出</span>
-            </a>
-            <a href="convertMeetingWord.html" class="nav-link">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>轉換會議文件</span>
-            </a>
-            <a href="#" class="nav-link active">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                </svg>
-                <span>產生會議簡報</span>
-            </a>
-            <a href="help.html" class="nav-link" style="margin-top:24px;">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 2a10 10 0 100 20 10 10 0 000-20zm.75 14.5h-1.5v-1.5h1.5v1.5zm0-3.5h-1.5V7h1.5v6z" />
-                </svg>
-                <span>說明</span>
-            </a>
-        </div>
-    </nav>
-
     <main>
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+            </svg>
+            返回工具箱
+        </a>
         <div class="header">
             <h1>產生會議簡報</h1>
-            <p>自動轉換大會簡報格式，替換年月份與宣講指導，並可合併報告與提案檔案。</p>
+            <p>自動轉換分會簡報格式，替換年月份與宣講指導，並可合併報告與提案檔案。</p>
         </div>
 
         <div class="tool-card">
@@ -429,7 +332,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="templateFile">大會公版簡報 (.pptx)</label>
+                    <label for="templateFile">公版簡報 (.pptx)</label>
                     <div id="templateStatus" style="font-size:15px; margin-bottom:8px; color:var(--text-secondary);">
                         連線中，檢查伺服器公版檔案...
                     </div>
@@ -441,7 +344,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="reportFile">工作報告簡報 (.pptx) <span
+                    <label for="reportFile">分會工作報告(.pptx) <span
                             style="font-size:13px; font-weight:normal; color:#888;">[選填] 會自動插入在「工作報告」之後</span></label>
                     <div class="file-drop-area">
                         <div class="file-drop-text">點擊或拖放檔案至此</div>
@@ -449,9 +352,19 @@
                         <input type="file" id="reportFile" name="reportFile" accept=".pptx">
                     </div>
                 </div>
+                
+		<div class="input-group">
+                    <label for="docFile">分會會議文件 (.docx) <span
+                            style="font-size:13px; font-weight:normal; color:#888;">[選填] 會自動在「提案」匯入</span></label>
+                    <div class="file-drop-area">
+                        <div class="file-drop-text">點擊或拖放檔案至此</div>
+                        <div class="file-name"></div>
+                        <input type="file" id="docFile" name="docFile" accept=".docx">
+                    </div>
+                </div>
 
                 <div class="input-group">
-                    <label for="proposalFile">聯合月例會提案簡報 (.pptx) <span
+                    <label for="proposalFile">聯合月例會投影片 (.pptx)<span
                             style="font-size:13px; font-weight:normal; color:#888;">[選填] 從「提案討論」至「臨時動議」擷取</span></label>
                     <div class="file-drop-area">
                         <div class="file-drop-text">點擊或拖放檔案至此</div>
@@ -460,15 +373,6 @@
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="docFile">上次會議紀錄 (.docx) <span
-                            style="font-size:13px; font-weight:normal; color:#888;">[選填] 會自動在「提案」匯入</span></label>
-                    <div class="file-drop-area">
-                        <div class="file-drop-text">點擊或拖放檔案至此</div>
-                        <div class="file-name"></div>
-                        <input type="file" id="docFile" name="docFile" accept=".docx">
-                    </div>
-                </div>
 
                 <div class="actions">
                     <button type="button" id="submitBtn" class="btn-primary" onclick="submitForm()" disabled>
@@ -561,7 +465,7 @@
             const docInput = document.getElementById('docFile');
 
             if (!templateInput.files[0] && !preloadedTemplateBuffer) {
-                alertBox.innerText = '❌ 請先上傳大會公版簡報或確保伺服器存在公版';
+                alertBox.innerText = '❌ 請先上傳公版簡報或確保伺服器存在公版';
                 alertBox.style.color = '#e74c3c';
                 alertBox.style.display = 'block';
                 return;
@@ -695,10 +599,10 @@
                     const statusEl = document.getElementById('templateStatus');
                     statusEl.innerHTML = '<span style="color:#27ae60; font-weight:bold;">✅ 已自動載入伺服器上的公版簡報！</span> (您也可以上傳檔案來覆蓋它)';
                 } else {
-                    document.getElementById('templateStatus').innerHTML = '伺服器無預設公版。請先<a href="https://docs.google.com/presentation/d/1NPYNx_WUlXorJ17BSLvC6mOrSzL30md5/export/pptx" target="_blank" style="color:var(--primary-color); font-weight:bold; text-decoration:underline;">下載大會公版簡報</a>，並在此拖曳上傳。';
+                    document.getElementById('templateStatus').innerHTML = '伺服器無預設公版。請先<a href="https://docs.google.com/presentation/d/1NPYNx_WUlXorJ17BSLvC6mOrSzL30md5/export/pptx" target="_blank" style="color:var(--primary-color); font-weight:bold; text-decoration:underline;">下載公版簡報</a>，並在此拖曳上傳。';
                 }
             } catch (e) {
-                document.getElementById('templateStatus').innerHTML = '無法連線讀取伺服器公版。請先<a href="https://docs.google.com/presentation/d/1NPYNx_WUlXorJ17BSLvC6mOrSzL30md5/export/pptx" target="_blank" style="color:var(--primary-color); font-weight:bold; text-decoration:underline;">下載大會公版簡報</a>，並在此拖曳上傳。';
+                document.getElementById('templateStatus').innerHTML = '無法連線讀取伺服器公版。請先<a href="https://docs.google.com/presentation/d/1NPYNx_WUlXorJ17BSLvC6mOrSzL30md5/export/pptx" target="_blank" style="color:var(--primary-color); font-weight:bold; text-decoration:underline;">下載公版簡報</a>，並在此拖曳上傳。';
             }
         }
 

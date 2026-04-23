@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>轉換會議文件</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Outfit:wght@400;600&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --primary-color: #a87a4f;
@@ -16,111 +18,117 @@
             --card-bg: #ffffff;
             --text-main: #3d2c1b;
             --text-secondary: #6b4f35;
-            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             --radius: 16px;
-            --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             display: flex;
+            justify-content: center;
+            align-items: flex-start;
             min-height: 100vh;
             font-size: 20px;
             line-height: 1.75;
-        }
-        nav {
-            width: 280px;
-            background-color: var(--sidebar-bg);
-            color: var(--sidebar-text);
             padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            position: sticky;
-            top: 0;
-            min-height: 100vh;
-            flex-shrink: 0;
         }
-        .logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 20px;
-            font-weight: 600;
-            padding-left: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--accent-color);
+
+        main {
+            width: 100%;
+            max-width: 800px;
+            flex-grow: 0;
         }
-        .nav-links { display:flex; flex-direction:column; gap:10px; }
-        .nav-link {
-            padding: 15px 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            color: var(--sidebar-text);
-            font-size: 16px;
-            opacity: 0.7;
-            transition: var(--transition);
-            display: flex;
+
+        .header {
+            margin-bottom: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+        }
+
+        .back-btn {
+            display: inline-flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: var(--transition);
         }
-        .nav-link.active { background-color:rgba(255,255,255,0.1); opacity:1; font-weight:600; }
-        .nav-link:hover { opacity:1; background-color:rgba(255,255,255,0.05); }
-        main { flex-grow:1; padding:60px; max-width:1200px; }
-        .header { margin-bottom:40px; }
-        .header h1 { font-size:42px; color:var(--primary-color); margin-bottom:8px; }
-        .header p { color:var(--text-secondary); }
+
+        .back-btn:hover {
+            color: var(--accent-color);
+            transform: translateX(-5px);
+        }
+
         .tool-card {
             background: var(--card-bg);
             border-radius: var(--radius);
             padding: 40px;
             box-shadow: var(--shadow);
-            border: 1px solid rgba(168,122,79,0.1);
+            border: 1px solid rgba(168, 122, 79, 0.1);
         }
-        .section-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin: 32px 0 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid rgba(168,122,79,0.15);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+
+        .input-group {
+            margin-bottom: 20px;
         }
-        .section-title:first-of-type { margin-top:0; }
-        .input-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-        .input-group { margin-bottom:16px; }
+
         label {
             font-weight: 600;
             color: var(--primary-color);
-            font-size: 15px;
+            font-size: 18px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             display: block;
         }
-        input, select {
+
+        input,
+        textarea,
+        select {
             width: 100%;
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid #ddd;
-            font-size: 17px;
+            border: 1px solid #ccc;
+            font-size: 18px;
             font-family: inherit;
-            background: #fafafa;
-            transition: var(--transition);
         }
-        input[type="date"] { cursor:pointer; }
-        input:focus, select:focus {
+
+        input:focus,
+        textarea:focus,
+        select:focus {
             outline: none;
             border-color: var(--accent-color);
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(212,163,115,0.12);
+            box-shadow: 0 0 0 4px rgba(212, 163, 115, 0.1);
         }
-        input[type="file"] { padding:10px; font-size:15px; cursor:pointer; }
-        .actions { display:flex; gap:15px; margin-top:28px; }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
         button {
             padding: 14px 28px;
             border-radius: 10px;
@@ -132,601 +140,243 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-family: inherit;
         }
-        .btn-primary { background-color:var(--primary-color); color:white; }
-        .btn-primary:hover:not(:disabled) { background-color:var(--accent-color); transform:translateY(-2px); }
-        .btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
-        .error { color:#e74c3c; font-size:14px; margin-top:4px; }
-        .spinner {
-            display: inline-block;
-            width: 36px; height: 36px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
         }
-        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e5e5;
+        }
+
+        .output-group {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px dashed var(--accent-color);
+            position: relative;
+        }
+
         .copy-toast {
-            position: fixed; bottom:30px; right:30px;
-            background: var(--sidebar-bg); color:white;
-            padding: 12px 24px; border-radius:30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transform: translateY(100px); opacity:0;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--sidebar-bg);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
             transition: var(--transition);
         }
-        .copy-toast.show { transform:translateY(0); opacity:1; }
-        @media (max-width:900px) {
-            nav { width:80px; padding:40px 10px; }
-            .logo, .nav-link span { display:none; }
-            main { padding:30px; }
-            .input-row { grid-template-columns:1fr; }
+
+        .copy-toast.show {
+            transform: translateY(0);
+            opacity: 1;
         }
-        @media (max-width:640px) {
-            nav { width:60px; padding:20px 8px; }
-            .logo { display:none; }
-            .nav-link { padding:12px 8px; flex-direction:column; gap:4px; text-align:center; }
-            .nav-link span { display:block; font-size:9px; }
-            main { padding:20px; }
-            .header h1 { font-size:26px; }
-            .tool-card { padding:20px; }
-            .input-row { grid-template-columns:1fr; }
+
+        .error {
+            color: #e74c3c;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 640px) {
+            main { padding: 0; }
+            .header h1 { font-size: 32px; }
+            .tool-card { padding: 20px; }
         }
     </style>
 </head>
-<body>
-    <nav>
-        <div class="logo">秘書工具箱</div>
-        <div class="nav-links">
-            <a href="index.html" class="nav-link">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span>接龍姓名匯出</span>
-            </a>
-            <a href="index.html" class="nav-link">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3zM6 19a6 6 0 0112 0"/>
-                </svg>
-                <span>快速名單產出</span>
-            </a>
-            <a href="#" class="nav-link active">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <span>轉換會議文件</span>
-            </a>
-            <a href="replaceMeetingSlide.html" class="nav-link">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                </svg>
-                <span>產生會議簡報</span>
-            </a>
-            <a href="help.html" class="nav-link" style="margin-top:24px;">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20zm.75 14.5h-1.5v-1.5h1.5v1.5zm0-3.5h-1.5V7h1.5v6z"/>
-                </svg>
-                <span>說明</span>
-            </a>
-        </div>
-    </nav>
 
+<body>
     <main>
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+            </svg>
+            返回工具箱
+        </a>
         <div class="header">
             <h1>轉換會議文件</h1>
-            <p>自動修改聯合月例會 Word 文件中的日期、時間、地點等資訊，以利分會使用。</p>
+            <p>自動修改月例會 Word 文件中的日期、時間、地點等資訊。</p>
         </div>
 
         <div class="tool-card">
             <form id="docForm">
-
-                <div class="section-title">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    會議基本資訊
-                </div>
-
-                <div class="input-row">
-                    <div class="input-group">
-                        <label for="date">日期</label>
-                        <input type="date" id="date" name="date" required>
-                        <div id="dateError" class="error"></div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="time">時間</label>
-                        <input type="text" id="time" name="time" placeholder="例如：19:30" required>
-                        <div id="timeError" class="error"></div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="room">地點</label>
-                        <input type="text" id="room" name="room" placeholder="例如：蘭陽別院3樓305室" required>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="name">分會名稱</label>
-                        <input type="text" id="name" name="name" placeholder="例如：宜六" required>
-                    </div>
-                </div>
-
-                <div class="section-title">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    會議人員
-                </div>
-
-                <div class="input-row">
-                    <div class="input-group">
-                        <label for="chairman">主席</label>
-                        <input type="text" id="chairman" name="chairman" placeholder="例如：OOO會長" required>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="mc">司儀</label>
-                        <input type="text" id="mc" name="mc" placeholder="例如：王小明" required>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="computer">電腦</label>
-                        <input type="text" id="computer" name="computer" placeholder="例如：王小明" required>
-                    </div>
-                </div>
-
-                <div class="section-title">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    上傳檔案
+                <div class="input-group">
+                    <label for="date">日期</label>
+                    <input type="text" id="date" name="date" placeholder="YYYY-MM-DD" required>
+                    <div id="dateError" class="error"></div>
                 </div>
 
                 <div class="input-group">
-                    <label for="file">Word 檔案 (.docx)</label>
+                    <label for="time">時間</label>
+                    <input type="text" id="time" name="time" placeholder="HH:MM" required>
+                    <div id="timeError" class="error"></div>
+                </div>
+
+                <div class="input-group">
+                    <label for="room">地點</label>
+                    <input type="text" id="room" name="room" placeholder="例如：蘭陽別院4樓405室" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="name">分會名稱</label>
+                    <input type="text" id="name" name="name" placeholder="例如：宜六" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="file">上傳 Word 檔案 (.docx)</label>
                     <input type="file" id="file" name="file" accept=".docx" required>
                 </div>
 
                 <div class="actions">
-                    <button type="button" id="submitBtn" class="btn-primary" onclick="submitForm()" disabled>
+                    <button type="button" class="btn-primary" onclick="submitForm()">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        系統初始化中...
+                        下載修改後 Word 檔
                     </button>
                 </div>
             </form>
 
-            <div id="loading" style="display:none; text-align:center; margin-top:20px;">
-                <div class="spinner"></div>
-                <p style="margin-top:10px; color:var(--text-secondary);">處理中，請稍候...</p>
+            <div id="loading" style="display: none; text-align: center; margin-top: 20px;">
+                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 10px; color: var(--text-secondary);">處理中，請稍候...</p>
             </div>
 
-            <div id="alertBox" style="display:none; text-align:center; margin-top:20px; font-size:17px;"></div>
+            <div id="alertBox" class="error" style="display: none; text-align: center; margin-top: 20px;"></div>
         </div>
     </main>
 
     <div id="toast" class="copy-toast">已複製到剪貼簿！</div>
 
     <script>
-        let pyodide;
-        const submitBtn  = document.getElementById('submitBtn');
-        const loadingDiv = document.getElementById('loading');
-        const alertBox   = document.getElementById('alertBox');
-
-        const LS_FIELDS = ['time', 'room', 'name', 'chairman', 'mc', 'computer'];
-
-        function saveToLocalStorage() {
-            LS_FIELDS.forEach(id => {
-                localStorage.setItem('meeting_' + id, document.getElementById(id).value);
-            });
-        }
-
-        function loadFromLocalStorage() {
-            LS_FIELDS.forEach(id => {
-                const val = localStorage.getItem('meeting_' + id);
-                if (val !== null && val !== '') {
-                    document.getElementById(id).value = val;
-                }
-            });
-        }
-
-        LS_FIELDS.forEach(id => {
-            document.getElementById(id).addEventListener('input', saveToLocalStorage);
-        });
-
         function validateDate(dateStr) {
-            if (!dateStr) return false;
-            const d = new Date(dateStr);
-            return d instanceof Date && !isNaN(d);
+            const regex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!regex.test(dateStr)) return false;
+            const date = new Date(dateStr);
+            return date instanceof Date && !isNaN(date);
         }
 
         function validateTime(timeStr) {
-            if (!/^\d{2}:\d{2}$/.test(timeStr)) return false;
-            const [h, m] = timeStr.split(':').map(Number);
-            return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+            const regex = /^\d{2}:\d{2}$/;
+            if (!regex.test(timeStr)) return false;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
         }
 
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.style.display = msg ? 'block' : 'none';
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = message ? 'block' : 'none';
         }
 
-        document.getElementById('time').addEventListener('input', function () {
-            showError('timeError', validateTime(this.value) ? '' : '請輸入正確的時間格式 HH:MM');
+        document.getElementById('date').addEventListener('input', function() {
+            const isValid = validateDate(this.value);
+            showError('dateError', isValid ? '' : '請輸入正確的日期格式 YYYY-MM-DD');
         });
 
-        function escapePy(str) {
-            return str.replace(/\\/g, '\\\\').replace(/"""/g, '\\"\\"\\"');
-        }
+        document.getElementById('time').addEventListener('input', function() {
+            const isValid = validateTime(this.value);
+            showError('timeError', isValid ? '' : '請輸入正確的時間格式 HH:MM');
+        });
 
         async function submitForm() {
-            const dateValue     = document.getElementById('date').value.trim();
-            const timeValue     = document.getElementById('time').value.trim();
-            const roomValue     = document.getElementById('room').value.trim();
-            const nameValue     = document.getElementById('name').value.trim();
-            const chairmanValue = document.getElementById('chairman').value.trim();
-            const mcValue       = document.getElementById('mc').value.trim();
-            const computerValue = document.getElementById('computer').value.trim();
-            const fileInput     = document.getElementById('file');
+            const form = document.getElementById('docForm');
+
+            // 驗證日期和時間
+            const dateValue = document.getElementById('date').value;
+            const timeValue = document.getElementById('time').value;
 
             let hasError = false;
             if (!validateDate(dateValue)) {
-                showError('dateError', '請選擇日期');
+                showError('dateError', '請輸入正確的日期格式 YYYY-MM-DD');
                 hasError = true;
-            } else {
-                showError('dateError', '');
             }
             if (!validateTime(timeValue)) {
                 showError('timeError', '請輸入正確的時間格式 HH:MM');
                 hasError = true;
             }
+
             if (hasError) return;
 
-            if (!document.getElementById('docForm').checkValidity()) {
-                document.getElementById('docForm').reportValidity();
+            // 原生 HTML5 表單驗證
+            if (!form.checkValidity()) {
+                form.reportValidity();
                 return;
             }
 
-            if (!fileInput.files[0]) {
-                alertBox.innerText = '❌ 請先選擇 Word 檔案';
-                alertBox.style.color = '#e74c3c';
-                alertBox.style.display = 'block';
-                return;
-            }
+            const formData = new FormData(form);
 
-            loadingDiv.style.display = 'block';
-            alertBox.style.display = 'none';
-            submitBtn.disabled = true;
+            // 顯示載入動畫
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('alertBox').style.display = 'none';
 
             try {
-                const file = fileInput.files[0];
-                const fileData = await file.arrayBuffer();
-                pyodide.FS.writeFile('/input.docx', new Uint8Array(fileData));
-
-                const pythonCode = `
-from docx import Document
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
-from docx.shared import Pt
-from datetime import datetime
-
-ROC_YEAR_OFFSET = 1911
-WEEKDAY_ZH = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日']
-
-def format_date_cell(date_str, time_str, room_str):
-    dt = datetime.strptime(date_str, "%Y-%m-%d")
-    roc_year = dt.year - ROC_YEAR_OFFSET
-    month = dt.month
-    day = dt.day
-    weekday = WEEKDAY_ZH[dt.weekday()]
-    hour, minute = map(int, time_str.split(':'))
-    if 18 <= hour <= 23:
-        period = "晚上"
-        display_hour = hour - 12 if hour > 12 else hour
-    elif 12 <= hour < 18:
-        period = "下午"
-        display_hour = hour - 12
-    else:
-        period = "早上"
-        display_hour = hour
-    time_display = f"{period}{display_hour:02d}:{minute:02d}"
-    return (
-        f"日期：{roc_year} 年{month:02d}月{day:02d}日（{weekday}）\\n"
-        f"時間：{time_display}\\n"
-        f"地點：{room_str}"
-    )
-
-def set_cell_text(cell, text, font_size=11):
-    cell.text = text
-    for p in cell.paragraphs:
-        for run in p.runs:
-            run.font.name = "標楷體"
-            run._element.rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
-            run.font.size = Pt(font_size)
-
-def set_cell_text_table_align(cell, text, font_size=11):
-    if cell.paragraphs:
-        p = cell.paragraphs[0]
-        p.text = ""
-        run = p.add_run(text)
-        run.font.name = "標楷體"
-        run._element.rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
-        run.font.size = Pt(font_size)
-        for i in range(len(cell.paragraphs)-1, 0, -1):
-            p_elem = cell.paragraphs[i]._element
-            p_elem.getparent().remove(p_elem)
-    else:
-        cell.text = text
-
-def replace_text_in_paragraph(paragraph, old_text, new_text, font_size=None):
-    full_text = "".join(run.text for run in paragraph.runs)
-    if old_text not in full_text:
-        return False
-    for i, run in enumerate(paragraph.runs):
-        run.text = "" if i > 0 else full_text.replace(old_text, new_text)
-        if i == 0 and font_size:
-            run.font.name = "標楷體"
-            run.font.size = Pt(font_size)
-            if run._element.rPr is not None:
-                run._element.rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
-    return True
-
-def replace_in_document(doc, old_text, new_text, font_size=None):
-    for para in doc.paragraphs:
-        replace_text_in_paragraph(para, old_text, new_text, font_size)
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for para in cell.paragraphs:
-                    replace_text_in_paragraph(para, old_text, new_text, font_size)
-
-
-def style_text_in_paragraph(paragraph, search_text, cell=None):
-    """將段落中出現的 search_text 標記為粗體 + 黃色底色，
-       如果傳入 cell，則同時把整個儲存格背景設為黃色"""
-    full_text = "".join(run.text for run in paragraph.runs)
-    if search_text not in full_text:
-        return False
-
-    # --- 文字樣式處理（粗體 + 黃色文字底色）---
-    font_name = "標楷體"
-    font_size = None
-    for run in paragraph.runs:
-        if run.font.name:
-            font_name = run.font.name
-        if run.font.size:
-            font_size = run.font.size
-        if font_size:
-            break
-
-    paragraph.clear()
-    parts = full_text.split(search_text)
-    for i, part in enumerate(parts):
-        if part:
-            run = paragraph.add_run(part)
-            run.font.name = font_name
-            rPr = run._element.get_or_add_rPr()
-            rPr.rFonts.set(qn('w:eastAsia'), font_name)
-            if font_size:
-                run.font.size = font_size
-
-        if i < len(parts) - 1:
-            run = paragraph.add_run(search_text)
-            run.bold = True
-            run.font.name = "標楷體"
-            rPr = run._element.get_or_add_rPr()
-            rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
-            if font_size:
-                run.font.size = font_size
-            
-            # 文字本身黃色底色（可保留或移除）
-            shd = OxmlElement('w:shd')
-            shd.set(qn('w:val'), 'clear')
-            shd.set(qn('w:color'), 'auto')
-            shd.set(qn('w:fill'), 'FFFF00')   # 文字底色黃色
-            rPr.append(shd)
-
-    # --- 新增：如果有傳入 cell，則把整個儲存格背景設為黃色 ---
-    if cell is not None:
-        tcPr = cell._element.get_or_add_tcPr()
-        shd = OxmlElement('w:shd')
-        shd.set(qn('w:val'), 'clear')
-        shd.set(qn('w:color'), 'auto')
-        shd.set(qn('w:fill'), 'FFFF00')   # 整個儲存格黃色背景
-        tcPr.append(shd)
-
-    return True
-
-def style_text_in_paragraph_old(paragraph, search_text):
-    """將段落中所有出現的 search_text 標記為粗體 + 灰色底色（標楷體）"""
-    full_text = "".join(run.text for run in paragraph.runs)
-    if search_text not in full_text:
-        return False
-
-    # 掃描所有 runs 取得字體資訊，不只取 runs[0]
-    font_name = "標楷體"
-    font_size = None
-    for run in paragraph.runs:
-        if run.font.name:
-            font_name = run.font.name
-        if run.font.size:
-            font_size = run.font.size
-        if font_size:
-            break
-
-    # 清除段落並重建 runs
-    paragraph.clear()
-    parts = full_text.split(search_text)
-    for i, part in enumerate(parts):
-        # 普通文字 run
-        if part:
-            run = paragraph.add_run(part)
-            run.font.name = font_name
-            rPr = run._element.get_or_add_rPr()
-            rPr.rFonts.set(qn('w:eastAsia'), font_name)
-            if font_size:
-                run.font.size = font_size
-
-        # 分會名稱 run：粗體 + 灰色底色
-        if i < len(parts) - 1:
-            run = paragraph.add_run(search_text)
-            run.bold = True
-            run.font.name = "標楷體"
-            rPr = run._element.get_or_add_rPr()
-            rPr.rFonts.set(qn('w:eastAsia'), '標楷體')
-            if font_size:
-                run.font.size = font_size
-            # 加灰色底色（CCCCCC = 淺灰，黑白列印約 20% 灰）
-            shd = OxmlElement('w:shd')
-            shd.set(qn('w:val'), 'clear')
-            shd.set(qn('w:color'), 'auto')
-            shd.set(qn('w:fill'), 'FFFF00')
-            rPr.append(shd)
-    return True
-
-def delete_textbox_containing(doc, search_text):
-    WPS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape'
-    W   = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
-    body = doc.element.body
-    for txbx in body.findall('.//' + '{' + WPS + '}txbx'):
-        text = ''.join(t.text or '' for t in txbx.findall('.//' + '{' + W + '}t'))
-        if search_text in text:
-            node = txbx
-            for _ in range(8):
-                node = node.getparent()
-            parent = node.getparent()
-            if parent is not None:
-                parent.remove(node)
-
-def modify_docx():
-    doc = Document('/input.docx')
-
-    date_str     = """${escapePy(dateValue)}"""
-    time_str     = """${escapePy(timeValue)}"""
-    room_str     = """${escapePy(roomValue)}"""
-    name_str     = """${escapePy(nameValue)}"""
-    chairman_str = """${escapePy(chairmanValue)}"""
-    mc_str       = """${escapePy(mcValue)}"""
-    computer_str = """${escapePy(computerValue)}"""
-
-    table = doc.tables[0]
-
-    # Row 0, Col 0：日期區塊
-    set_cell_text(table.rows[0].cells[0], format_date_cell(date_str, time_str, room_str))
-
-    # Row 0, Col 2：主席 / 司儀 / 電腦
-    role_text = f"主席：{chairman_str}\\n司儀：{mc_str}\\n電腦：{computer_str}"
-    set_cell_text(table.rows[0].cells[2], role_text)
-
-    # Row 3, Col 0
-    set_cell_text_table_align(table.rows[3].cells[0], "9.宣講員宣講")
-
-    # Row 4, Col 4
-    set_cell_text_table_align(table.rows[4].cells[4], "16.輔導法師開示")
-
-    # 替換標題
-    new_title = f"{name_str}月例會活動討論案"
-    replace_in_document(doc, "聯合月例會活動討論案", new_title, font_size=20)
-
-    # 分會名稱加粗體 + 灰色底色（全文件所有出現位置）
-    for tb in doc.tables:
-        for row in tb.rows:
-            for cell in row.cells:
-                for para in cell.paragraphs:
-                    style_text_in_paragraph(para, name_str, cell=cell)
-
-    # 刪除文字框
-    delete_textbox_containing(doc, "聯合月例會】")
-
-    doc.save('/output.docx')
-    return True
-
-modify_docx()
-`;
-
-                await pyodide.runPythonAsync(pythonCode);
-
-                const outputData = pyodide.FS.readFile('/output.docx');
-                const blob = new Blob([outputData], {
-                    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
                 });
-                const yearMonthMatch = file.name.match(/(\d+年\d+月)/);
-                const newName = yearMonthMatch
-                    ? `${yearMonthMatch[1]}${nameValue}月例會.docx`
-                    : file.name.replace('.docx', '_修改版.docx');
 
-                if (window.showSaveFilePicker) {
-                    try {
-                        const fileHandle = await window.showSaveFilePicker({
-                            suggestedName: newName,
-                            types: [{
-                                description: 'Word 文件',
-                                accept: { 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }
-                            }]
-                        });
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(blob);
-                        await writable.close();
-                        alertBox.innerText = '✅ 檔案已儲存完成';
-                    } catch (e) {
-                        if (e.name !== 'AbortError') throw e;
-                        alertBox.innerText = '⚠️ 已取消儲存';
-                        alertBox.style.color = '#e67e22';
-                        alertBox.style.display = 'block';
-                        return;
-                    }
-                } else {
+                if (response.ok) {
+                    // 處理檔案下載
+                    const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
+
+                    // 設定預設檔名
+                    const originalName = document.getElementById('file').files[0].name;
+                    const newName = originalName.replace('.docx', `_修改版.docx`);
+
                     a.href = url;
                     a.download = newName;
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
                     window.URL.revokeObjectURL(url);
-                    alertBox.innerText = '✅ 檔案修改完成並已下載';
+                } else {
+                    // 顯示錯誤訊息
+                    const errorData = await response.json();
+                    document.getElementById('alertBox').innerText = '❌ 錯誤：' + errorData.error;
+                    document.getElementById('alertBox').style.display = 'block';
                 }
-                alertBox.style.color = '#27ae60';
-                alertBox.style.display = 'block';
-
             } catch (error) {
-                console.error('處理失敗:', error);
-                alertBox.innerText = '❌ 處理失敗：' + error.message;
-                alertBox.style.color = '#e74c3c';
-                alertBox.style.display = 'block';
+                document.getElementById('alertBox').innerText = '❌ 系統發生未知錯誤';
+                document.getElementById('alertBox').style.display = 'block';
             } finally {
-                loadingDiv.style.display = 'none';
-                submitBtn.disabled = false;
+                // 隱藏載入動畫
+                document.getElementById('loading').style.display = 'none';
             }
         }
 
-        async function initPyodide() {
-            try {
-                pyodide = await loadPyodide();
-                await pyodide.loadPackage(['micropip']);
-                const micropip = pyodide.pyimport('micropip');
-                await micropip.install(['python-docx']);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    下載修改後 Word 檔
-                `;
-            } catch (error) {
-                alertBox.innerText = '❌ 系統初始化失敗，請重新整理頁面';
-                alertBox.style.color = '#e74c3c';
-                alertBox.style.display = 'block';
-            }
+        // ── Toast ──
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2200);
         }
-
-        window.addEventListener('load', () => {
-            loadFromLocalStorage();
-            initPyodide();
-        });
     </script>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 </html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>秘書工具箱</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Outfit:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #a87a4f;
+            --accent-color: #d4a373;
+            --bg-color: #fdfaf3;
+            --sidebar-bg: #3d2c1b;
+            --sidebar-text: #fdfaf3;
+            --card-bg: #ffffff;
+            --text-main: #3d2c1b;
+            --text-secondary: #6b4f35;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            font-size: 20px;
+            line-height: 1.75;
+        }
+
+        nav {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            position: sticky;
+            top: 0;
+            height: auto;
+            min-height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            padding-left: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-link {
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--sidebar-text);
+            font-size: 16px;
+            opacity: 0.7;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            opacity: 1;
+            font-weight: 600;
+        }
+
+        .nav-link:hover {
+            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        main {
+            flex-grow: 1;
+            padding: 60px;
+            max-width: 1200px;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(168, 122, 79, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tool-card .input-group > label {
+            font-size: 22px;
+            text-transform: none;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 20px;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(212, 163, 115, 0.1);
+        }
+
+        textarea#description,
+        textarea#notes {
+            min-height: 80px;
+            max-height: 120px;
+        }
+
+        #tool-generator .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        #tool-generator .form-col {
+            flex: 1;
+        }
+
+        #tool-generator .form-col label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 18px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e5e5;
+        }
+
+        .output-group {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px dashed var(--accent-color);
+            position: relative;
+        }
+
+        /* ── Group bar (names tool) ── */
+        .group-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .group-bar > label {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary-color);
+            white-space: nowrap;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        #groupSelect {
+            flex: 1;
+            min-width: 150px;
+            max-width: 280px;
+            padding: 10px 36px 10px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #d4b896;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a87a4f' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+            appearance: none;
+            font-size: 18px;
+            font-family: inherit;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+            width: auto;
+        }
+        #groupSelect:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(212,163,115,0.15); }
+
+        .icon-btn {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            border: 1.5px solid #c4a47c;
+            background: #fff;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #a87a4f;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+        .icon-btn:hover { background: var(--primary-color); color: #fff; border-color: var(--primary-color); transform: translateY(-2px); }
+        .icon-btn.danger { color: #c0392b; border-color: #e8b4ae; }
+        .icon-btn.danger:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+        .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; }
+
+        /* Name selector styles */
+        .name-area {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+        }
+
+        #nameButtons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+            font-size: 20px;
+            min-height: 44px;
+        }
+        #nameButtons.empty::after {
+            content: '尚未產生按鈕';
+            color: #bbb;
+            font-size: 16px;
+            line-height: 44px;
+        }
+
+        .name-btn {
+            padding: 10px 22px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1.5px solid #c4a47c;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 18px;
+            color: #3d2c1b;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .name-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(32,45,60,0.06);
+        }
+
+        .name-btn.selected {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(168,122,79,0.18);
+        }
+
+        #output,
+        #chainOutput,
+        #messageOutput {
+            font-family: inherit;
+            font-size: 20px;
+            color: var(--text-main);
+            word-break: break-all;
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--sidebar-bg);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .copy-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 900px) {
+            nav { width: 80px; padding: 40px 10px; }
+            .logo, .nav-link span { display: none; }
+            main { padding: 30px; }
+        }
+
+        @media (max-width: 640px) {
+            nav { width: 60px; padding: 20px 8px; }
+            .logo { display: none; }
+            .nav-links { gap: 8px; }
+            .nav-link { padding: 12px 8px; flex-direction: column; gap: 4px; text-align: center; }
+            .nav-link span { display: block; font-size: 9px; line-height: 1.2; }
+            .nav-link svg { width: 20px; height: 20px; }
+            main { padding: 20px; }
+            .header h1 { font-size: 26px; }
+            .tool-card { padding: 16px; }
+            textarea { min-height: 150px; padding: 12px; font-size: 17px; }
+            .actions { flex-direction: column; gap: 10px; }
+            .actions button { width: 100%; justify-content: center; }
+            .output-group { padding: 12px; }
+            #output, #chainOutput { font-size: 16px; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">秘書工具箱</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link" style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); border-radius: 0; padding-bottom: 20px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                </svg>
+                <span>返回工具箱</span>
+            </a>
+            <a href="#" class="nav-link active" onclick="showTool('format', this)">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                <span>接龍姓名匯出</span>
+            </a>
+            <a href="#" class="nav-link" onclick="showTool('names', this)">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3zM6 19a6 6 0 0112 0"></path>
+                </svg>
+                <span>快速名單產出</span>
+            </a>
+            <a href="help.html" class="nav-link" style="margin-top:24px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 2a10 10 0 100 20 10 10 0 000-20zm.75 14.5h-1.5v-1.5h1.5v1.5zm0-3.5h-1.5V7h1.5v6z"></path>
+                </svg>
+                <span>說明</span>
+            </a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- 姓名格式化工具 -->
+        <div id="tool-format" class="tool-section">
+            <div class="header">
+                <h1>接龍姓名匯出</h1>
+                <p>將接龍訊息姓名列表轉換為逗號分隔的格式，方便複製使用。</p>
+            </div>
+
+            <div class="tool-card">
+                <div class="input-group">
+                    <label for="input">輸入原始清單</label>
+                    <textarea id="input" placeholder="OOO活動，請接龍&#10;1. 哆啦A夢&#10;2. 唐老鴨&#10;3. 柯南"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-primary" onclick="formatNames()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        立即轉換
+                    </button>
+                    <button class="btn-secondary" onclick="clearAll()">清除</button>
+                </div>
+
+                <div class="input-group">
+                    <label>轉換結果（可編輯）</label>
+                    <div class="output-group">
+                        <textarea id="output" placeholder="尚未轉換..."></textarea>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>結構化結果（JSON）</label>
+                    <div class="output-group">
+                        <textarea id="outputStructured" placeholder="尚未轉換...（將輸出 JSON 結構）" style="min-height:140px; white-space:pre-wrap; font-family:monospace;"></textarea>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="copyResult()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                        </path>
+                    </svg>
+                    複製結果
+                </button>
+            </div>
+        </div>
+
+        <!-- 快速名單產出（多組版） -->
+        <div id="tool-names" class="tool-section" style="display: none;">
+            <div class="header">
+                <h1>快速名單產出</h1>
+                <p>多組名單管理，點選姓名即可快速匯出逗號分隔清單。</p>
+            </div>
+
+            <div class="tool-card">
+                <!-- Group bar -->
+                <div class="group-bar">
+                    <label>名單組：</label>
+                    <select id="groupSelect" onchange="onSelectChange()"></select>
+                    <button class="icon-btn danger" title="刪除此名單組" onclick="deleteGroup()" style="font-size:18px; color:#c0392b;">🗑</button>
+                </div>
+
+                <div class="input-group">
+                    <label for="namesInput">姓名清單（每行一個）</label>
+                    <textarea id="namesInput" placeholder="哆啦A夢&#10;唐老鴨&#10;柯南" style="min-height:110px;"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-primary" onclick="generateNameButtons()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        產生按鈕
+                    </button>
+                    <button class="btn-secondary" onclick="saveGroup()">儲存此組</button>
+                </div>
+
+                <div class="input-group">
+                    <label>姓名按鈕（點擊選取 / 取消）</label>
+                    <div class="output-group name-area">
+                        <div id="nameButtons" class="empty"></div>
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-top:20px;">
+                    <label>已選姓名（逗號分隔，可手動編輯）</label>
+                    <div class="output-group">
+                        <textarea id="selectedOutput" style="min-height:56px;background:transparent;border:none;padding:0;resize:none;" placeholder="點選姓名按鈕，或直接輸入姓名（用逗號分隔）"></textarea>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="width:100%;justify-content:center;margin-top:14px;" onclick="copySelected()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    複製已選姓名
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="copy-toast">已複製到剪貼簿！</div>
+
+    <script>
+        // ── Tool switcher ──
+        function showTool(toolName, el) {
+            document.querySelectorAll('.tool-section').forEach(s => s.style.display = 'none');
+            document.getElementById('tool-' + toolName).style.display = 'block';
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        // ── Format tool ──
+        function formatNames() {
+            const input = document.getElementById('input').value;
+            if (!input.trim()) { alert('請先輸入文字'); return; }
+            const lines = input.split('\n');
+            let firstLineIndex = -1, lastLineIndex = -1;
+            const numRegex = /^\s*\d+[.、。]/;
+            for (let i = 0; i < lines.length; i++) {
+                if (numRegex.test(lines[i])) {
+                    if (firstLineIndex === -1) firstLineIndex = i;
+                    lastLineIndex = i;
+                }
+            }
+            let textToProcess = input;
+            if (firstLineIndex !== -1) textToProcess = lines.slice(firstLineIndex, lastLineIndex + 1).join('\n');
+
+            const items = textToProcess.split(/[\n,，、;；]/).map(s => s.trim()).filter(Boolean);
+            const parsed = items.map(item => {
+                // 移除前置編號或多餘空白
+                const raw = item.replace(/^[0-9\s.、。()（）]+/, '').trim();
+                // 先移除尾部括號描述
+                let base = raw.replace(/[\s(（][^()（）]*[)）]$/, '').trim();
+                let name = base;
+                let note = '';
+                // 如果有用破折號、冒號或空白分隔的備註，嘗試分離：例如 "尤秀華-五戎複戒..."
+                const m = base.match(/^(.*?)[\-–—:\：\s]+(.+)$/);
+                if (m) {
+                    name = m[1].trim();
+                    note = m[2].trim().replace(/[。\.]+$/,'');
+                }
+                name = name.replace(/\s+/g, ' ').trim();
+                return { name, note, raw: item };
+            });
+
+            document.getElementById('output').value = parsed.map(p => p.name).join(',');
+            const outStructured = document.getElementById('outputStructured');
+            if (outStructured) outStructured.value = JSON.stringify(parsed, null, 2);
+        }
+
+        function clearAll() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').value = '';
+        }
+
+        function copyResult() {
+            const result = document.getElementById('output').value;
+            if (!result) return;
+            navigator.clipboard.writeText(result).then(() => showToast('已複製到剪貼簿！'));
+        }
+
+        // ── Multi-group names tool ──
+        const STORE_KEY = 'nameGroups_v1';
+        function uid() { return Math.random().toString(36).slice(2, 9); }
+
+        function loadState() {
+            try {
+                const d = JSON.parse(localStorage.getItem(STORE_KEY));
+                if (d && d.groups && d.groups.length) return d;
+            } catch(e) {}
+            // 遷移舊版資料
+            const id = uid();
+            let defaultNames = [];
+            try {
+                const old = JSON.parse(localStorage.getItem('secretarytools_names'));
+                if (Array.isArray(old) && old.length) defaultNames = old;
+            } catch(e) {}
+            return { activeId: id, groups: [{ id, name: '預設名單', names: defaultNames }] };
+        }
+
+        function saveState() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+        let state = loadState();
+        function activeGroup() { return state.groups.find(g => g.id === state.activeId) || state.groups[0]; }
+
+        function renderGroupSelect() {
+            const sel = document.getElementById('groupSelect');
+            sel.innerHTML = '';
+            state.groups.forEach(g => {
+                const o = document.createElement('option');
+                o.value = g.id; o.textContent = g.name;
+                if (g.id === state.activeId) o.selected = true;
+                sel.appendChild(o);
+            });
+            const add = document.createElement('option');
+            add.value = '__add__'; add.textContent = '＋ 新增名單組';
+            sel.appendChild(add);
+        }
+
+        function onSelectChange() {
+            const val = document.getElementById('groupSelect').value;
+            if (val === '__add__') {
+                renderGroupSelect();
+                const name = prompt('新名單組名稱：', '新名單');
+                if (!name || !name.trim()) return;
+                const newG = { id: uid(), name: name.trim(), names: [] };
+                state.groups.push(newG);
+                state.activeId = newG.id;
+                saveState(); renderGroupSelect(); loadGroupUI();
+                return;
+            }
+            state.activeId = val;
+            saveState();
+            loadGroupUI();
+        }
+
+        function loadGroupUI() {
+            const g = activeGroup();
+            document.getElementById('namesInput').value = g.names.join('\n');
+            if (g.names.length) {
+                renderNameButtons(g.names);
+            } else {
+                const c = document.getElementById('nameButtons');
+                c.innerHTML = ''; c.className = 'empty';
+            }
+            document.getElementById('selectedOutput').value = '';
+        }
+
+        function deleteGroup() {
+            if (state.groups.length <= 1) { showToast('至少需要保留一組名單'); return; }
+            if (!confirm(`確定要刪除「${activeGroup().name}」？`)) return;
+            state.groups = state.groups.filter(g => g.id !== state.activeId);
+            state.activeId = state.groups[0].id;
+            saveState(); renderGroupSelect(); loadGroupUI();
+        }
+
+        function saveGroup() {
+            const names = parseNamesInput();
+            if (!names.length) { alert('請先輸入至少一個姓名'); return; }
+            activeGroup().names = names;
+            saveState();
+            showToast(`已儲存至「${activeGroup().name}」`);
+        }
+
+        function parseNamesInput() {
+            return (document.getElementById('namesInput').value || '')
+                .split('\n')
+                .map(l => l.replace(/^\s*(?:\d+[.、。]|\(\d+\))\s*/, '').trim())
+                .filter(Boolean);
+        }
+
+        function generateNameButtons() {
+            const names = parseNamesInput();
+            if (!names.length) { alert('請先輸入至少一個姓名'); return; }
+            renderNameButtons(names);
+        }
+
+        function renderNameButtons(names) {
+            const c = document.getElementById('nameButtons');
+            c.innerHTML = ''; c.className = '';
+            names.forEach(name => {
+                const btn = document.createElement('button');
+                btn.type = 'button'; btn.className = 'name-btn'; btn.textContent = name;
+                btn.onclick = () => { btn.classList.toggle('selected'); updateSelectedOutput(); };
+                c.appendChild(btn);
+            });
+            updateSelectedOutput();
+        }
+
+        function updateSelectedOutput() {
+            const sel = Array.from(document.querySelectorAll('.name-btn.selected')).map(b => b.textContent);
+            document.getElementById('selectedOutput').value = sel.join(',');
+        }
+
+        function copySelected() {
+            const text = document.getElementById('selectedOutput').value.trim();
+            if (!text) { showToast('尚未選取任何姓名'); return; }
+            navigator.clipboard.writeText(text).then(() => showToast('已複製到剪貼簿！'));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGroupSelect();
+            loadGroupUI();
+            const sel = document.getElementById('selectedOutput');
+            if (sel) {
+                sel.addEventListener('input', function() {
+                    const set = new Set(this.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
+                    document.querySelectorAll('.name-btn').forEach(b => {
+                        b.classList.toggle('selected', set.has(b.textContent.trim().toLowerCase()));
+                    });
+                });
+            }
+        });
+
+        // ── Toast ──
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+        }
+    </script>
+</body>
+</html>

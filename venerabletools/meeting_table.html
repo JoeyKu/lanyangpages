@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月例會時間整理工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+  :root {
+    --primary:#a87a4f; --primary-mid:#d4a373; --primary-pale:#e8dcc4;
+    --bg-light:#fdfaf3; --bg-white:#ffffff; --text-dark:#3d2c1b;
+    --text-secondary: #6b4f35;
+    --border:#d4b896; --red:#c0392b; --shadow:rgba(168,122,79,.14);
+    --radius: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Noto Sans TC',sans-serif;
+    background:var(--bg-light);
+    color:var(--text-dark);
+    min-height:100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+  }
+  
+  main {
+    width: 100%;
+    max-width: 1000px;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    transition: var(--transition);
+  }
+
+  .back-btn:hover {
+    color: var(--primary-mid);
+    transform: translateX(-5px);
+  }
+
+  .header {
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 42px;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    color: var(--text-secondary);
+    font-size: 18px;
+  }
+
+  .tool-card {
+    background: var(--bg-white);
+    border-radius: var(--radius);
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(168, 122, 79, 0.1);
+    margin-bottom: 40px;
+  }
+
+  .drop-zone{border:2px dashed var(--border);border-radius:14px;background:#fff;padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:24px;}
+  .drop-zone:hover,.drop-zone.over{border-color:var(--primary);background:var(--bg-light);}
+  .drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .dz-icon{font-size:48px;margin-bottom:12px;}
+  .dz-label{font-size:18px;color:var(--primary);font-weight:600;letter-spacing:.5px;}
+  .dz-hint{font-size:14px;color:#888;margin-top:6px;}
+  
+  .file-list{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;}
+  .chip{display:flex;align-items:center;gap:8px;background:var(--bg-light);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:14px;color:var(--primary);font-weight:500;}
+  .chip .zone-badge{background:var(--primary);color:#fff;border-radius:10px;padding:1px 8px;font-size:12px;}
+  .chip .remove{cursor:pointer;color:#999;font-size:16px;background:none;border:none;padding:0; margin-left: 4px;}
+  .chip .remove:hover{color:var(--red);}
+  
+  #status{font-size:14px;color:var(--red);min-height:24px;margin-bottom:12px; text-align: center;}
+  
+  .btn-process{display:block;width:100%;padding:16px;border:none;border-radius:12px;background:var(--primary);color:#fff;font-size:18px;font-family:'Noto Sans TC',sans-serif;font-weight:600;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 12px var(--shadow);transition:var(--transition);}
+  .btn-process:hover:not(:disabled){background:var(--primary-mid);transform: translateY(-2px);box-shadow:0 6px 16px var(--shadow);}
+  .btn-process:disabled{background:#ccc;cursor:not-allowed;box-shadow:none;}
+  
+  #result-section{display:none; width: 100%;}
+  .result-header{margin: 40px 0 20px; display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:15px; border-bottom: 2px solid var(--primary-pale); padding-bottom: 15px;}
+  .result-header h2{font-family:'Noto Serif TC',serif;font-size:24px;color:var(--primary);letter-spacing:1px;}
+  .btn-group{display:flex;gap:12px;}
+  .btn-dl{padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:var(--transition); display: flex; align-items: center; gap: 8px;}
+  .btn-dl.xlsx-btn{background:var(--primary);color:#fff;border:none;box-shadow:0 3px 10px var(--shadow);}
+  .btn-dl.xlsx-btn:hover{background:var(--primary-mid);transform: translateY(-2px);}
+  .btn-dl.html-btn{background:#fff;color:var(--primary);border:2.5px solid var(--primary);}
+  .btn-dl.html-btn:hover{background:var(--bg-light);}
+  
+  .table-wrap{width: 100%; overflow-x:auto; margin-bottom: 80px;}
+  .section-tag{display:inline-block;background:var(--primary);color:#fff;font-size:13px;font-weight:600;padding:6px 18px;border-radius:6px 6px 0 0;letter-spacing:1px;margin-top:32px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;box-shadow:0 4px 20px var(--shadow);}
+  thead tr{background:var(--primary);color:#fff;}
+  thead th{padding:14px 10px;text-align:center;border:1px solid var(--primary-mid);white-space:nowrap;font-weight:600;}
+  tbody tr:nth-child(odd){background:#fff;}
+  tbody tr:nth-child(even){background:var(--bg-light);}
+  tbody tr:hover{background:var(--primary-pale);transition:background .15s;}
+  tbody td{padding:12px 10px;text-align:center;border:1px solid var(--border);white-space:nowrap;}
+  td.venue{text-align:left;}
+
+  @media (max-width: 640px) {
+    .header h1 { font-size: 32px; }
+    .tool-card { padding: 24px; }
+    .result-header { flex-direction: column; align-items: center; text-align: center; }
+  }
+</style>
+</head>
+<body>
+  <main>
+    <a href="index.html" class="back-btn">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+      </svg>
+      返回工具箱
+    </a>
+    <div class="header">
+      <h1>月例會時間整理工具</h1>
+      <p>上傳一或多個 Excel 檔案 · 自動辨識區別 · 合併輸出同一份</p>
+    </div>
+
+    <div class="tool-card">
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" accept=".xlsx,.xls" multiple id="file-input" onchange="addFiles(this.files)">
+        <div class="dz-icon">📂</div>
+        <div class="dz-label">點擊選擇或拖曳 Excel 檔案</div>
+        <div class="dz-hint">可一次選多個 · 自動辨識第幾區</div>
+      </div>
+      <div class="file-list" id="file-list"></div>
+      <div id="status"></div>
+      <button class="btn-process" id="btn-process" disabled onclick="processFiles()">▶ 開始整理</button>
+    </div>
+
+    <div id="result-section">
+      <div class="result-header">
+        <h2 id="result-title"></h2>
+        <div class="btn-group">
+          <button class="btn-dl html-btn" onclick="downloadHTML()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            下載 HTML
+          </button>
+          <button class="btn-dl xlsx-btn" onclick="downloadXLSX()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            下載 Excel
+          </button>
+        </div>
+      </div>
+      <div class="table-wrap" id="table-wrap"></div>
+    </div>
+  </main>
+
+<script>
+// ─────────────────────────────────────────────
+//  State
+// ─────────────────────────────────────────────
+let files = [];
+let mergedData = [];
+let resultTitle = '宜蘭區2026年5月份月例會時間';
+
+const KEYS = ['branch','president','monk','date','week','time','venue','senior','lecturer'];
+const COLS_DISPLAY = ['分　會','會　長','輔導法師','日　期','週','時　間','地　　點','上級指導','宣　講　員'];
+const COLS_PLAIN   = ['分會','會長','輔導法師','日期','週','時間','地點','上級指導','宣講員'];
+const COL_WIDTHS   = [14, 8, 10, 7, 5, 7, 20, 8, 10]; // chars
+
+// ─────────────────────────────────────────────
+//  Drag-drop
+// ─────────────────────────────────────────────
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); addFiles(e.dataTransfer.files); });
+
+function addFiles(fileList) {
+  Array.from(fileList).forEach(f => {
+    if (files.find(x => x.name === f.name)) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const zone = detectZone(wb, f.name);
+      files.push({ file: f, wb, zone, name: f.name });
+      renderChips(); updateBtn();
+    };
+    reader.readAsArrayBuffer(f);
+  });
+  document.getElementById('file-input').value = '';
+}
+
+function detectZone(wb, filename) {
+  for (const sn of wb.SheetNames) {
+    const ws = wb.Sheets[sn];
+    const cell = ws['A1'];
+    if (cell) {
+      const m = String(cell.v || '').match(/第([一二三四五六七八九十\d]+)區/);
+      if (m) return m[1];
+    }
+  }
+  const mf = filename.match(/第([一二三四五六七八九十\d]+)區/);
+  return mf ? mf[1] : null;
+}
+
+function renderChips() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = '';
+  files.forEach((f, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `<span class="zone-badge">${f.zone ? '第'+f.zone+'區' : '未知'}</span>
+      <span>${f.name}</span>
+      <button class="remove" onclick="removeFile(${i})">✕</button>`;
+    list.appendChild(chip);
+  });
+}
+
+function removeFile(i) {
+  files.splice(i, 1);
+  renderChips(); updateBtn();
+  if (!files.length) document.getElementById('result-section').style.display = 'none';
+}
+
+function updateBtn() {
+  document.getElementById('btn-process').disabled = files.length === 0;
+}
+
+// ─────────────────────────────────────────────
+//  Parse workbook
+// ─────────────────────────────────────────────
+function parseWorkbook(wb) {
+  const sheetName = wb.SheetNames.find(n => n.includes('5月'))
+    || wb.SheetNames.find(n => n.includes('月'))
+    || wb.SheetNames[wb.SheetNames.length - 1];
+  const raw = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '' });
+
+  let dataStart = -1;
+  for (let i = 0; i < raw.length; i++) {
+    const row = raw[i].map(c => String(c).trim());
+    if (row.includes('分會') && row.includes('會長') && row.includes('宣講員')) {
+      dataStart = i + 1; break;
+    }
+  }
+  if (dataStart === -1) return null;
+
+  const hdr = raw[dataStart - 1].map(c => String(c).trim());
+  const idx = k => hdr.findIndex(h => h.includes(k));
+  const iB=idx('分會'),iP=idx('會長'),iM=idx('輔導'),iDt=idx('日期'),
+        iW=idx('週'),iT=idx('時間'),iV=idx('地'),iS=idx('上級'),iL=idx('宣講');
+
+  const rows = [];
+  for (let i = dataStart; i < raw.length; i++) {
+    const r = raw[i];
+    const branch = String(r[iB]??'').trim();
+    if (!branch || branch === '分會') continue;
+
+    let dateStr = '';
+    const rd = r[iDt];
+    if (rd) {
+      if (typeof rd === 'number') {
+        const d = XLSX.SSF.parse_date_code(rd);
+        if (d) dateStr = `${d.m}/${d.d}`;
+      } else {
+        const m = String(rd).match(/(\d{1,2})[-\/月](\d{1,2})/);
+        dateStr = m ? `${m[1]}/${m[2]}` : String(rd).replace(/2026[-年]/,'').trim();
+      }
+    }
+
+    let timeStr = '';
+    const rt = r[iT];
+    if (rt !== undefined && rt !== '') {
+      if (typeof rt === 'number') {
+        const tot = Math.round(rt * 24 * 60);
+        timeStr = `${String(Math.floor(tot/60)).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;
+      } else {
+        const m = String(rt).match(/(\d{1,2}):(\d{2})/);
+        timeStr = m ? `${m[1].padStart(2,'0')}:${m[2]}` : String(rt).trim();
+      }
+    }
+
+    rows.push({
+      branch, president:String(r[iP]??'').trim(), monk:String(r[iM]??'').trim(),
+      date:dateStr, week:String(r[iW]??'').trim(), time:timeStr,
+      venue:String(r[iV]??'').trim(), senior:String(r[iS]??'').trim(),
+      lecturer:String(r[iL]??'').trim(),
+    });
+  }
+  return rows;
+}
+
+const ZONE_ORD = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10};
+
+// Convert "5/2" + "09:30" → sortable number (month*10000 + day*100 + hour*60 + min)
+function parseSortKey(row) {
+  const dm = (row.date || '').match(/(\d{1,2})\/(\d{1,2})/);
+  const tm = (row.time || '').match(/(\d{1,2}):(\d{2})/);
+  const month = dm ? parseInt(dm[1]) : 99;
+  const day   = dm ? parseInt(dm[2]) : 99;
+  const hour  = tm ? parseInt(tm[1]) : 99;
+  const min   = tm ? parseInt(tm[2]) : 99;
+  return month * 100000 + day * 1000 + hour * 60 + min;
+}
+
+function processFiles() {
+  setStatus('');
+  const map = {};
+  for (const f of files) {
+    const rows = parseWorkbook(f.wb);
+    if (!rows) { setStatus(`⚠ 無法解析「${f.name}」，請確認格式`); return; }
+    const z = f.zone || '?';
+    if (!map[z]) map[z] = [];
+    map[z].push(...rows);
+  }
+  // Collect all rows from all zones, sort by date then time
+  const allRowsUnsorted = Object.values(map).flat();
+  allRowsUnsorted.sort((a, b) => parseSortKey(a) - parseSortKey(b));
+  mergedData = [{ rows: allRowsUnsorted }];
+
+  renderTable();
+  document.getElementById('result-title').textContent = resultTitle;
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('result-section').scrollIntoView({ behavior:'smooth' });
+}
+
+// ─────────────────────────────────────────────
+//  HTML preview
+// ─────────────────────────────────────────────
+function renderTable() {
+  const rows = mergedData[0].rows;
+  document.getElementById('table-wrap').innerHTML = `
+    <table>
+      <thead><tr>${COLS_DISPLAY.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r=>`<tr>${KEYS.map((k,i)=>`<td${i===6?' class="venue"':''}>${r[k]}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// ─────────────────────────────────────────────
+//  Download HTML
+// ─────────────────────────────────────────────
+function downloadHTML() {
+  const css = `body{font-family:"微軟正黑體","Noto Sans TC",Arial,sans-serif;background:#fdfaf3;padding:28px;color:#3d2c1b}.container{max-width:1240px;margin:0 auto;background:#fff;padding:28px 24px 40px;box-shadow:0 2px 10px rgba(168,122,79,.15)}h1{text-align:center;font-size:22px;font-weight:700;color:#a87a4f;margin-bottom:24px;letter-spacing:2px}table{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:28px}thead tr{background:#a87a4f;color:#fff}thead th{padding:9px 8px;text-align:center;border:1px solid #d4a373;white-space:nowrap}tbody tr:nth-child(odd){background:#fff}tbody tr:nth-child(even){background:#fdfaf3}tbody td{padding:7px 9px;text-align:center;border:1px solid #d4b896;white-space:nowrap}td.venue{text-align:left}`;
+  const rows = mergedData[0].rows;
+  const blocks = `<table><thead><tr>${COLS_PLAIN.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${KEYS.map((k,i)=>`<td${i===6?' class="venue"':''}>${r[k]}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const html = `<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"><title>${resultTitle}</title><style>${css}</style></head><body><div class="container"><h1>${resultTitle}</h1>${blocks}</div></body></html>`;
+  dl(new Blob([html],{type:'text/html'}), resultTitle+'.html');
+}
+
+// ─────────────────────────────────────────────
+//  Download XLSX — styled OpenXML via JSZip
+// ─────────────────────────────────────────────
+async function downloadXLSX() {
+  // Flatten all rows into one list (no zone labels)
+  const allRows = mergedData.flatMap(({rows}) => rows);
+
+  // Build worksheet data: title row + header row + data rows
+  const wsData = [
+    [resultTitle, ...Array(COLS_PLAIN.length - 1).fill('')],
+    ...COLS_PLAIN.map((c,_) => c),  // placeholder, built below
+    ...allRows.map(r => KEYS.map(k => r[k]))
+  ];
+  // Proper structure
+  const sheetRows = [
+    COLS_PLAIN.map((_, i) => i === 0 ? resultTitle : ''),  // row 1: merged title
+    COLS_PLAIN,                                              // row 2: header
+    ...allRows.map(r => KEYS.map(k => r[k]))                 // data rows
+  ];
+
+  const zip = new JSZip();
+  const totalRows = sheetRows.length;
+  const totalCols = COLS_PLAIN.length;
+
+  // ── styles.xml ──
+  // Colors: header fill = 4A6741 (moss), odd rows = FFFFFF, even rows = E8F0E3
+  // Title fill = 2C4A2C (dark moss)
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="5">
+    <font><sz val="11"/><name val="微軟正黑體"/></font>
+    <font><b/><sz val="14"/><color rgb="FF2C4A2C"/><name val="微軟正黑體"/></font>
+    <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="微軟正黑體"/></font>
+    <font><sz val="11"/><color rgb="FF1A2218"/><name val="微軟正黑體"/></font>
+    <font><sz val="11"/><color rgb="FF1A2218"/><name val="微軟正黑體"/></font>
+  </fonts>
+  <fills count="5">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFE8F0E3"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF4A6741"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFC0CEAF"/></left>
+      <right style="thin"><color rgb="FFC0CEAF"/></right>
+      <top style="thin"><color rgb="FFC0CEAF"/></top>
+      <bottom style="thin"><color rgb="FFC0CEAF"/></bottom>
+    </border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="7">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="4" borderId="1" xfId="0"><alignment horizontal="center" vertical="center" wrapText="0"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="4" fillId="3" borderId="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="4" fillId="3" borderId="1" xfId="0"><alignment horizontal="left" vertical="center"/></xf>
+  </cellXfs>
+</styleSheet>`;
+
+  // xfId map: 1=title, 2=header, 3=odd data center, 4=even data center, 5=odd/even venue (left)
+  // venue col index = 6 (0-based)
+
+  function colName(n) {
+    let s = '';
+    n++; // 1-based
+    while (n > 0) { s = String.fromCharCode(65 + (n-1) % 26) + s; n = Math.floor((n-1)/26); }
+    return s;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── sheet data ──
+  let sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+           xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`;
+
+  // Column widths
+  sheetXml += '<cols>';
+  COL_WIDTHS.forEach((w, i) => {
+    const c = i + 1;
+    sheetXml += `<col min="${c}" max="${c}" width="${w}" customWidth="1"/>`;
+  });
+  sheetXml += '</cols>';
+
+  sheetXml += '<sheetData>';
+
+  // Row 1: title (merged A1:I1)
+  sheetXml += `<row r="1" ht="24" customHeight="1">`;
+  sheetXml += `<c r="A1" s="1" t="inlineStr"><is><t>${esc(resultTitle)}</t></is></c>`;
+  for (let c = 1; c < totalCols; c++) {
+    sheetXml += `<c r="${colName(c)}1" s="1"/>`;
+  }
+  sheetXml += '</row>';
+
+  // Row 2: headers
+  sheetXml += `<row r="2" ht="20" customHeight="1">`;
+  COLS_PLAIN.forEach((col, c) => {
+    sheetXml += `<c r="${colName(c)}2" s="2" t="inlineStr"><is><t>${esc(col)}</t></is></c>`;
+  });
+  sheetXml += '</row>';
+
+  // Data rows (starting at row 3)
+  allRows.forEach((row, ri) => {
+    const excelRow = ri + 3;
+    const isEven = (ri % 2 === 1); // 0-indexed: ri=0 is odd row (white), ri=1 is even (sage)
+    sheetXml += `<row r="${excelRow}" ht="18" customHeight="1">`;
+    KEYS.forEach((k, ci) => {
+      const isVenue = ci === 6;
+      let s;
+      if (isVenue) {
+        s = isEven ? 6 : 5; // left-align: s=5 odd/white, s=6 even/sage
+      } else {
+        s = isEven ? 4 : 3; // center: s=3 odd/white, s=4 even/sage
+      }
+      sheetXml += `<c r="${colName(ci)}${excelRow}" s="${s}" t="inlineStr"><is><t>${esc(row[k])}</t></is></c>`;
+    });
+    sheetXml += '</row>';
+  });
+
+  sheetXml += '</sheetData>';
+
+  // Merge title row A1:I1
+  sheetXml += `<mergeCells count="1"><mergeCell ref="A1:${colName(totalCols-1)}1"/></mergeCells>`;
+  sheetXml += '</worksheet>';
+
+  // ── workbook.xml ──
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+          xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="月例會時間" sheetId="1" r:id="rId1"/>
+  </sheets>
+</workbook>`;
+
+  const workbookRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`;
+
+  zip.file('[Content_Types].xml', contentTypes);
+  zip.file('_rels/.rels', relsXml);
+  zip.file('xl/workbook.xml', workbookXml);
+  zip.file('xl/_rels/workbook.xml.rels', workbookRels);
+  zip.file('xl/styles.xml', stylesXml);
+  zip.file('xl/worksheets/sheet1.xml', sheetXml);
+
+  const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  dl(blob, resultTitle + '.xlsx');
+}
+
+function dl(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+
+function setStatus(msg) { document.getElementById('status').textContent = msg; }
+</script>
+</body>
+</html>
